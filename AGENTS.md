@@ -28,3 +28,7 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- All dashboard data flows through the `DashboardApi` interface in `src/lib/api/`; mock adapter is used unless `VITE_API_BASE_URL` is set — so the teammates' backend can replace mocks without touching UI.
+- No backend and no raw dataset import in this frontend — calculations belong to the separate team backend.
