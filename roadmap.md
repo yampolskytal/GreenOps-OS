@@ -1,0 +1,13 @@
+# Roadmap — GreenOps OS frontend
+- [x] Design system + app shell (sidebar, top bar, global state)
+- [x] Role welcome + persistent role switcher
+- [x] CEO / CFO / IT dashboards
+- [x] Shared charts, KPI, calc drawers, evidence popovers
+- [x] Safety Shield + Optimization Studio
+- [x] Footprint calendar + infrastructure map + waste findings
+- [x] Data import UI (local header check only, no fake imports)
+- [x] Chat assistant panel (backend integration point)
+- [x] Submission Center (exact template CSVs, demo-blocked)
+- [x] Forecast + bonus views
+- [ ] Wire real endpoints — blocked: waiting for backend endpoint spec
+- [ ] Swap Loader for 21st.dev animation — blocked: user will provide component

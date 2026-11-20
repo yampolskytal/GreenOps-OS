@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CeoRouteImport } from './routes/ceo'
 import { Route as CfoRouteImport } from './routes/cfo'
+import { Route as FindingsRouteImport } from './routes/findings'
+import { Route as FootprintRouteImport } from './routes/footprint'
 import { Route as ItRouteImport } from './routes/it'
+import { Route as StudioRouteImport } from './routes/studio'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +32,24 @@ const CfoRoute = CfoRouteImport.update({
   path: '/cfo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FindingsRoute = FindingsRouteImport.update({
+  id: '/findings',
+  path: '/findings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FootprintRoute = FootprintRouteImport.update({
+  id: '/footprint',
+  path: '/footprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ItRoute = ItRouteImport.update({
   id: '/it',
   path: '/it',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudioRoute = StudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +57,55 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/findings': typeof FindingsRoute
+  '/footprint': typeof FootprintRoute
   '/it': typeof ItRoute
+  '/studio': typeof StudioRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/findings': typeof FindingsRoute
+  '/footprint': typeof FootprintRoute
   '/it': typeof ItRoute
+  '/studio': typeof StudioRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/findings': typeof FindingsRoute
+  '/footprint': typeof FootprintRoute
   '/it': typeof ItRoute
+  '/studio': typeof StudioRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/ceo' | '/cfo' | '/it'
+  fullPaths:
+    '/' | '/ceo' | '/cfo' | '/findings' | '/footprint' | '/it' | '/studio'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ceo' | '/cfo' | '/it'
-  id: '__root__' | '/' | '/ceo' | '/cfo' | '/it'
+  to: '/' | '/ceo' | '/cfo' | '/findings' | '/footprint' | '/it' | '/studio'
+  id:
+    | '__root__'
+    | '/'
+    | '/ceo'
+    | '/cfo'
+    | '/findings'
+    | '/footprint'
+    | '/it'
+    | '/studio'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CeoRoute: typeof CeoRoute
   CfoRoute: typeof CfoRoute
+  FindingsRoute: typeof FindingsRoute
+  FootprintRoute: typeof FootprintRoute
   ItRoute: typeof ItRoute
+  StudioRoute: typeof StudioRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +131,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CfoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/findings': {
+      id: '/findings'
+      path: '/findings'
+      fullPath: '/findings'
+      preLoaderRoute: typeof FindingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/footprint': {
+      id: '/footprint'
+      path: '/footprint'
+      fullPath: '/footprint'
+      preLoaderRoute: typeof FootprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/it': {
       id: '/it'
       path: '/it'
       fullPath: '/it'
       preLoaderRoute: typeof ItRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/studio': {
+      id: '/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +166,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CeoRoute: CeoRoute,
   CfoRoute: CfoRoute,
+  FindingsRoute: FindingsRoute,
+  FootprintRoute: FootprintRoute,
   ItRoute: ItRoute,
+  StudioRoute: StudioRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

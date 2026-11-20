@@ -1,39 +1,87 @@
-import { queryOptions } from "@tanstack/react-query";
-import type { DashboardApi } from "./types";
-import { mockOverview, mockFinance, mockIt } from "./mock-data";
+import type { ChatMessage, GlobalQuery, GreenOpsApi } from "./types";
+import { DEMO_BASELINE, demoBonus, demoBreakdowns, demoDaily, demoFindings, demoLocations, demoMeasures, demoOverview, demoQuality, demoResources } from "./demo-data";
+import { evaluatePackage, greedyPackage } from "../optimizer";
+import { BASELINE_HEADER, BASELINE_ROWS, MEASURES_HEADER, toCsv } from "./templates";
+import { demoChatReply } from "./demo-chat";
 
-/** Mock adapter: returns placeholder data. */
-export const mockApi: DashboardApi = {
-  isMock: true,
-  getExecutiveOverview: async () => mockOverview,
-  getFinanceView: async () => mockFinance,
-  getItView: async () => mockIt,
+const delay = <T,>(v: T, ms = 350) => new Promise<T>((r) => setTimeout(() => r(v), ms));
+const base = { costChf: DEMO_BASELINE.costChf, co2Kg: DEMO_BASELINE.co2Kg };
+const byDept = <T extends { department?: string }>(q: GlobalQuery, xs: T[]) => (q.department === "all" ? xs : xs.filter((x) => !x.department || x.department === q.department));
+
+/** DEMO adapter — local placeholder logic. Never presents results as real analytics. */
+export const demoApi: GreenOpsApi = {
+  isDemo: true,
+  getOverview: () => delay(demoOverview),
+  getBreakdowns: () => delay(demoBreakdowns),
+  getResources: (q) => delay(byDept(q, demoResources).filter((r) => q.provider === "all" || r.provider === q.provider)),
+  getLocations: () => delay(demoLocations),
+  getFindings: () => delay(demoFindings),
+  getMeasures: () => delay(demoMeasures),
+  simulate: (_q, i) => delay(evaluatePackage(demoMeasures, i.measureIds, base, i.budgetChf, i.chfPerPersonDay), 200),
+  optimize: (_q, i) => { const ids = greedyPackage(demoMeasures, i.budgetChf, i.priority, base, i.chfPerPersonDay); return delay({ measureIds: ids, result: evaluatePackage(demoMeasures, ids, base, i.budgetChf, i.chfPerPersonDay) }, 300); },
+  getForecast: (_q, metric, horizon) => {
+    const start = { cost: 428000, energy: 78000, co2Location: 13400, co2Market: 3600 }[metric];
+    const unit = { cost: "CHF", energy: "kWh", co2Location: "kg CO₂", co2Market: "kg CO₂" }[metric];
+    const cut = metric === "cost" ? 0.27 : 0.5;
+    const points = Array.from({ length: horizon + 1 }, (_, i) => {
+      const year = 2026 + i; const g = (r: number) => start * Math.pow(1 + r, i);
+      const opt = (r: number) => (i === 0 ? g(r) : g(r) * (1 - cut * Math.min(1, i)));
+      return { year, baseline: { low: g(0.02), mid: g(0.05), high: g(0.09) }, optimized: { low: opt(0.02), mid: opt(0.05), high: opt(0.09) }, ...(i === 0 ? { observed: start } : {}) };
+    });
+    return delay({ metric, unit, growthAssumption: "DEMO: 2% / 5% / 9% growth per year (headcount + AI adoption). Backend will justify.", points });
+  },
+  getDailyFootprint: (q) => delay(demoDaily(q.from, q.to)),
+  getDataQuality: () => delay(demoQuality),
+  getBonus: () => delay(demoBonus),
+  importFiles: (files) => delay({ accepted: false, message: "Backend not connected — files were checked locally for their column headers only. Nothing was imported and no figures changed.", issues: files.map((f) => `${f.name}: waiting for backend import API`) }, 600),
+  chat: (_q, history) => delay(demoChatReply(history), 700),
+  exportBaseline: () => {
+    const o = demoOverview; const v: Record<string, [number, number, number]> = {
+      total_cost_baseline_year_chf: [o.cost.value.low, o.cost.value.mid, o.cost.value.high], total_energy_baseline_year_kwh: [o.energy.value.low, o.energy.value.mid, o.energy.value.high],
+      total_co2_location_based_baseline_year_kg: [o.co2Location.value.low, o.co2Location.value.mid, o.co2Location.value.high],
+    };
+    const rows = BASELINE_ROWS.map((r) => { const x = v[r.parameter]; return [r.parameter, r.must_or_bonus, x?.[0] ?? "", x?.[1] ?? "", x?.[2] ?? "", r.unit, x ? "DEMO placeholder" : "", x ? "DEMO — replace with backend calculation" : ""]; });
+    const missing = BASELINE_ROWS.filter((r) => r.must_or_bonus === "Must" && !v[r.parameter]).map((r) => `Missing mandatory value: ${r.parameter}`);
+    return delay({ filename: "DEMO_baseline_and_assumptions.csv", csv: toCsv(BASELINE_HEADER, rows), issues: ["Contains demo placeholders — not a valid submission.", ...missing], submittable: false });
+  },
+  exportMeasures: (_q, ids) => {
+    const ms = demoMeasures.filter((m) => ids.includes(m.id));
+    const rows = ms.map((m) => [m.id, m.description, m.resource, m.change, m.effortPersonDays, m.savingsChf, m.savingsKwh, m.savingsCo2KgLocation, m.savingsCo2KgMarket, `${m.risk.why} Protection: ${m.risk.protectionWindows.join("; ") || "none"}`, `DEMO. ${m.assumptions.join("; ")} Sources: ${m.evidence.map((e) => e.source).join("; ")}`]);
+    const r = evaluatePackage(demoMeasures, ids, base, 16500, 1100);
+    return delay({ filename: "DEMO_measures_package.csv", csv: toCsv(MEASURES_HEADER, rows), issues: ["Contains demo placeholders — not a valid submission.", ...r.reasons], submittable: false });
+  },
 };
 
-/** HTTP adapter for the teammates' backend. Endpoints are proposals — align with backend. */
-export function createHttpApi(baseUrl: string): DashboardApi {
-  const get = async <T,>(path: string): Promise<T> => {
-    const res = await fetch(`${baseUrl}${path}`);
-    if (!res.ok) throw new Error(`API ${path} failed [${res.status}]: ${await res.text()}`);
+/** HTTP adapter. Endpoint paths are proposals until the backend spec arrives. */
+export function createHttpApi(baseUrl: string): GreenOpsApi {
+  const qs = (q: GlobalQuery) => new URLSearchParams({ version: q.datasetVersion, from: q.from, to: q.to, department: q.department, provider: q.provider }).toString();
+  const req = async <T,>(path: string, init?: RequestInit): Promise<T> => {
+    const res = await fetch(`${baseUrl}${path}`, init);
+    if (!res.ok) throw new Error(`Request ${path} failed [${res.status}]: ${await res.text()}`);
     return res.json() as Promise<T>;
   };
+  const post = <T,>(path: string, body: unknown) => req<T>(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   return {
-    isMock: false,
-    getExecutiveOverview: () => get("/overview"),
-    getFinanceView: () => get("/finance"),
-    getItView: () => get("/it"),
+    isDemo: false,
+    getOverview: (q) => req(`/overview?${qs(q)}`),
+    getBreakdowns: (q) => req(`/breakdowns?${qs(q)}`),
+    getResources: (q) => req(`/resources?${qs(q)}`),
+    getLocations: (q) => req(`/locations?${qs(q)}`),
+    getFindings: (q) => req(`/findings?${qs(q)}`),
+    getMeasures: (q) => req(`/measures?${qs(q)}`),
+    simulate: (q, i) => post(`/simulation?${qs(q)}`, i),
+    optimize: (q, i) => post(`/optimize?${qs(q)}`, i),
+    getForecast: (q, metric, h) => req(`/forecast?${qs(q)}&metric=${metric}&horizon=${h}`),
+    getDailyFootprint: (q) => req(`/metrics/daily?${qs(q)}`),
+    getDataQuality: (q) => req(`/data-quality?${qs(q)}`),
+    getBonus: (q) => req(`/bonus?${qs(q)}`),
+    importFiles: (files) => { const fd = new FormData(); files.forEach((f) => fd.append("files", f)); return req(`/imports`, { method: "POST", body: fd }); },
+    chat: (q, history: ChatMessage[]) => post(`/chat?${qs(q)}`, { messages: history }),
+    exportBaseline: (q) => req(`/exports/baseline?${qs(q)}`),
+    exportMeasures: (q, ids) => post(`/exports/measures?${qs(q)}`, { measureIds: ids }),
   };
 }
 
 const baseUrl = import.meta.env["VITE_API_BASE_URL"] as string | undefined;
-/** Set VITE_API_BASE_URL to switch from mock to the real backend. */
-export const api: DashboardApi = baseUrl ? createHttpApi(baseUrl) : mockApi;
-
-export const overviewQuery = queryOptions({ queryKey: ["overview"], queryFn: () => api.getExecutiveOverview() });
-export const financeQuery = queryOptions({ queryKey: ["finance"], queryFn: () => api.getFinanceView() });
-export const itQuery = queryOptions({ queryKey: ["it"], queryFn: () => api.getItView() });
-
-/** Locale-independent Swiss grouping (1'234) so server and browser render identically. */
-export const group = (n: number) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
-export const chf = (n: number) => `CHF ${group(n)}`;
-export const kg = (n: number) => `${group(n)} kg`;
+/** Set VITE_API_BASE_URL to switch from demo data to the team backend. */
+export const api: GreenOpsApi = baseUrl ? createHttpApi(baseUrl) : demoApi;
