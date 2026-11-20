@@ -30,5 +30,9 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
-- All dashboard data flows through the `DashboardApi` interface in `src/lib/api/`; mock adapter is used unless `VITE_API_BASE_URL` is set — so the teammates' backend can replace mocks without touching UI.
+- All data flows through the `GreenOpsApi` interface (`src/lib/api/types.ts`); `client.ts` uses the demo adapter unless `VITE_API_BASE_URL` is set — so the teammates' backend replaces demo data without touching UI.
+- Shared cross-view state (role, filters, date range, dataset, plan, budget) lives in `src/lib/store.tsx`, persisted to localStorage — so role switches never reset selections.
+- `src/lib/optimizer.ts` is a demo stand-in for backend optimization; the backend stays authoritative.
+- CSV export headers live only in `src/lib/api/templates.ts` and must match the organisers' templates exactly.
+- Leaflet map is loaded lazily behind `<ClientOnly>` (browser-only library).
 - No backend and no raw dataset import in this frontend — calculations belong to the separate team backend.

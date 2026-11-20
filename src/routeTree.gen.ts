@@ -14,8 +14,11 @@ import { Route as CeoRouteImport } from './routes/ceo'
 import { Route as CfoRouteImport } from './routes/cfo'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as FootprintRouteImport } from './routes/footprint'
+import { Route as ForecastRouteImport } from './routes/forecast'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as ItRouteImport } from './routes/it'
 import { Route as StudioRouteImport } from './routes/studio'
+import { Route as SubmissionRouteImport } from './routes/submission'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,6 +45,16 @@ const FootprintRoute = FootprintRouteImport.update({
   path: '/footprint',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForecastRoute = ForecastRouteImport.update({
+  id: '/forecast',
+  path: '/forecast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ItRoute = ItRouteImport.update({
   id: '/it',
   path: '/it',
@@ -52,6 +65,11 @@ const StudioRoute = StudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubmissionRoute = SubmissionRouteImport.update({
+  id: '/submission',
+  path: '/submission',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,8 +77,11 @@ export interface FileRoutesByFullPath {
   '/cfo': typeof CfoRoute
   '/findings': typeof FindingsRoute
   '/footprint': typeof FootprintRoute
+  '/forecast': typeof ForecastRoute
+  '/import': typeof ImportRoute
   '/it': typeof ItRoute
   '/studio': typeof StudioRoute
+  '/submission': typeof SubmissionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,8 +89,11 @@ export interface FileRoutesByTo {
   '/cfo': typeof CfoRoute
   '/findings': typeof FindingsRoute
   '/footprint': typeof FootprintRoute
+  '/forecast': typeof ForecastRoute
+  '/import': typeof ImportRoute
   '/it': typeof ItRoute
   '/studio': typeof StudioRoute
+  '/submission': typeof SubmissionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,15 +102,37 @@ export interface FileRoutesById {
   '/cfo': typeof CfoRoute
   '/findings': typeof FindingsRoute
   '/footprint': typeof FootprintRoute
+  '/forecast': typeof ForecastRoute
+  '/import': typeof ImportRoute
   '/it': typeof ItRoute
   '/studio': typeof StudioRoute
+  '/submission': typeof SubmissionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/ceo' | '/cfo' | '/findings' | '/footprint' | '/it' | '/studio'
+    | '/'
+    | '/ceo'
+    | '/cfo'
+    | '/findings'
+    | '/footprint'
+    | '/forecast'
+    | '/import'
+    | '/it'
+    | '/studio'
+    | '/submission'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/ceo' | '/cfo' | '/findings' | '/footprint' | '/it' | '/studio'
+  to:
+    | '/'
+    | '/ceo'
+    | '/cfo'
+    | '/findings'
+    | '/footprint'
+    | '/forecast'
+    | '/import'
+    | '/it'
+    | '/studio'
+    | '/submission'
   id:
     | '__root__'
     | '/'
@@ -94,8 +140,11 @@ export interface FileRouteTypes {
     | '/cfo'
     | '/findings'
     | '/footprint'
+    | '/forecast'
+    | '/import'
     | '/it'
     | '/studio'
+    | '/submission'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -104,8 +153,11 @@ export interface RootRouteChildren {
   CfoRoute: typeof CfoRoute
   FindingsRoute: typeof FindingsRoute
   FootprintRoute: typeof FootprintRoute
+  ForecastRoute: typeof ForecastRoute
+  ImportRoute: typeof ImportRoute
   ItRoute: typeof ItRoute
   StudioRoute: typeof StudioRoute
+  SubmissionRoute: typeof SubmissionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,6 +197,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FootprintRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forecast': {
+      id: '/forecast'
+      path: '/forecast'
+      fullPath: '/forecast'
+      preLoaderRoute: typeof ForecastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/it': {
       id: '/it'
       path: '/it'
@@ -159,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/submission': {
+      id: '/submission'
+      path: '/submission'
+      fullPath: '/submission'
+      preLoaderRoute: typeof SubmissionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -168,8 +241,11 @@ const rootRouteChildren: RootRouteChildren = {
   CfoRoute: CfoRoute,
   FindingsRoute: FindingsRoute,
   FootprintRoute: FootprintRoute,
+  ForecastRoute: ForecastRoute,
+  ImportRoute: ImportRoute,
   ItRoute: ItRoute,
   StudioRoute: StudioRoute,
+  SubmissionRoute: SubmissionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

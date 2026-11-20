@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Briefcase, Calculator, Server, SlidersHorizontal, Search, CalendarDays, TrendingUp, Upload, FileCheck2, Sparkles, Leaf } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api/client";
@@ -28,11 +28,13 @@ const PROVIDERS = ["all", "Azure", "AWS", "Swiss hoster"];
 
 export function RoleSwitcher() {
   const { s, set } = useApp(); const navigate = useNavigate();
+  const path = useRouterState({ select: (r) => r.location.pathname });
+  const current = ROLES.find((r) => r.to === path)?.id ?? s.role;
   return (
     <div className="inline-flex rounded-lg border bg-surface p-0.5" role="tablist" aria-label="Role">
       {ROLES.map((r) => (
-        <button key={r.id} role="tab" aria-selected={s.role === r.id} onClick={() => { set({ role: r.id }); navigate({ to: r.to }); }}
-          className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition", s.role === r.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+        <button key={r.id} role="tab" aria-selected={current === r.id} onClick={() => { set({ role: r.id }); navigate({ to: r.to }); }}
+          className={cn("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition", current === r.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
           <r.Icon className="h-3.5 w-3.5" />{r.label}
         </button>
       ))}

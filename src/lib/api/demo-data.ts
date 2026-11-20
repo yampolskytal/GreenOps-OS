@@ -94,7 +94,7 @@ export const demoMeasures: Measure[] = [
 ];
 export const DEMO_DEFAULT_PACKAGE = ["M1", "M3", "M4", "M6", "M2", "M8", "M10"];
 
-export const demoFindings: Finding[] = demoMeasures.map((x) => ({
+export const demoFindings: Finding[] = demoMeasures.map((x): Finding => ({
   id: `F-${x.id}`, title: x.title, description: x.description, resource: x.resource,
   category: ({ M1: "servers", M2: "data-platform", M3: "saas", M4: "servers", M5: "ai-models", M6: "servers", M7: "data-platform", M8: "ci", M9: "logs", M10: "reports", M11: "redundancy", M12: "data-platform" } as const)[x.id as "M1"] ?? "servers",
   impactChfYear: x.savingsChf, impactKwhYear: x.savingsKwh, impactCo2KgYear: x.savingsCo2KgLocation, evidence: x.evidence, assumptions: x.assumptions, risk: x.risk.level, action: x.change, measureId: x.id,

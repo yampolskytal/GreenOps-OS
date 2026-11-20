@@ -1,0 +1,39 @@
+/** Known source files and their columns (from data_dictionary.md / dataset headers). Local header check only — backend validates authoritatively. */
+export const SOURCE_SCHEMAS: Record<string, string[]> = {
+  "ai_subscriptions.csv": ["month","product","provider","cost_center","licences_purchased","licences_active_30d","messages_30d","price_per_seat","currency","amount","contract_status","contract_end","notice_period_days","billing"],
+  "ai_usage.csv": ["date","resource_id","tool","department","task_type","model_class","provider","model","requests","tokens_in","tokens_in_cache","tokens_out","cost_chf","project_id"],
+  "aws_costs.csv": ["line_item_usage_start_date","line_item_resource_id","product_servicecode","product_region","line_item_usage_amount","pricing_unit","line_item_unblended_cost","line_item_currency_code","line_item_line_item_type","resource_tags_user_department","resource_tags_user_tool","resource_tags_user_project","resource_tags_user_env"],
+  "azure_costs.csv": ["Date","ResourceId","ServiceName","ResourceLocation","Quantity","UnitOfMeasure","CostInBillingCurrency","BillingCurrency","ChargeType","Tags","AvgCpuPercent","Notes"],
+  "business_calendar.csv": ["date","weekday","workday","public_holiday","company_holidays"],
+  "data_platform_usage.csv": ["date","resource_id","cluster","region","node_count","runtime_h","active_use_h","query_count"],
+  "exchange_rates.csv": ["month","eur_chf","usd_chf"],
+  "hoster_invoice.csv": ["Date","Item","Service","Quantity","Unit","Amount_CHF","CostCenter","ProjectNumber","Accesses","Remark"],
+  "it_tickets.csv": ["ticket_id","date","type","resource_id","title","description","status"],
+  "mapping_departments_tools.csv": ["resource_id","tool","department","cost_center","responsible_role","environment","criticality","default_project","rechargeable"],
+  "saas_contracts.csv": ["month","contract","provider","cost_center","licences_purchased","licences_active_30d","price_per_licence","currency","amount","contract_status","contract_end","notice_period_days","billing"],
+  "server_inventory.csv": ["server_id","provider","region","vcpu","ram_gb","type","owner_cost_center","created","last_login","cpu_utilisation_30d_pct","ram_utilisation_30d_pct","runtime_h_30d","tags","operating_system","patch_level","project_id","environment","criticality"],
+  "server_metrics_weekly.csv": ["week_start","server_id","cpu_avg_pct","cpu_max_pct","ram_avg_pct","network_gb","uptime_h","gpu_avg_pct"],
+  "ai_invoice_monthly.csv": ["month","provider","model_class","tokens_in","tokens_out","currency","amount"],
+  "backup_chains.csv": ["source","category","backup_tool","size_gb","frequency","retention_days","last_restore_test","second_site","criticality","data_class","cost_center"],
+  "data_catalog_tables.csv": ["table","schema","size_gb","rows","last_read","last_written","owner_cost_center","project_id","data_class","retention_required"],
+  "data_center_locations.csv": ["provider","region","location","used_by_sme"],
+  "data_platform_jobs.csv": ["date","job_name","resource_id","start_time","duration_h","status","triggered_by","time_window"],
+  "headcount.csv": ["month","department","fte"],
+  "log_volume.csv": ["date","service","log_gb","unit","retention_days","project_id","owner_cost_center"],
+  "m365_usage.csv": ["week_start","department","cost_center","active_users","storage","teams_video_minutes","mails_sent","storage_unit"],
+  "powerbi_usage.csv": ["date","resource_id","report","department","refresh_count","refresh_duration_min","view_count","active_user_count","report_type"],
+  "project_hours_monthly.csv": ["month","project_id","department","hours"],
+  "projects.csv": ["project_id","project_name","type","customer","cost_center","start","end","rechargeable","status"],
+  "provider_monthly_report.csv": ["month","total_cost_chf","label"],
+  "web_traffic.csv": ["time_utc","requests","gb_out","bot_share_pct","sample_rate","status_5xx"],
+};
+
+export function recognize(header: string[]) {
+  const h = header.map((x) => x.replace(/^\uFEFF/, "").trim());
+  let best: { source: string; missing: string[]; score: number } | null = null;
+  for (const [source, cols] of Object.entries(SOURCE_SCHEMAS)) {
+    const missing = cols.filter((c) => !h.includes(c)); const score = (cols.length - missing.length) / cols.length;
+    if (!best || score > best.score) best = { source, missing, score };
+  }
+  return best && best.score >= 0.5 ? best : null;
+}

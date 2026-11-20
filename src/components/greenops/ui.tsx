@@ -78,7 +78,7 @@ export function EvidencePopover({ evidence, label = "Evidence" }: { evidence: Ev
   );
 }
 
-export function ChartCard({ title, subtitle, info, action, children, className }: { title: string; subtitle?: string; info?: Calculation; action?: ReactNode; children: ReactNode; className?: string }) {
+export function ChartCard({ title, subtitle, info, action, children, className }: { title: string; subtitle?: string | undefined; info?: Calculation; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={cn("card-elevated rise-in p-5", className)}>
       <header className="mb-4 flex items-start gap-2">
