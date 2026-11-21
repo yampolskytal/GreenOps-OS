@@ -909,7 +909,10 @@ export default function ContributionSkyline({ data, month, endDate, view: viewPr
             setTarget();
         };
         let io = null;
-        if ("IntersectionObserver" in window) {
+        if (reduced) {
+            enter();
+        }
+        else if ("IntersectionObserver" in window) {
             io = new IntersectionObserver((entries) => {
                 if (entries.some((en) => en.isIntersecting)) {
                     enter();
