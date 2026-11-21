@@ -10,14 +10,23 @@ const finiteValue = (v: number | null | undefined): v is number =>
   typeof v === "number" && Number.isFinite(v);
 
 function interpolate(value: number, domain: number[], range: number[]) {
-  if (value <= domain[0]) return range[0];
+  const firstDomain = domain[0];
+  const firstRange = range[0];
+  if (firstDomain === undefined || firstRange === undefined) return 0;
+  if (value <= firstDomain) return firstRange;
   for (let i = 1; i < domain.length; i++) {
-    if (value <= domain[i]) {
-      const share = (value - domain[i - 1]) / (domain[i] - domain[i - 1]);
-      return range[i - 1] + share * (range[i] - range[i - 1]);
+    const high = domain[i],
+      low = domain[i - 1],
+      start = range[i - 1],
+      end = range[i];
+    if (high === undefined || low === undefined || start === undefined || end === undefined)
+      continue;
+    if (value <= high) {
+      const share = (value - low) / (high - low);
+      return start + share * (end - start);
     }
   }
-  return range[range.length - 1];
+  return range[range.length - 1] ?? firstRange;
 }
 
 /** Give the middle 80% room, while preserving the ordering and full span of the tails. */
@@ -28,6 +37,8 @@ export function buildCalendarScale(values: (number | null | undefined)[]) {
   const max = finite[finite.length - 1];
   const lower = finite[Math.round((finite.length - 1) * 0.1)];
   const upper = finite[Math.round((finite.length - 1) * 0.9)];
+  if (min === undefined || max === undefined || lower === undefined || upper === undefined)
+    return null;
   const domain = [min];
   const range = [0];
   if (lower < upper) {

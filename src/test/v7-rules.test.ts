@@ -61,7 +61,7 @@ describe("V7 proposal and exception boundaries", () => {
     if (!blocked) throw new Error("Missing M7");
     const input = { measureIds: ["M7"], budgetChf: 16500, chfPerPersonDay: 1100 };
     const before = await demoApi.simulate(q, input);
-    const after = await getPlanningApi(["M7"]).simulate(q, input);
+    const after = await getPlanningApi(["M7"], demoApi).simulate(q, input);
     expect(before.excluded.map((e) => e.id)).toContain("M7");
     expect(after.excluded).toEqual([]);
     expect(after.savingsChf).toBe(blocked.savingsChf);
@@ -71,7 +71,7 @@ describe("V7 proposal and exception boundaries", () => {
     ).toBeNull();
   });
   it("revocation restores exclusion", async () => {
-    const r = await getPlanningApi([]).simulate(q, {
+    const r = await getPlanningApi([], demoApi).simulate(q, {
       measureIds: ["M7"],
       budgetChf: 16500,
       chfPerPersonDay: 1100,

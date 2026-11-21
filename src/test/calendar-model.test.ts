@@ -73,13 +73,14 @@ describe("footprint periods and integrity", () => {
     );
     const days = grid.cells.slice(0, values.length);
     expect(new Set(days.slice(1, -1).map((day) => day.level)).size).toBe(4);
-    expect(days[5].height).toBeGreaterThan(days[3].height);
+    expect(days[5]?.height).toBeGreaterThan(days[3]?.height ?? 0);
     expect(days[4]).toMatchObject({
-      height: days[5].height,
-      level: days[5].level,
+      height: days[5]?.height,
+      level: days[5]?.level,
     });
     expect(days.at(-1)).toMatchObject({ count: 46, height: 1, level: 4 });
-    const scale = grid.colorDomain!;
+    const scale = grid.colorDomain;
+    if (!scale) throw new Error("Expected supplied-value scale");
     expect(scale.ticks.map((tick) => scale.position(tick))).toEqual(
       [0, 0.25, 0.5, 0.75, 1].map((p) => expect.closeTo(p)),
     );

@@ -31,7 +31,7 @@ use the editor.
 
 ## Project rules
 
-- All data flows through the `GreenOpsApi` interface (`src/lib/api/types.ts`); `client.ts` uses the demo adapter unless `VITE_API_BASE_URL` is set (`/api/v2` for the bundled backend, proxied by Vite) — so the backend replaces demo data without touching UI.
+- All data flows through `GreenOpsApi`; the active adapter uses the same-origin `/api/v2` server proxy with no demo fallback, so credentials and authoritative calculations remain server-side.
 - Shared cross-view state (role, filters, date range, dataset, plan, budget) lives in `src/lib/store.tsx`, persisted to localStorage — so role switches never reset selections.
 - `src/lib/optimizer.ts` is a demo stand-in for backend optimization; the backend stays authoritative.
 - CSV export headers live only in `src/lib/api/templates.ts` and must match the organisers' templates exactly.
@@ -62,3 +62,4 @@ use the editor.
 - Switching inspector triggers updates the active dock directly; outside-click dismissal excludes other inspector triggers to prevent close/reopen layout jumps.
 - Inspectors opened inside a dock use its local detail stack and preserve the parent content, so nested details cannot unmount their own trigger or leave an empty panel.
 - Footprint ranges use the tested inclusive `footprint-range.ts` filter on supplied daily rows while planning uses the fixed official query; historical domains and selected-month summaries consume supplied values only.
+- The proxy reads saved Basic credentials inside its handler, pins the approved HTTPS origin, allows only bounded analytical endpoints and blocks imports/persisted writes; per-instance limits are best-effort, so public access never grants operational authority.

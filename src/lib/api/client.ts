@@ -160,7 +160,7 @@ export const demoApi: GreenOpsApi = {
   },
 };
 
-/** HTTP adapter. Endpoint paths are proposals until the backend spec arrives. */
+/** HTTP adapter. Credentials stay exclusively in the same-origin server proxy. */
 export function createHttpApi(baseUrl: string): GreenOpsApi {
   const qs = (q: GlobalQuery) =>
     new URLSearchParams({
@@ -171,9 +171,31 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
       provider: q.provider,
     }).toString();
   const req = async <T>(path: string, init?: RequestInit): Promise<T> => {
-    const res = await fetch(`${baseUrl}${path}`, init);
-    if (!res.ok) throw new Error(`Request ${path} failed [${res.status}]: ${await res.text()}`);
-    return validateApiResponse(path, await res.json()) as T;
+    let res: Response;
+    try {
+      res = await fetch(`${baseUrl}${path}`, { ...init, signal: AbortSignal.timeout(100_000) });
+    } catch {
+      throw new Error(
+        "Backend connection unavailable or still starting. Please retry shortly. No demo data was substituted.",
+      );
+    }
+    if (!res.ok) {
+      let message = "The backend could not complete this request. Please retry shortly.";
+      try {
+        const error = await res.json();
+        if (typeof error.error === "string") message = error.error;
+      } catch {
+        /* Never show raw provider errors. */
+      }
+      throw new Error(`${message} [${res.status}]`);
+    }
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error("The backend returned invalid JSON. No demo data was substituted.");
+    }
+    return validateApiResponse(path, data) as T;
   };
   const post = <T>(path: string, body: unknown) =>
     req<T>(path, {
@@ -198,24 +220,27 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
     getDailyFootprint: (q) => req(`/metrics/daily?${qs(q)}`),
     getDataQuality: (q) => req(`/data-quality?${qs(q)}`),
     getBonus: (q) => req(`/bonus?${qs(q)}`),
-    importFiles: (files) => {
-      const fd = new FormData();
-      files.forEach((f) => fd.append("files", f));
-      return req(`/imports`, { method: "POST", body: fd });
-    },
-    chat: (q, history: ChatMessage[]) => post(`/chat?${qs(q)}`, { messages: history }),
+    importFiles: async () => ({
+      accepted: false,
+      message:
+        "Imports are not enabled in this public workspace. An authenticated administrator connection is required. No files were uploaded and no figures changed.",
+      issues: [],
+    }),
+    chat: (q, history: ChatMessage[]) =>
+      post(`/chat?${qs(q)}`, {
+        messages: history.slice(-20).map(({ role, content }) => ({ role, content })),
+      }),
     exportBaseline: (q) => req(`/exports/baseline?${qs(q)}`),
     exportMeasures: (q, ids) => post(`/exports/measures?${qs(q)}`, { measureIds: ids }),
   };
 }
 
-const baseUrl = import.meta.env["VITE_API_BASE_URL"] as string | undefined;
-/** Set VITE_API_BASE_URL to switch from demo data to the team backend. */
-export const api: GreenOpsApi = baseUrl ? createHttpApi(baseUrl) : demoApi;
+/** All application requests use the production-capable same-origin secret-bearing proxy. */
+export const api: GreenOpsApi = createHttpApi("/api/v2");
 
 /** UI-only demo exceptions never cross the real provider boundary or alter source restrictions. */
-export function getPlanningApi(exceptionIds: string[]): GreenOpsApi {
-  if (!api.isDemo || !exceptionIds.length) return api;
+export function getPlanningApi(exceptionIds: string[], provider: GreenOpsApi = api): GreenOpsApi {
+  if (!provider.isDemo || !exceptionIds.length) return provider;
   const approved = demoMeasures.map((m) =>
     exceptionIds.includes(m.id)
       ? { ...m, includable: true, risk: { ...m.risk, level: "review" as const } }

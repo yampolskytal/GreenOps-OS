@@ -1,3 +1,10 @@
+## Production backend connection
+- [x] Secure same-origin proxy using saved backend secrets and an explicit endpoint allowlist
+- [x] Switch the existing adapter to source-backed responses without demo fallback or layout changes
+- [x] Verify GET/POST, endpoint responses, safe errors and credential isolation
+- [x] Add user-approved best-effort per-visitor request limits (reset with server instances)
+- [ ] Publish with user approval and verify production deployment
+
 ## Details-button flow sweep
 - [x] Verify selected-item details across dashboards, Studio, Explore, Current Plan, forecasts, data/report pages and nested assistant sources without changing saved data.
 
