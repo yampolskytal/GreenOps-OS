@@ -8,6 +8,7 @@ import threading
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 from functools import cached_property
+from pathlib import Path
 
 from accounting import MarketSummary, market_reduction, merge_market_effects
 from assistant_router import route_question
@@ -192,7 +193,8 @@ class FrontendApi:
         market = m.get("market_effect") or market_reduction([], 1)
         return {
             "id": m["id"], "title": m["name"], "description": m["method"], "resource": m["resource"], "change": m["change"],
-            "service": SERVICE.get(self.category.get(m["resource"]), "Cloud"),
+            "service": {"licences": "SaaS & AI", "subscriptions": "SaaS & AI", "ai-gateway": "AI"}.get(
+                m["resource"], SERVICE.get(self.category.get(m["resource"]), "Unclassified")),
             "effortPersonDays": m["days"], "savingsChf": m["chf"], "savingsKwh": mid(m["kwh"]),
             "savingsCo2KgLocation": mid(m["kg"]), "savingsCo2KgMarket": mid(market["range"]),
             "savingsCo2KgMarketRange": rng(market["range"]) if market["range"] is not None else None,
@@ -634,7 +636,10 @@ class FrontendApi:
         for f in contra["findings"]:
             if len(sources[f["type"]]) < 4 and f.get("ref"):
                 sources[f["type"]].add(f["ref"].split(":")[0])
-        return {"version": self.w.run_id[:12], "importedAt": summary["as_of"], "datasets": datasets,
+        dataset = Path(self.a.path).resolve()
+        official = Path(__file__).resolve().parent / "inputs" / "sprintd-basel-green-ai-data-main"
+        label = "Official challenge data" if dataset == official else "Representative demo" if self.a.demo else dataset.name
+        return {"version": self.w.run_id[:12], "datasetName": label, "asOf": summary["as_of"], "datasets": datasets,
                 "conflicts": [{"title": f"{k.replace('_', ' ')} ({n})", "sources": sorted(sources.get(k, []))}
                               for k, n in contra["counts"].items()]}
 

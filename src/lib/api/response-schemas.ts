@@ -261,7 +261,9 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
   ),
   "/data-quality": z.object({
     version: z.string(),
-    importedAt: z.string(),
+    datasetName: z.string().optional(),
+    asOf: z.string().optional(),
+    importedAt: z.string().optional(),
     datasets: z.array(
       z.object({
         file: z.string(),

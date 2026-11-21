@@ -7,14 +7,6 @@ import { useQuality, useOverview } from "@/lib/queries";
 import { Q } from "@/components/greenops/ui";
 import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
-import { useApp } from "@/lib/store";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 export const Route = createFileRoute("/data")({
   head: () =>
     seo(
@@ -24,7 +16,6 @@ export const Route = createFileRoute("/data")({
   component: DataReports,
 });
 function DataReports() {
-  const { s, set } = useApp();
   const quality = useQuality(),
     ov = useOverview();
   return (
@@ -44,25 +35,11 @@ function DataReports() {
               <div className="mb-6 flex flex-wrap gap-x-10 gap-y-4 border-b pb-6 text-sm">
                 <div>
                   <p className="text-muted-foreground">Current dataset</p>
-                  <Select
-                    value={s.datasetVersion}
-                    onValueChange={(v) => set({ datasetVersion: v })}
-                  >
-                    <SelectTrigger aria-label="Dataset selection" className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[...new Set([s.datasetVersion, d.version])].map((v) => (
-                        <SelectItem key={v} value={v}>
-                          {v}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <p className="mt-1">{d.datasetName ?? "Active dataset"} · {d.version}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Latest import</p>
-                  <p className="num mt-1">{d.importedAt}</p>
+                  <p className="text-muted-foreground">Data as of</p>
+                  <p className="num mt-1">{d.asOf ?? d.importedAt ?? "Unavailable"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Sources</p>
@@ -84,7 +61,7 @@ function DataReports() {
             assumptions. Monthly/daily values and scenario effects must be supplied separately.
           </p>
           <p className="mt-6 text-xs text-muted-foreground">
-            Dropping CSVs checks their headers. Once the local backend confirms an import, dashboards use the new dataset.
+            Files are previewed locally. Once the backend confirms an import, dashboards use the new dataset.
           </p>
         </TabsContent>
         <TabsContent value="submission">

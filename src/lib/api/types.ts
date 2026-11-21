@@ -4,7 +4,7 @@
  */
 export type Role = "ceo" | "cfo" | "it";
 export type LocationId = "zurich" | "frankfurt" | "dublin" | "eu-mixed";
-export type ServiceType = "Cloud" | "Servers" | "AI" | "SaaS" | "Data platform";
+export type ServiceType = "Cloud" | "Servers" | "AI" | "SaaS" | "SaaS & AI" | "Data platform" | "Unclassified";
 export type Provider =
   "Azure" | "AWS" | "Swiss hoster" | "Anthropic" | "OpenAI" | "Microsoft" | "Other SaaS";
 export type RiskLevel = "low" | "review" | "blocked";
@@ -335,7 +335,9 @@ export interface DatasetHealth {
 }
 export interface DataQuality {
   version: string;
-  importedAt: string;
+  datasetName?: string;
+  asOf?: string;
+  importedAt?: string; // Older providers used this field for the analysis date.
   datasets: DatasetHealth[];
   conflicts: { title: string; sources: string[] }[];
 }

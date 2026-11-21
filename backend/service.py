@@ -68,7 +68,7 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
         length = int(handler.headers.get("Content-Length") or 0)
         if not 0 < length <= max_upload:
             handler.close_connection = True
-            return 413, {"accepted": False, "message": "Upload between 1 byte and 64 MB of CSV files.", "issues": []}
+            return 413, {"accepted": False, "message": "Upload between 1 byte and 64 MB of source files.", "issues": []}
         raw = handler.rfile.read(length)  # always drain the body so the client sees the response
         if handler.role != "admin" or not factory:
             return 403, {"accepted": False, "message": "Your role cannot import data.", "issues": []}
@@ -82,12 +82,13 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
             name = Path(part.get_filename() or "").name
             if not name:
                 continue
-            if not (name.endswith(".csv") and name[:-4] in SCHEMA):
+            source = Path(name).stem
+            if source not in SCHEMA or Path(name).suffix != (".jsonl" if "record_fields" in SCHEMA[source] else ".csv"):
                 issues.append(f"{name}: not a known source file, skipped")
                 continue
             files[name] = part.get_payload(decode=True) or b""
         if not files:
-            return 200, {"accepted": False, "message": "No recognised source CSV files were uploaded.", "issues": issues}
+            return 200, {"accepted": False, "message": "No recognised source files were uploaded.", "issues": issues}
         with lock:
             if service["job"]["status"] == "running":
                 return 409, {"accepted": False, "message": "A rebuild is already running. Try again shortly.", "issues": issues}
@@ -102,11 +103,19 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                 # Partial upload: keep the current dataset's other sources and its policy.
                 for source in Path(prior.a.path).glob("*.csv"):
                     shutil.copyfile(source, target / source.name)
+                extras = Path(prior.a.path) / "extra"
+                if extras.is_dir():
+                    (target / "extra").mkdir()
+                    for source in extras.iterdir():
+                        if source.is_file() and source.stem in SCHEMA and source.suffix in (".csv", ".jsonl"):
+                            shutil.copyfile(source, target / "extra" / source.name)
                 (target / "policy.json").write_text(json.dumps(prior.a.policy, ensure_ascii=False), encoding="utf-8")
                 issues.append("Partial upload: " + ", ".join(f"{c}.csv" for c in missing)
                               + " kept from the current dataset")
             for name, body in files.items():
-                (target / name).write_bytes(body)
+                folder = target if Path(name).stem in CORE else target / "extra"
+                folder.mkdir(exist_ok=True)
+                (folder / name).write_bytes(body)
             next_work = factory(prior, {"data": str(target)}, None)
             if next_work.store:
                 next_work.store.append(handler.actor, next_work.run_id, "import",

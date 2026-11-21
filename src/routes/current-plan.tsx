@@ -41,7 +41,7 @@ function CurrentPlanPage() {
     <AppShell
       kicker={plan.suggested ? "Suggested strategy · not adopted" : "Committed strategy"}
       title={plan.label}
-      subtitle="Your saved proposal. Projected benefits are not evidence of executed or approved operational changes."
+      subtitle="Projected benefits are estimates. Saving a plan does not approve operational changes."
       actions={
         <Button asChild variant="outline">
           <Link to="/studio" hash="recommendations">
@@ -69,7 +69,7 @@ function CurrentPlanPage() {
           <>
             {(numericalWarnings(r).length > 0 || blocked > 0 || review > 0 || api.isDemo) && (
               <p className="mb-5 border-l-2 border-warning pl-3 text-sm text-warning">
-                Saved proposal — not submission-ready
+                {api.isDemo ? "Demo projection only" : blocked || review ? "Operational restrictions or owner reviews remain. Check CSV eligibility separately in Submission." : "Review the numerical limits before exporting."}
               </p>
             )}
             <Q q={overview}>{(o) => <PlanOutcomes overview={o} result={r} afterLabel={plan.suggested ? "After suggested strategy" : "After Current Plan"} />}</Q>
@@ -126,7 +126,7 @@ function CurrentPlanPage() {
                     "Submission readiness",
                     api.isDemo
                       ? "Not submission-ready — DEMO"
-                      : "Not verified — prepare official reports to check",
+                       : "Check CSV eligibility in Submission",
                   ],
                 ].map(([label, value]) => (
                   <div key={label} className="border-b pb-3">
@@ -183,7 +183,7 @@ function CurrentPlanPage() {
         <Button asChild variant="outline">
           <Link to="/submission">
             <FileSpreadsheet />
-            Export submission reports
+            {plan.suggested ? "Submission reports · adoption required for package" : "Export submission reports"}
           </Link>
         </Button>
       </div>

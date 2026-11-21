@@ -208,46 +208,6 @@ export function AppShell({
               </span>
             )}
           </Link>
-          <div className="mb-8">
-            <Select
-              value={current}
-              onValueChange={(v) => {
-                const r = ROLES.find((x) => x.id === v);
-                if (r) {
-                  set({ role: r.id });
-                  void navigate({ to: r.to });
-                }
-              }}
-            >
-              <SelectTrigger
-                aria-label="Presentation role"
-                title={`Role: ${ROLES.find((r) => r.id === current)?.label}`}
-                className={cn("bg-card", collapsed ? "w-10 px-1" : "max-sm:w-10 max-sm:px-1")}
-              >
-                <SelectValue>
-                  {collapsed ? (
-                    current.toUpperCase()
-                  ) : (
-                    <>
-                      <span className="max-lg:hidden">
-                        {ROLES.find((r) => r.id === current)?.label}
-                      </span>
-                      <span className="hidden max-lg:inline text-[10px]">
-                        {current.toUpperCase()}
-                      </span>
-                    </>
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <nav className="space-y-2">
             {nav.map((n) => (
               <Button
@@ -296,6 +256,15 @@ export function AppShell({
             <span className="mr-auto text-xs text-muted-foreground">
               GreenOps OS · {api.isDemo ? "Demo workspace" : "Connected workspace"}
             </span>
+            <Select value={current} onValueChange={(value) => {
+              const role = ROLES.find(r => r.id === value);
+              if (role) { set({ role: role.id }); void navigate({ to: role.to }); }
+            }}>
+              <SelectTrigger aria-label="Presentation role" className="w-auto min-w-28 gap-2 bg-card">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>{ROLES.map(r => <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>)}</SelectContent>
+            </Select>
             <GlobalSearch />
             <DataHealth />
             <Button

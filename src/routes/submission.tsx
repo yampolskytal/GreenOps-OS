@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Download, FileSpreadsheet, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
 import { ChartCard } from "@/components/greenops/ui";
 import { api } from "@/lib/api/client";
 import type { ExportFile } from "@/lib/api/types";
-import { useApp, useGlobalQuery } from "@/lib/store";
+import { useApp, useDisplayedPlan, useGlobalQuery } from "@/lib/store";
 import { officialQuery, canDownloadExport } from "@/lib/planning";
 import { Button } from "@/components/ui/button";
 import { seo } from "@/lib/seo";
@@ -43,6 +43,7 @@ function Submission() {
 export function SubmissionContent() {
   const q = officialQuery(useGlobalQuery());
   const { s } = useApp();
+  const plan = useDisplayedPlan();
   const [files, setFiles] = useState<Record<string, { key: string; file: ExportFile }>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +60,7 @@ export function SubmissionContent() {
       key: "measures",
       title: "Package of measures",
       tpl: "template_measures_package.csv",
-      desc: `One row per measure in your plan (${s.measureIds.length} selected): effort, savings, risks and sources.`,
+      desc: plan.suggested ? `${plan.measureIds.length} measures are suggested. Adopt or customize the recommendation before exporting the package.` : `One row per committed measure (${s.measureIds.length} selected): effort, savings, risks and sources.`,
       run: () => api.exportMeasures(q, s.measureIds),
     },
   ];
@@ -82,7 +83,7 @@ export function SubmissionContent() {
               </div>
               <Button
                 variant="outline"
-                disabled={busy != null}
+                 disabled={busy != null || (it.key === "measures" && (!plan.ready || plan.suggested))}
                 onClick={async () => {
                   setBusy(it.key);
                   setError(null);
@@ -97,8 +98,9 @@ export function SubmissionContent() {
                 }}
                 className="mt-4 rounded-lg border px-3 py-2 text-sm hover:border-primary"
               >
-                {busy === it.key ? "Checking…" : "Check & prepare"}
-              </Button>
+                 {busy === it.key ? "Checking…" : "Check & prepare"}
+               </Button>
+               {it.key === "measures" && plan.suggested && <Button asChild variant="link"><Link to="/current-plan">Review and adopt plan</Link></Button>}
               {f && (
                 <div className="rise-in mt-4 space-y-3">
                   <div
@@ -112,7 +114,7 @@ export function SubmissionContent() {
                       {!api.isDemo && f.submittable ? (
                         <>
                           <CheckCircle2 className="h-4 w-4 text-success" />
-                          Ready to submit
+                          CSV validated for submission
                         </>
                       ) : (
                         <>

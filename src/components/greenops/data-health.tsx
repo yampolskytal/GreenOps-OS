@@ -35,7 +35,7 @@ export function DataHealth() {
                   <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
                     {[
                       ["Dataset version", d.version],
-                      ["Latest import", d.importedAt],
+                      ["Data as of", d.asOf ?? d.importedAt ?? "Unavailable"],
                       ["Files", String(d.datasets.length)],
                       ["Missing values", String(tot("missing"))],
                       ["Duplicates", String(tot("duplicates"))],

@@ -118,7 +118,7 @@ export function demoDaily(from: string, to: string): DailyFootprint[] {
 }
 
 export const demoQuality: DataQuality = {
-  version: "demo-v0", importedAt: "2026-09-06",
+  version: "demo-v0", datasetName: "Representative demo", asOf: "2026-09-06",
   datasets: [
     ["azure_costs.csv", "core", 41210, 14, 37, 2, 118, 0, "warning"], ["aws_costs.csv", "core", 19880, 3, 12, 0, 64, 0, "ok"], ["hoster_invoice.csv", "core", 5120, 0, 0, 1, 210, 0, "warning"],
     ["data_platform_usage.csv", "core", 1360, 6, 0, 0, 0, 0, "ok"], ["ai_usage.csv", "core", 28400, 22, 41, 0, 9, 0, "ok"], ["ai_subscriptions.csv", "core", 66, 0, 0, 0, 0, 4, "warning"],

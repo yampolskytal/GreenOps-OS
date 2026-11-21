@@ -20,20 +20,14 @@ export function DemoExceptions({ measures }: { measures: Measure[] }) {
   return (
     <section id="approvals" className="mt-8 border-t pt-6">
       <h2 className="text-lg font-semibold">
-        Approvals & Exceptions <span className="text-xs text-warning">DEMO</span>
+        Approvals & Exceptions {api.isDemo && <span className="text-xs text-warning">DEMO</span>}
       </h2>
       <p className="mt-2 text-xs text-muted-foreground">
-        Simulation decisions only. No authorization to modify real systems; exceptions never
-        establish submission readiness.
+        {api.isDemo ? "Simulation decisions only. Exceptions never authorize real changes." : "Review the operational restrictions with the resource owner. Exporting a proposal does not authorize implementation."}
       </p>
-      {!api.isDemo && (
-        <p className="mt-3 text-warning text-sm">
-          Demo decisions are retained for inspection but do not apply to the connected provider.
-        </p>
-      )}
       <div className="mt-5 space-y-4">
         {items.map((m) => {
-          const decision = s.demoExceptions[m.id];
+          const decision = api.isDemo ? s.demoExceptions[m.id] : undefined;
           return (
             <article key={m.id} className="rounded-lg border bg-card p-4">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
@@ -54,7 +48,7 @@ export function DemoExceptions({ measures }: { measures: Measure[] }) {
                   ? "Demo exception approved — conditional proposal"
                   : decision
                     ? "Kept blocked / exception revoked"
-                    : "No demo decision"}
+                     : api.isDemo ? "No demo decision" : !m.includable || m.risk.level === "blocked" ? "Blocked from implementation" : "Owner review required"}
                 {decision
                   ? ` · Decision made from CEO view · ${new Date(decision.decidedAt).toLocaleDateString()}`
                   : ""}
@@ -88,12 +82,12 @@ export function DemoExceptions({ measures }: { measures: Measure[] }) {
                       </p>
                     ))}
                   </DetailBlock>
-                  <DetailBlock title="Demo decision">
+                  {api.isDemo && <DetailBlock title="Demo decision">
                     <p>
                       {decision?.approved ? "Demo exception approved" : "Not approved"}. Real
                       implementation is not authorized.
                     </p>
-                  </DetailBlock>
+                  </DetailBlock>}
                 </DetailDrawer>
                 {s.role === "ceo" &&
                   api.isDemo &&

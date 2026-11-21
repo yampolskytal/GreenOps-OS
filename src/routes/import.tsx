@@ -37,8 +37,23 @@ interface Checked {
 }
 
 async function check(file: File): Promise<Checked> {
+  if (file.name.endsWith(".jsonl")) {
+    const required: Record<string, string[]> = {
+      "ci_pipeline_runs.jsonl": ["pipeline", "repo", "started_at"],
+      "ai_agent_runs.jsonl": ["run_id", "agent", "start"],
+    };
+    const fields = required[file.name];
+    const result = { file, source: file.name, missing: [], preview: [] };
+    if (!fields) return { ...result, error: "Unknown JSONL source filename" };
+    try {
+      const sample = await file.slice(0, 65536).text();
+      const row = JSON.parse(sample.trimStart().split(/\r?\n/, 1)[0] ?? "");
+      if (!row || Array.isArray(row) || typeof row !== "object") throw new Error();
+      return { ...result, missing: fields.filter(k => !(k in row)), preview: [Object.keys(row)] };
+    } catch { return { ...result, error: "Cannot preview the first JSON record" }; }
+  }
   if (!file.name.toLowerCase().endsWith(".csv"))
-    return { file, source: null, missing: [], preview: [], error: "Not a CSV file" };
+    return { file, source: null, missing: [], preview: [], error: "Choose a CSV or JSONL source" };
   const text = await file.slice(0, 20000).text();
   const parsed = Papa.parse<string[]>(text, { preview: 4, skipEmptyLines: true });
   const rows = parsed.data;
@@ -70,7 +85,7 @@ export function DataManagement() {
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<ImportResult | null>(null);
   const qc = useQueryClient();
-  const { s, set } = useApp();
+  const { set } = useApp();
   const add = async (list: FileList | null) => {
     if (!list) return;
     setRes(null);
@@ -113,27 +128,28 @@ export function DataManagement() {
           void add(e.dataTransfer.files);
         }}
         className={cn(
-          "card-elevated flex cursor-pointer flex-col items-center justify-center border-2 border-dashed p-12 text-center transition",
+          "card-elevated flex cursor-pointer flex-col items-center justify-center border-2 border-dashed p-12 text-center transition focus-within:ring-2 focus-within:ring-primary",
           drag && "border-primary shadow-glow",
         )}
       >
         <UploadCloud className="h-10 w-10 text-primary" />
-        <p className="mt-3 font-semibold">Drop CSV files here or click to choose</p>
+        <p className="mt-3 font-semibold">Choose CSV or JSONL files, or drop them here</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Supported: the 13 core and 15 bonus sources from the data dictionary
         </p>
         <input
           type="file"
-          accept=".csv"
+          accept=".csv,.jsonl"
+          aria-label="Choose CSV or JSONL source files"
           multiple
-          className="hidden"
+          className="sr-only"
           onChange={(e) => void add(e.target.files)}
         />
       </label>
       {files.length > 0 && (
         <ChartCard
           title="Files"
-          subtitle={`Current dataset: ${s.datasetVersion}`}
+          subtitle="Local preview · the backend validates the complete files on import."
           className="mt-6"
           action={
             <Button
