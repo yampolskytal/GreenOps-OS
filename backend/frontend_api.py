@@ -4,6 +4,7 @@ The frontend contract lives in src/lib/api/types.ts. Market observations use
 the workspace ledger and modeled savings use the evidence-backed measure catalog.
 """
 import calendar
+import threading
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 from functools import cached_property
@@ -12,6 +13,7 @@ from accounting import MarketSummary, market_reduction, merge_market_effects
 from assistant_router import route_question
 from greenops import END
 from templates import BASE_NAME, MEASURE_NAME, tables
+from response_cache import ResponseCache, encode, key_of
 
 PERIOD = "Sep 2025 – Aug 2026"
 COST_TARGET, CO2_TARGET, MAX_DAYS = 25.0, 40.0, 15
@@ -106,7 +108,9 @@ class FrontendApi:
         self.category = {}
         for line in self.a.lines:
             self.category.setdefault(line["resource"], line["category"])
-        self.cache = {}
+        # Responses are pure functions of this immutable workspace plus the key; a rebuilt
+        # or imported dataset gets a new workspace, adapter and therefore an empty cache.
+        self.responses = ResponseCache()
 
     # ---------- helpers
     def lines(self, q):
@@ -409,11 +413,24 @@ class FrontendApi:
                 "feasible": bool(chosen) and all(c["met"] for c in constraints), "reasons": reasons, "excluded": excluded,
                 "paybackMonths": effort_chf / chf * 12 if chf > 0 else None}
 
-    def optimize(self, q, body):
+    @staticmethod
+    def optimize_inputs(body):
+        """Normalize an optimize request; equal tuples always produce equal results for one review state."""
         rate = float(body.get("chfPerPersonDay", DEFAULT_RATE)) or DEFAULT_RATE
         budget = int(max(0, min(16500, float(body.get("budgetChf", 16500)))))
         days = min(MAX_DAYS, int(budget / rate * 2) / 2)
         objective = {"balanced": "midpoint", "cost": "first-year", "co2": "conservative"}.get(body.get("priority"), "midpoint")
+        return rate, budget, days, objective
+
+    def review_version(self):
+        """Latest review journal entry for this run. Approvals and rejections change optimizer eligibility."""
+        if not self.w.store:
+            return None
+        latest = self.w.store.history(self.w.run_id, "review", 1)
+        return latest[0]["seq"] if latest else 0
+
+    def optimize(self, q, body):
+        rate, budget, days, objective = self.optimize_inputs(body)
         plan = self.w.package(budget, days, "planning", objective)
         ids = [m["id"] for m in plan["selected"]]
         return {"measureIds": ids, "result": self.simulate(q, {"measureIds": ids, "budgetChf": budget, "chfPerPersonDay": rate})}
@@ -642,10 +659,17 @@ class UnknownRoute(LookupError):
     pass
 
 
+_adapter_lock = threading.Lock()
+
+
 def adapter(work):
     api = getattr(work, "_frontend_api", None)
     if api is None:
-        api = work._frontend_api = FrontendApi(work)
+        # Concurrent first requests must share one adapter, otherwise each builds its own cache.
+        with _adapter_lock:
+            api = getattr(work, "_frontend_api", None)
+            if api is None:
+                api = work._frontend_api = FrontendApi(work)
     return api
 
 
@@ -668,3 +692,52 @@ def handle_post(work, route, params, body):
     if route not in routes:
         raise UnknownRoute(route)
     return routes[route](q, body)
+
+
+# Routes whose results depend on external services or conversation state are never cached.
+UNCACHED_POST = frozenset({"chat"})
+
+
+def respond_get(work, route, params):
+    """Serialized GET response and cache outcome. Raises UnknownRoute/ValueError like handle_get."""
+    api, q = adapter(work), query(params)
+    extra = ([params.get("metric", "cost"), params.get("horizon", "3"), params.get("measureIds", "")]
+             if route == "forecast" else [])
+    return api.responses.get_or_compute(key_of("GET", route, q, *extra),
+                                        lambda: handle_get(work, route, params))
+
+
+def respond_post(work, route, params, body):
+    """Serialized POST response and cache outcome. Raises UnknownRoute/ValueError like handle_post."""
+    api, q = adapter(work), query(params)
+    if route in UNCACHED_POST:
+        return encode(handle_post(work, route, params, body)), "bypass"
+    if route == "optimize":
+        # Key on the normalized inputs so equivalent requests (16500 vs 16500.0) coalesce,
+        # and on the review journal so approvals or rejections invalidate the result.
+        key = key_of("POST", route, q, *api.optimize_inputs(body), api.review_version())
+    else:
+        key = key_of("POST", route, q, body)
+    return api.responses.get_or_compute(key, lambda: handle_post(work, route, params, body))
+
+
+DEFAULT_BUDGET, DEFAULT_PRIORITIES = 16500, ("balanced", "cost", "co2")
+
+
+def warm(work):
+    """Precompute the Studio's default strategies and the official-period views in the background.
+
+    Requests arriving meanwhile join the in-flight computation instead of repeating it.
+    """
+    def run():
+        try:
+            for priority in DEFAULT_PRIORITIES:
+                respond_post(work, "optimize", {}, {"budgetChf": DEFAULT_BUDGET, "priority": priority,
+                                                    "chfPerPersonDay": DEFAULT_RATE})
+            for route in ("measures", "overview"):
+                respond_get(work, route, {})
+        except Exception as error:  # Warming is an optimization only; requests compute on demand.
+            print(f"GreenOps cache warm-up skipped: {error}", flush=True)
+    thread = threading.Thread(target=run, name="greenops-warm", daemon=True)
+    thread.start()
+    return thread

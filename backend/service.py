@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import mimetypes
+import secrets
 import shutil
 import threading
 from collections import defaultdict
@@ -50,6 +51,11 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
     accounts, catalog = accounts or {}, catalog or {}
     service = {"workspace": workspace, "job": {"status": "ready"}}
     lock = threading.Lock()
+    # PBKDF2 (600k rounds) costs ~0.1 s of CPU locally and about 1 s on a fractional-CPU host.
+    # The proxy authenticates every request, so verified credentials are remembered as an
+    # HMAC under a random per-process key. Failed attempts are never cached and always pay
+    # the full PBKDF2 cost. Accounts are loaded once at startup, so the cache cannot go stale.
+    verified_key, verified = secrets.token_bytes(32), {}
     if host not in ("127.0.0.1", "localhost") and not accounts:
         raise ValueError("Shared listening requires authentication")
 
@@ -114,6 +120,7 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
         with lock:
             catalog[f"Upload {stamp}"] = {"data": str(target)}
             service.update(workspace=next_work, job={"status": "ready", "run": next_work.run_id})
+        frontend_api.warm(next_work)
         baseline = next_work.a.baseline
         return 200, {"accepted": True, "datasetVersion": next_work.run_id[:12], "issues": issues,
                      "message": f"Imported {len(files)} file(s): {baseline['lines']:,} ledger lines, "
@@ -140,6 +147,7 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                     next_work.store.append(actor, next_work.run_id, "rebuild", {"prior_run": work.run_id, "dataset": selected})
                 with lock:
                     service.update(workspace=next_work, job={"status": "ready", "run": next_work.run_id})
+                frontend_api.warm(next_work)
             except (ValueError, TypeError, OSError, KeyError) as error:
                 with lock:
                     service["job"] = {"status": "error", "message": str(error)}
@@ -163,8 +171,13 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                 return None, None
             account = accounts.get(user)
             if account:
+                token = hmac.new(verified_key, f"{user}:{password}".encode(), hashlib.sha256).digest()
+                known = verified.get(user)
+                if known is not None and hmac.compare_digest(known, token):
+                    return user, account["role"]
                 proof = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(account["salt"]), 600000)
                 if hmac.compare_digest(proof, bytes.fromhex(account["digest"])):
+                    verified[user] = token
                     return user, account["role"]
             return None, None
 
@@ -202,11 +215,11 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
             try:
                 if path.startswith("api/v2/"):
                     try:
-                        result = frontend_api.handle_get(work, path[7:], params)
+                        body, outcome = frontend_api.respond_get(work, path[7:], params)
                     except frontend_api.UnknownRoute:
                         self.write(404, {"error": "Unknown API route"})
                         return
-                    self.write(200, result)
+                    self.write(200, body, headers={"X-GreenOps-Cache": outcome})
                 elif path.startswith("api/"):
                     route = path[4:]
                     if route == "package":
@@ -319,8 +332,9 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                 work = service["workspace"]
                 if route.startswith("api/v2/"):
                     try:
-                        self.write(200, frontend_api.handle_post(
-                            work, route[7:], {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}, payload))
+                        body, outcome = frontend_api.respond_post(
+                            work, route[7:], {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}, payload)
+                        self.write(200, body, headers={"X-GreenOps-Cache": outcome})
                     except frontend_api.UnknownRoute:
                         self.write(404, {"error": "Unknown API route"})
                     return
@@ -394,6 +408,7 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                 self.write(400, {"error": str(error)})
 
     with ThreadingHTTPServer((host, port), Handler) as server:
+        frontend_api.warm(workspace)
         print(f"{workspace.a.mode} | http://{host}:{server.server_port}", flush=True)
         try:
             server.serve_forever()
