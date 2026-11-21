@@ -331,14 +331,21 @@ class FrontendApi:
         sim = self.simulate(q, {"measureIds": ids}) if ids else None
         saved = {"chf": sim["savingsChf"], "kwh": sim["savingsKwh"], "kg": sim["savingsCo2Kg"]}[key] if sim else 0
         cut = min(1.0, saved / base["mid"]) if base["mid"] else 0
-        points = [{"year": 2026, "periodLabel": PERIOD, "baseline": base, "optimized": base, "observed": base["mid"]}]
-        for i, r in enumerate(fc["results"][:max(1, min(3, horizon))], start=1):
+        years = max(1, min(3, horizon))
+        annual = [{"year": 2026, "periodLabel": PERIOD, "baseline": base, "optimized": base}]
+        for i, r in enumerate(fc["results"][:years], start=1):
             v = rng(r[key])
-            points.append({"year": 2026 + i, "periodLabel": r["period"], "baseline": v,
+            annual.append({"year": 2026 + i, "periodLabel": r["period"], "baseline": v,
                            "optimized": {k: x * (1 - cut) for k, x in v.items()}})
-        return {"metric": metric, "unit": {"chf": "CHF", "kwh": "kWh", "kg": "kg CO₂"}[key], "granularity": "annual",
-                "growthAssumption": f"{fc['describe'][key]}. {fc['method']}", "points": points,
-                "implementationTiming": "Optimized path applies the selected measures' annual run-rate from year 1."}
+        points = []
+        for row in fc["monthly"][key][:12 * years]:
+            v = rng(row["values"])
+            points.append({"year": int(row["month"][:4]), "date": row["month"] + "-01",
+                           "baseline": v, "optimized": {k: x * (1 - cut) for k, x in v.items()},
+                           **({} if row["observed_base"] else {"coverage": "No baseline observation for this month · annual average used"})})
+        return {"metric": metric, "unit": {"chf": "CHF", "kwh": "kWh", "kg": "kg CO₂"}[key], "granularity": "monthly",
+                "growthAssumption": f"{fc['describe'][key]}. {fc['method']}", "points": points, "annualTotals": annual,
+                "implementationTiming": "Optimized path applies the selected measures' annual run-rate from the first forecast month."}
 
     def daily(self, q):
         start = date.fromisoformat(q["from"] + "-01")

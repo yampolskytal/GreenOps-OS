@@ -52,6 +52,21 @@ def forecast(a):
         results.append({"period": f"Sep {2025+t}–Aug {2026+t}", "chf": [round(baseline["chf"] * v, 2) for v in factor["chf"]],
                         **{k: [round(v * x, 2) for v, x in zip(factor[k], baseline[k])] for k in ("kwh", "kg")},
                         "monthly_chf_mid": [round(monthly[m]["chf"] * factor["chf"][1], 2) if m in monthly else None for m in months]})
+    # Monthly path: each future month is the same calendar month of the baseline year grown by the per-metric
+    # rate, so observed seasonality and the fitted trend both carry forward. A month without observations uses
+    # the baseline-year monthly average instead.
+    projected = {k: [] for k in growth}
+    for t in range(1, 4):
+        for m in months:
+            year, month = int(m[:4]) + t, m[5:]
+            for k, g in growth.items():
+                observed = monthly[m][k] if m in monthly else None
+                if observed is None:
+                    observed = [v / 12 for v in baseline[k]] if isinstance(baseline[k], list) else baseline[k] / 12
+                level = observed if isinstance(observed, list) else [observed] * 3
+                projected[k].append({"month": f"{year}-{month}", "values": [
+                    round(x * (1 + rate) ** t, 4) for x, rate in zip(level, g["values"])],
+                    "observed_base": m in monthly})
     def describe(k):
         g = growth[k]
         low, rate, high = (f"{v * 100:+.1f}%" for v in g["values"])
@@ -60,12 +75,12 @@ def forecast(a):
                     f"R² {g['r2']:.2f})")
         return (f"{rate}/yr planning assumption (range {low} to {high}); fewer than {MIN_TREND_MONTHS} complete "
                 "positive monthly observations to fit a trend")
-    return {"results": results, "growth": growth, "baseline_months_observed": sum(m in monthly for m in months),
+    return {"results": results, "growth": growth, "monthly": projected, "baseline_months_observed": sum(m in monthly for m in months),
             "describe": {k: describe(k) for k in growth},
             "method": "No-action compound growth scenario, fixed CHF unit rates and grid factors. Growth is fitted per "
                       "metric from the observed baseline-year monthly totals when at least nine months are complete, "
                       "otherwise the configured planning assumption is used. One year cannot separate seasonality from "
-                      "trend. Monthly CHF preserves observed seasonality. Ranges combine growth and factor scenarios "
+                      "trend. Monthly projections repeat the observed seasonal pattern on the fitted trend. Ranges combine growth and factor scenarios "
                       "and carry forward baseline coverage gaps."}
 
 

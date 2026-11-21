@@ -279,7 +279,7 @@ class Agent:
             f = self.api.forecast(q, metric, years, ids)
             out["text"].append(f"**Forecast ({metric}, {f['unit']})** — baseline vs with {len(ids)} measures\n" + "\n".join(
                 f"- {p.get('periodLabel', p['year'])}: {fmt(p['baseline']['mid'])} → {fmt(p['optimized']['mid'])} "
-                f"(range {fmt(p['baseline']['low'])}–{fmt(p['baseline']['high'])})" for p in f["points"]))
+                f"(range {fmt(p['baseline']['low'])}–{fmt(p['baseline']['high'])})" for p in f.get("annualTotals", f["points"])))
             out["actions"].append({"type": "navigate", "to": "/forecast", "label": "Open Forecasts"})
         elif tool == "data_quality":
             dq = self.api.data_quality(q)
