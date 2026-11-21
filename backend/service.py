@@ -4,15 +4,20 @@ import hashlib
 import hmac
 import json
 import mimetypes
+import shutil
 import threading
 from collections import defaultdict
+from datetime import datetime, timezone
+from email import policy as email_policy
+from email.parser import BytesParser
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 
 from assistant_router import route_question, ai_usage_report
 import frontend_api
 from evidence import explain, totals_explained
-from greenops import total
+from greenops import CORE, SCHEMA, total
 from templates import tables
 
 
@@ -47,6 +52,72 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
     lock = threading.Lock()
     if host not in ("127.0.0.1", "localhost") and not accounts:
         raise ValueError("Shared listening requires authentication")
+
+    uploads = Path(__file__).resolve().parent / "inputs" / "uploads"
+    max_upload = 64 * 1024 * 1024
+
+    def import_upload(handler):
+        """Store uploaded source CSVs as a new dataset folder and rebuild the workspace from it."""
+        length = int(handler.headers.get("Content-Length") or 0)
+        if not 0 < length <= max_upload:
+            handler.close_connection = True
+            return 413, {"accepted": False, "message": "Upload between 1 byte and 64 MB of CSV files.", "issues": []}
+        raw = handler.rfile.read(length)  # always drain the body so the client sees the response
+        if handler.role != "admin" or not factory:
+            return 403, {"accepted": False, "message": "Your role cannot import data.", "issues": []}
+        content_type = handler.headers.get("Content-Type", "")
+        if not content_type.startswith("multipart/form-data"):
+            return 400, {"accepted": False, "message": "Send files as multipart/form-data.", "issues": []}
+        message = BytesParser(policy=email_policy.HTTP).parsebytes(
+            b"Content-Type: " + content_type.encode("latin-1") + b"\r\n\r\n" + raw)
+        files, issues = {}, []
+        for part in message.iter_parts() if message.is_multipart() else ():
+            name = Path(part.get_filename() or "").name
+            if not name:
+                continue
+            if not (name.endswith(".csv") and name[:-4] in SCHEMA):
+                issues.append(f"{name}: not a known source file, skipped")
+                continue
+            files[name] = part.get_payload(decode=True) or b""
+        if not files:
+            return 200, {"accepted": False, "message": "No recognised source CSV files were uploaded.", "issues": issues}
+        with lock:
+            if service["job"]["status"] == "running":
+                return 409, {"accepted": False, "message": "A rebuild is already running. Try again shortly.", "issues": issues}
+            service["job"] = {"status": "running"}
+            prior = service["workspace"]
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        target = uploads / f"{stamp}-{hashlib.sha256(raw).hexdigest()[:8]}"
+        missing = [c for c in CORE if f"{c}.csv" not in files]
+        try:
+            target.mkdir(parents=True)
+            if missing:
+                # Partial upload: keep the current dataset's other sources and its policy.
+                for source in Path(prior.a.path).glob("*.csv"):
+                    shutil.copyfile(source, target / source.name)
+                (target / "policy.json").write_text(json.dumps(prior.a.policy, ensure_ascii=False), encoding="utf-8")
+                issues.append("Partial upload: " + ", ".join(f"{c}.csv" for c in missing)
+                              + " kept from the current dataset")
+            for name, body in files.items():
+                (target / name).write_bytes(body)
+            next_work = factory(prior, {"data": str(target)}, None)
+            if next_work.store:
+                next_work.store.append(handler.actor, next_work.run_id, "import",
+                                       {"prior_run": prior.run_id, "data": str(target), "files": sorted(files)})
+        except Exception as error:
+            shutil.rmtree(target, ignore_errors=True)
+            with lock:
+                service["job"] = {"status": "error", "message": str(error)}
+            if not isinstance(error, (ValueError, TypeError, OSError, KeyError)):
+                raise
+            return 200, {"accepted": False, "message": f"Import failed: {error}", "issues": issues}
+        with lock:
+            catalog[f"Upload {stamp}"] = {"data": str(target)}
+            service.update(workspace=next_work, job={"status": "ready", "run": next_work.run_id})
+        baseline = next_work.a.baseline
+        return 200, {"accepted": True, "datasetVersion": next_work.run_id[:12], "issues": issues,
+                     "message": f"Imported {len(files)} file(s): {baseline['lines']:,} ledger lines, "
+                                f"CHF {baseline['chf']:,.0f} baseline ({next_work.a.mode})."}
 
     def start_job(payload, actor):
         with lock:
@@ -235,8 +306,7 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                 self.write(403, {"error": "Cross-origin write refused"})
                 return
             if urlparse(self.path).path.strip("/") == "api/v2/imports":
-                self.write(200, {"accepted": False, "message": "Imports are not accepted over HTTP. Restart the backend with --data pointing at the new case folder.",
-                                 "issues": []})
+                self.write(*import_upload(self))
                 return
             try:
                 length = int(self.headers.get("Content-Length", 0))

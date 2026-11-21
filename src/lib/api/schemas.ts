@@ -2,7 +2,7 @@
 export const SOURCE_SCHEMAS: Record<string, string[]> = {
   "ai_subscriptions.csv": ["month","product","provider","cost_center","licences_purchased","licences_active_30d","messages_30d","price_per_seat","currency","amount","contract_status","contract_end","notice_period_days","billing"],
   "ai_usage.csv": ["date","resource_id","tool","department","task_type","model_class","provider","model","requests","tokens_in","tokens_in_cache","tokens_out","cost_chf","project_id"],
-  "aws_costs.csv": ["line_item_usage_start_date","line_item_resource_id","product_servicecode","product_region","line_item_usage_amount","pricing_unit","line_item_unblended_cost","line_item_currency_code","line_item_line_item_type","resource_tags_user_department","resource_tags_user_tool","resource_tags_user_project","resource_tags_user_env"],
+  "aws_costs.csv": ["line_item_usage_start_date","line_item_resource_id","product_servicecode","product_region","line_item_usage_amount","pricing_unit","line_item_unblended_cost","line_item_currency_code","line_item_line_item_type","resource_tags_user_department","resource_tags_user_tool","resource_tags_user_project","resource_tags_user_environment"],
   "azure_costs.csv": ["Date","ResourceId","ServiceName","ResourceLocation","Quantity","UnitOfMeasure","CostInBillingCurrency","BillingCurrency","ChargeType","Tags","AvgCpuPercent","Notes"],
   "business_calendar.csv": ["date","weekday","workday","public_holiday","company_holidays"],
   "data_platform_usage.csv": ["date","resource_id","cluster","region","node_count","runtime_h","active_use_h","query_count"],

@@ -1,0 +1,17 @@
+﻿resource_id,tool,department,cost_center,responsible_role,environment,criticality,default_project,rechargeable
+vm-app,Customer portal,IT,4500,Head of IT,prod,high,P-001,no
+vm-test,Test environments,IT,4500,Head of IT,test,low,P-001,no
+gpu-ai,AI GPU server,IT,4500,Head of IT,dev,low,P-003,no
+db-fin,Finance database,Finance,4200,Head of Finance,prod,high,P-015,no
+dp-prod,Data platform production,Consulting,4000,Head of Consulting,prod,high,P-003,partly
+dp-dev,Data platform development,Consulting,4000,Head of Consulting,dev,medium,P-003,partly
+st-backup,Backup archive,IT,4500,Head of IT,prod,high,P-015,no
+st-archive,Legacy project archive,Sales,4100,Head of Sales,prod,medium,P-015,no
+build-cicd,CI/CD pipelines,IT,4500,Head of IT,dev,medium,P-003,partly
+net-egress,Data egress,IT,4500,Head of IT,prod,medium,P-002,partly
+web-cdn,Web hosting and CDN,Marketing,4300,Head of Marketing,prod,high,P-002,partly
+log-storage,Logging and monitoring,IT,4500,Head of IT,prod,medium,P-003,no
+project-storage,Project file storage,Consulting,4000,Head of Consulting,prod,medium,P-005,partly
+ai-assistant,Internal AI assistant,Consulting,4000,Head of Consulting,prod,medium,P-003,partly
+ai-marketing,Marketing content AI,Marketing,4300,Head of Marketing,prod,low,P-002,no
+ai-contract,Contract review AI,Finance,4200,Head of Finance,prod,high,P-015,no

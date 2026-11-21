@@ -9,19 +9,64 @@ from scheduler import schedule
 from greenops import END, day, inside, key, natural, obj, project_id, resource
 
 
+MIN_TREND_MONTHS = 9
+TREND_Z = 1.645  # two-sided 90% interval on the fitted monthly log-slope
+
+
+def fitted_growth(series):
+    """Annual compound growth [low, mid, high] from a log-linear fit of observed monthly totals.
+
+    `series` holds (month_index, value) pairs; missing months are simply absent. Returns None when there are
+    too few positive observations to fit, so callers fall back to the configured planning assumption."""
+    observed = [(x, y) for x, y in series if y is not None]
+    if len(observed) < MIN_TREND_MONTHS or any(y <= 0 for _, y in observed):
+        return None
+    points = [(x, math.log(y)) for x, y in observed]
+    n = len(points)
+    mx, my = mean(x for x, _ in points), mean(y for _, y in points)
+    sxx = sum((x - mx) ** 2 for x, _ in points)
+    slope = sum((x - mx) * (y - my) for x, y in points) / sxx
+    residual = sum((y - (my + slope * (x - mx))) ** 2 for x, y in points)
+    total_ss = sum((y - my) ** 2 for _, y in points)
+    se = math.sqrt(residual / (n - 2) / sxx)
+    rate = lambda b: round(math.exp(12 * b) - 1, 4)
+    return {"values": [rate(slope - TREND_Z * se), rate(slope), rate(slope + TREND_Z * se)],
+            "r2": round(1 - residual / total_ss, 3) if total_ss else 0.0, "months": n}
+
+
 def forecast(a):
     baseline = a.baseline
-    growth = a.factors["growth"]["values"]
+    assumed = a.factors["growth"]["values"]
     monthly = {r["name"]: r for r in a.grouped("month")}
     months = [f"{year}-{m:02d}" for year, seq in ((2025, range(9, 13)), (2026, range(1, 9))) for m in seq]
+    mid = lambda v: v[1] if isinstance(v, list) else v
+    growth = {}
+    for k in ("chf", "kwh", "kg"):
+        fit = fitted_growth([(i, mid(monthly[m][k]) if m in monthly else None) for i, m in enumerate(months)])
+        growth[k] = ({"method": "trend", **fit} if fit else
+                     {"method": "assumption", "values": assumed, "r2": None,
+                      "months": sum(m in monthly for m in months)})
     results = []
     for t in range(1, 4):
-        values = [(1 + rate) ** t for rate in growth]
-        results.append({"period": f"Sep {2025+t}–Aug {2026+t}", "chf": [round(baseline["chf"] * v, 2) for v in values],
-                        **{k: [round(v * x, 2) for v, x in zip(values, baseline[k])] for k in ("kwh", "kg")},
-                        "monthly_chf_mid": [round(monthly[m]["chf"] * values[1], 2) if m in monthly else None for m in months]})
+        factor = {k: [(1 + rate) ** t for rate in g["values"]] for k, g in growth.items()}
+        results.append({"period": f"Sep {2025+t}–Aug {2026+t}", "chf": [round(baseline["chf"] * v, 2) for v in factor["chf"]],
+                        **{k: [round(v * x, 2) for v, x in zip(factor[k], baseline[k])] for k in ("kwh", "kg")},
+                        "monthly_chf_mid": [round(monthly[m]["chf"] * factor["chf"][1], 2) if m in monthly else None for m in months]})
+    def describe(k):
+        g = growth[k]
+        low, rate, high = (f"{v * 100:+.1f}%" for v in g["values"])
+        if g["method"] == "trend":
+            return (f"{rate}/yr fitted to {g['months']} observed months (log-linear, 90% range {low} to {high}, "
+                    f"R² {g['r2']:.2f})")
+        return (f"{rate}/yr planning assumption (range {low} to {high}); fewer than {MIN_TREND_MONTHS} complete "
+                "positive monthly observations to fit a trend")
     return {"results": results, "growth": growth, "baseline_months_observed": sum(m in monthly for m in months),
-            "method": "No-action compound growth scenario, fixed CHF unit rates and grid factors. Monthly CHF preserves observed seasonality. Ranges combine growth and factor scenarios and carry forward baseline coverage gaps."}
+            "describe": {k: describe(k) for k in growth},
+            "method": "No-action compound growth scenario, fixed CHF unit rates and grid factors. Growth is fitted per "
+                      "metric from the observed baseline-year monthly totals when at least nine months are complete, "
+                      "otherwise the configured planning assumption is used. One year cannot separate seasonality from "
+                      "trend. Monthly CHF preserves observed seasonality. Ranges combine growth and factor scenarios "
+                      "and carry forward baseline coverage gaps."}
 
 
 def clusters(reports):

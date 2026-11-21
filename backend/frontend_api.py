@@ -337,7 +337,7 @@ class FrontendApi:
             points.append({"year": 2026 + i, "periodLabel": r["period"], "baseline": v,
                            "optimized": {k: x * (1 - cut) for k, x in v.items()}})
         return {"metric": metric, "unit": {"chf": "CHF", "kwh": "kWh", "kg": "kg CO₂"}[key], "granularity": "annual",
-                "growthAssumption": fc["method"], "points": points,
+                "growthAssumption": f"{fc['describe'][key]}. {fc['method']}", "points": points,
                 "implementationTiming": "Optimized path applies the selected measures' annual run-rate from year 1."}
 
     def daily(self, q):

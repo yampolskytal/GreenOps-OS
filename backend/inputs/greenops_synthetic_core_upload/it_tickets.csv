@@ -1,0 +1,13 @@
+﻿ticket_id,date,type,resource_id,title,description,status
+T-2001,2025-09-10,Change,dp-prod,Production platform availability,Production platform must remain available every day 05:30-23:00. Weekend shutdown requires approval from Head of Consulting.,approved
+T-2002,2025-10-02,Note,gpu-ai,GPU scheduling review,GPU workload is not time critical. A human must approve shutdown automation after testing.,closed
+T-2003,2025-11-18,Incident,st-backup,Backup retry,Backup repeated after timeout. Do not remove the second copy before restore testing.,closed
+T-2004,2025-12-03,Request,ai-marketing,More AI seats,Marketing requested four additional seats. Decision postponed pending utilisation review.,rejected
+T-2005,2026-01-15,Change,vm-test,Test environment schedule,Approved to stop test compute outside 07:00-20:00 on workdays.,approved
+T-2006,2026-02-02,Incident,db-fin,Month-end close,Finance database performance issue. Protection window: last two workdays of every month.,closed
+T-2007,2026-03-19,Note,archive-01,Legacy archive owner,Sales must confirm retention obligations before deletion or migration.,closed
+T-2008,2026-04-08,Change,dp-dev,Development cluster,Auto-stop may be enabled after 60 idle minutes except during release week.,approved
+T-2009,2026-05-20,Incident,web-cdn,Web traffic spike,Resolved. Customer campaign caused valid traffic.,closed
+T-2010,2026-06-11,Request,ai-contract,Contract review model,Large model is required for regulated contract clauses; small model allowed for summaries only.,approved
+T-2011,2026-07-01,Change,poc-01,POC decommission,No owner identified. Head of IT must confirm before decommissioning.,approved
+T-2012,2026-08-04,Note,,Quarterly GreenOps review,"Review unused licences, idle servers, data platform runtime and cloud credits.",closed

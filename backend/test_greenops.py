@@ -142,5 +142,21 @@ class GreenOpsTest(unittest.TestCase):
                 proc.wait(timeout=5)
 
 
+class TrendGrowthTest(unittest.TestCase):
+    def test_fitted_growth_recovers_compound_rate(self):
+        from bonus import fitted_growth
+        fit = fitted_growth([(i, 100 * 1.1 ** (i / 12)) for i in range(12)])
+        self.assertAlmostEqual(fit["values"][1], 0.1, places=4)
+        self.assertEqual(fit["values"][0], fit["values"][1])  # exact fit has no spread
+        self.assertEqual(fit["months"], 12)
+
+    def test_fitted_growth_skips_missing_and_rejects_sparse_or_nonpositive(self):
+        from bonus import fitted_growth
+        series = [(i, 100 + (i % 3)) for i in range(12)]
+        self.assertEqual(fitted_growth(series[:2] + [(2, None)] + series[3:])["months"], 11)
+        self.assertIsNone(fitted_growth(series[:8]))
+        self.assertIsNone(fitted_growth(series[:11] + [(11, 0)]))
+
+
 if __name__ == "__main__":
     unittest.main()
