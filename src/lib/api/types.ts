@@ -134,8 +134,20 @@ export interface ResourceSummary {
   gpuAvgPct?: number;
   runtimeH30d: number | null;
   activeH30d?: number | null;
+  unclassifiedRuntimeH30d?: number | null;
+  runtimeEvidence?: {
+    from: string;
+    through: string;
+    source: string | null;
+    method: string;
+    observedDays: number | null;
+    cpuSource: string | null;
+    gpuSource: string | null;
+  };
   idleCostChfYear: number | null;
   flag?: string;
+  cost?: Kpi | null;
+  energy?: Kpi | null;
   co2Location?: Kpi | null;
   co2Market?: Kpi | null;
 }
@@ -298,6 +310,8 @@ export interface Forecast {
   unit: string;
   growthAssumption: string;
   points: ForecastPoint[];
+  annualTotals?: ForecastPoint[];
+  drivers?: { date: string; label: string; source: string; amount: number; basis: "annual" | "one-time" }[];
   granularity?: "monthly" | "annual";
   methodology?: Calculation;
   implementationTiming?: string;

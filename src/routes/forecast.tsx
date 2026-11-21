@@ -5,7 +5,6 @@ import { FORECAST_METRICS, ScenarioForecastPanel } from "@/components/greenops/s
 import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
 import { Button } from "@/components/ui/button";
 import type { Forecast } from "@/lib/api/types";
-import { useForecast } from "@/lib/queries";
 import { useDisplayedPlan } from "@/lib/store";
 import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
 import { seo } from "@/lib/seo";
@@ -21,14 +20,12 @@ function ForecastPage() {
   const hash = useRouterState({ select: (r) => r.location.hash });
   const chartMetric = FORECAST_METRICS.find((m) => hash === `forecast-${m.id}`)?.id;
   const plan = useDisplayedPlan();
-  const [metric, setMetric] = useState<Forecast["metric"]>("cost");
-  const fc = useForecast(metric, 1);
-  const f = fc.data;
+  const [f, setForecast] = useState<Forecast | null>(null);
   return (
     <AppShell
       kicker="Know the limits · Forecasts"
       title={`${plan.label} forecast`}
-      subtitle={`Actual monthly history, then projections without changes and with your ${plan.suggested ? "suggested starting strategy" : "committed Current Plan"}. Projections are not realized savings.`}
+      subtitle={`Follow quarterly projections over three years with your ${plan.suggested ? "suggested starting strategy" : "committed Current Plan"}.`}
     >
       <section data-analysis-region id={chartMetric ? `forecast-${chartMetric}` : "forecast"}>
         <PlanningProjection>
@@ -36,7 +33,8 @@ function ForecastPage() {
           key={chartMetric ?? "forecast"}
           initialMetric={chartMetric ?? "cost"}
           title={`${plan.label} vs. without changes`}
-          onState={(x) => setMetric(x.metric)}
+          onForecast={setForecast}
+          showDetails
           selections={[
             {
               key: "plan",
@@ -81,12 +79,17 @@ function ForecastPage() {
             <DetailBlock title="Granularity">
               <p>
                 {f.granularity === "monthly"
-                  ? "Monthly supplied values, averaged per 3-month period."
-                  : "Annual totals only, shown as one monthly-average point per year. No quarterly variation is inferred."}
+                  ? "Each quarterly point is the average of three monthly projections. Annual totals sum the monthly projections."
+                  : "The market-based scenario supplies annual totals for the covered activity."}
               </p>
             </DetailBlock>
             <DetailBlock title="Methodology">
               <p>{f.methodology?.formula ?? "Not supplied"}</p>
+              {f.methodology?.assumptions.length ? (
+                <ul className="my-2 list-disc space-y-1 pl-5">
+                  {f.methodology.assumptions.map((assumption) => <li key={assumption}>{assumption}</li>)}
+                </ul>
+              ) : null}
               {f.marketScopeLabel && <p>{f.marketScopeLabel}</p>}
               {f.methodology?.sources.length ? <p className="break-words">{f.methodology.sources.join(" · ")}</p> : null}
             </DetailBlock>

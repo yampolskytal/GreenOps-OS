@@ -94,7 +94,11 @@ class MarketV2Test(unittest.TestCase):
         self.assertIsNone(no_effect["points"][1]["optimized"])
         limited_effect = self.api.forecast(self.q, "co2Market", 1, ["move", "uncovered"])
         self.assertEqual(limited_effect["points"][1]["baseline"]["mid"], 18.48)
-        self.assertEqual(limited_effect["points"][1]["optimized"]["mid"], 14.63)
+        self.assertEqual(limited_effect["points"][1]["optimized"]["mid"], 14.98)
+        long_term = self.api.forecast(self.q, "co2Market", 3, ["move", "uncovered"])
+        self.assertEqual(long_term["annualTotals"][-1]["year"], 2029)
+        final = long_term["annualTotals"][-1]
+        self.assertAlmostEqual(final["baseline"]["mid"] - final["optimized"]["mid"], 3.5 * 1.1**2, places=3)
         self.assertIn("move", limited_effect["marketSavings"]["forecastLimitedMeasureIds"])
         self.assertTrue(any("Selected" in x or "selected" in x for x in limited_effect["methodology"]["limitations"]))
 

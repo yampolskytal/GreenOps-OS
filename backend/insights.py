@@ -8,6 +8,32 @@ from accounting import MarketSummary
 from greenops import END, day, number, total
 
 
+
+def forecast_changes(a):
+    """Resolve dated capacity changes from the matching observed billing scope."""
+    policy = a.policy.get("forecast", {})
+    dated = list(policy.get("dated_changes", []))
+    for change in policy.get("node_capacity_changes", []):
+        rows = [r for r in a.lines if r["resource"] == change["resource"]
+                and r["month"] == change["rate_month"] and r["unit"] == "node-hour"
+                and r["category"] == "Cloud" and (r["quantity"] or 0) > 0]
+        fields = {}
+        refs = set()
+        extra = (change["to_nodes"] - change["from_nodes"]) * 8760
+        for k in ("chf", "kwh", "kg"):
+            sample = [r for r in rows if r[k] is not None and (k != "chf" or r["chf"] >= 0)]
+            if sample:
+                observed = sum(r[k] if k == "chf" else r[k][1] for r in sample)
+                fields[f"annual_delta_{k}"] = observed / sum(r["quantity"] for r in sample) * extra
+                refs.update(r["ref"] for r in sample)
+        if fields:
+            name = f"{change['resource']} capacity grows from {change['from_nodes']} to {change['to_nodes']} nodes"
+            dated.append(change | fields | {"label": name, "rate_refs": sorted(refs),
+                         "method": "Additional nodes × 8,760 h × matching observed rate per node-hour. "
+                                   "Assumes continuous use at the sampled rate."})
+    return dated
+
+
 def projections(a, plan):
     default = a.factors["growth"]["values"]
     cost_grid = a.policy.get("forecast", {})
@@ -15,23 +41,7 @@ def projections(a, plan):
     for r in a.lines:
         categories[r["category"]].append(r)
     category_totals = {name: total(rows) for name, rows in categories.items()}
-    dated = list(cost_grid.get("dated_changes", []))
-    for change in cost_grid.get("node_capacity_changes", []):
-        rid = change["resource"]
-        sampling_month = change["rate_month"]
-        rows = [r for r in a.lines if r["resource"] == rid and r["month"] == sampling_month
-                and r["unit"] == "node-hour" and r["category"] == "Cloud" and r["quantity"]]
-        if not rows or any(r["chf"] is None or r["kg"] is None for r in rows):
-            continue
-        baseline = total(rows)
-        hours = sum(r["quantity"] for r in rows)
-        # Apply the observed price and energy per metered node-hour to the documented increase.
-        extra = (change["to_nodes"] - change["from_nodes"]) * 8760
-        dated.append(change | {"annual_delta_chf": baseline["chf"] / hours * extra,
-                               "annual_delta_kwh": baseline["kwh"][1] / hours * extra,
-                               "annual_delta_kg": baseline["kg"][1] / hours * extra,
-                               "rate_refs": [r["ref"] for r in rows],
-                               "method": "Extra nodes × 8,760 hours × observed rate per node-hour. Assumes continuous capacity billed at the sampled rate."})
+    dated = forecast_changes(a)
     output = []
     for year in range(1, 4):
         estimate = {k: [0.0, 0.0, 0.0] for k in ("chf", "kwh", "kg")}

@@ -19,6 +19,7 @@ export function ScenarioChart({
   boundary,
   format,
   unit,
+  milestones = [],
   height = 340,
   onToggle,
 }: {
@@ -27,6 +28,7 @@ export function ScenarioChart({
   boundary: number | null;
   format: (n: number) => string;
   unit: string;
+  milestones?: { time: number; label: string }[];
   height?: number;
   onToggle?: (key: string) => void;
 }) {
@@ -86,6 +88,9 @@ export function ScenarioChart({
                 label={{ value: "Forecast starts", position: "insideTopLeft", fill: "var(--muted-foreground)", fontSize: 11 }}
               />
             )}
+            {milestones.map(({ time, label }) => (
+              <ReferenceLine key={label} x={time} stroke="var(--info)" strokeDasharray="3 5" />
+            ))}
             <Tooltip
               cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
               allowEscapeViewBox={{ x: false, y: false }}
@@ -145,7 +150,7 @@ export function ScenarioChart({
         </ResponsiveContainer>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
-        Solid = observed monthly values · dashed = projections · zero-based axis · {unit}
+        Solid marks observed monthly values · dashed marks projections · {unit}
       </p>
     </div>
   );

@@ -136,6 +136,17 @@ const exportsSchema = z.object({
   issues: list,
   submittable: z.boolean(),
 });
+const forecastPoint = z.object({
+  year: number,
+  date: z.string().optional(),
+  periodLabel: z.string().optional(),
+  coverage: z.string().optional(),
+  baseline: range,
+  optimized: range.nullable(),
+  observed: number.nullable().optional(),
+  marketCoverage,
+}).passthrough();
+
 const responseSchemas: Record<string, z.ZodTypeAny> = {
   "/overview": z
     .object({
@@ -186,6 +197,11 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
         name: z.string(),
         runtimeH30d: number.nullable().default(null),
         activeH30d: number.nullable().optional(),
+        unclassifiedRuntimeH30d: number.nullable().optional(),
+        runtimeEvidence: z.object({
+          from: z.string(), through: z.string(), source: z.string().nullable(), method: z.string(),
+          observedDays: number.nullable(), cpuSource: z.string().nullable(), gpuSource: z.string().nullable(),
+        }).optional(),
         idleCostChfYear: number.nullable().default(null),
         provider: z.string().default("Not supplied"),
         location: z.string().default("Not supplied"),
@@ -194,6 +210,8 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
         criticality: z.string().default("unknown"),
         cpuAvgPct: number.nullable().optional(),
         gpuAvgPct: number.nullable().optional(),
+        cost: kpi.nullable().optional(),
+        energy: kpi.nullable().optional(),
         co2Location: kpi.nullable().optional(),
         co2Market: kpi.nullable().optional(),
         marketCoverage,
@@ -227,18 +245,12 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
       metric: z.enum(["cost", "energy", "co2Location", "co2Market"]),
       unit: z.string(),
       growthAssumption: z.string().default("Not supplied"),
-      points: z.array(
-        z
-          .object({
-            year: number,
-            date: z.string().optional(),
-            baseline: range,
-            optimized: range.nullable(),
-            observed: number.nullable().optional(),
-            marketCoverage,
-          })
-          .passthrough(),
-      ),
+      points: z.array(forecastPoint),
+      annualTotals: z.array(forecastPoint).optional(),
+      drivers: z.array(z.object({
+        date: z.string(), label: z.string(), source: z.string(), amount: number,
+        basis: z.enum(["annual", "one-time"]),
+      })).optional(),
       granularity: z.enum(["monthly", "annual"]).optional(),
       methodology: calculation.optional(),
       marketCoverage,

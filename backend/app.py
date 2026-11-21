@@ -84,7 +84,7 @@ class Workspace:
         self.answers = question_figures(self.reports.answers())
         self.directory = directory
         self.store, self.template_root = store, template_root
-        signature_files = ("app.py", "greenops.py", "analytics.py", "accounting.py", "planning.py", "case_measures.py", "evidence.py", "assistant_router.py", "assistant_check.py", "bonus.py", "bonus_evidence.py", "scheduler.py", "grid_replay.py", "insights.py", "templates.py", "schema-v13.json", "verification.py", "decision.py", "submission.py")
+        signature_files = ("app.py", "greenops.py", "analytics.py", "accounting.py", "planning.py", "case_measures.py", "evidence.py", "assistant_router.py", "assistant_check.py", "bonus.py", "bonus_evidence.py", "scheduler.py", "grid_replay.py", "insights.py", "templates.py", "schema-v13.json", "verification.py", "decision.py", "submission.py", "forecast_scenarios.py", "runtime.py")
         self.manifest = {"engine": fingerprint([(n, (ROOT / n).read_text(encoding="utf-8")) for n in signature_files]),
                          "mode": self.a.mode, "as_of": str(as_of), "factors": self.a.factors, "policy": self.a.policy,
                          "sources": {k: v.get("sha256") for k, v in self.a.sources.items()}}

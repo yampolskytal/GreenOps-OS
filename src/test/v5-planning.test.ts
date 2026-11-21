@@ -60,7 +60,7 @@ describe("V5 planning rules", () => {
   it("uses the official 15-person-day maximum", () => expect(TARGETS.maxPersonDays).toBe(15));
   it("uses the official CHF 16,500 implementation maximum", () =>
     expect(TARGETS.budgetChf).toBe(16500));
-  it("limits forecast horizons to one, two and three years", () =>
+  it("offers quarterly projections up to a three-year horizon", () =>
     expect(SUPPORTED_FORECAST_HORIZONS).toEqual([1, 2, 3]));
   it("fixes skyline height to cost and color to location CO₂", () =>
     expect(SKYLINE_ENCODING).toEqual({ height: "costChf", color: "co2Kg" }));

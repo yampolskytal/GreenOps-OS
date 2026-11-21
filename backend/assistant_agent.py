@@ -256,8 +256,8 @@ class Agent:
             parsed = int(re.sub(r"[^0-9]", "", budget[1])) if budget else 16500
             return {"calls": [call("optimize_plan", priority=priority, budget_chf=parsed)]}
         if "forecast" in q or "next year" in q or "projected" in q:
-            years = re.search(r"\b([1-3])\s*years?\b", q)
-            return {"calls": [call("forecast", metric=metric, years=int(years[1]) if years else 1 if "next year" in q else 3)]}
+            years = re.search(r"\b([1-5])\s*years?\b", q)
+            return {"calls": [call("forecast", metric=metric, years=int(years[1]) if years else 1 if "next year" in q else 5)]}
         if any(w in q for w in ("top measures", "best measures", "which measures", "biggest savings")) or re.search(r"\btop\s+\d+\s+measures", q):
             limit = re.search(r"\btop\s+(\d{1,2})", q)
             return {"calls": [call("list_measures", sort_by={"cost": "chf", "energy": "energy"}.get(metric, "co2"),

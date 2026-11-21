@@ -14,7 +14,7 @@ The Python backend lives in `backend/`. The application uses the same-origin `/a
 | getMeasures | GET measures | measure catalog (`Reports.measures`) |
 | simulate | POST simulation | catalog sums with scope/exclusive/requires/hard-blocker checks vs 25 % / 40 % / CHF / 15 PD |
 | optimize | POST optimize | `Workspace.package` branch-and-bound (balanced→midpoint, cost→first-year, co2→conservative) |
-| getForecast | GET forecast | monthly cost, energy and location emissions scenarios, plus an annual scenario for the evidenced residual-mix market scope |
+| getForecast | GET forecast | up to three years of monthly and annual cost, energy and location-based scenarios with dated effects, plus annual scenarios for the supported market scope |
 | getDailyFootprint | GET metrics/daily | ledger by day; monthly invoices spread over the month, weekly metrics over 7 days (`allocated`) |
 | getDataQuality | GET data-quality | sources, coverage, audit events, contradictions |
 | getBonus | GET bonus | carbon replay, CI diagnostics, workload clusters, AI usage, unused seats |
@@ -28,6 +28,11 @@ The Python backend lives in `backend/`. The application uses the same-origin `/a
 - `/simulation` excludes research leads, protected actions, unsupported measures and unresolved dependency chains. A zero-impact prerequisite counts only with a supported dependent measure. Existing saved proposals are revalidated when simulated or exported.
 - `/optimize` uses the same implementation rate, scopes, dependencies and budget as simulation. The cost priority uses first-year savings net of implementation cost. The balanced priority uses annual run-rate savings and midpoint location-based CO₂e. The carbon priority uses the conservative emissions range. The response reports whether the search completed.
 - Simulation reports signed margins against the numerical targets, first-year gross and net CHF, and a conservative carbon sensitivity. The official cost target still uses the annual run rate.
+
+## Forecast and operational telemetry
+
+- The three-year forecast returns monthly scenario points for the quarterly chart and annual totals. Near-term rates converge toward the configured long-run scenario by year three. After the first year, recurring infrastructure savings scale with the affected workload using the baseline trend where there are enough observations and the configured growth assumptions otherwise. Recorded contract and other cost-only savings retain their run-rate. Capacity changes, renewal dates, rollout, and one-time implementation charges affect their applicable months.
+- The runtime view uses observed active hours for data-platform clusters. Server runtime and separate CPU and GPU utilization come from the inventory snapshot or recent weekly telemetry. Missing active-hour observations remain unknown and stay visibly distinct on the shared runtime scale.
 
 ## Market-based CO₂e
 

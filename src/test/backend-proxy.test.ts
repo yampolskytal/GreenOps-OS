@@ -38,7 +38,8 @@ describe("Production proxy policy", () => {
       validQuery(new URLSearchParams("from=2025-09&to=2026-08&metric=cost&horizon=3"), "forecast"),
     ).toBe(true);
     expect(validQuery(new URLSearchParams("url=https://example.com"), "overview")).toBe(false);
-    expect(validQuery(new URLSearchParams("horizon=4"), "forecast")).toBe(false);
+    expect(validQuery(new URLSearchParams("horizon=5"), "forecast")).toBe(false);
+    expect(validQuery(new URLSearchParams("horizon=6"), "forecast")).toBe(false);
   });
   it.each([
     ["GET", "overview", 120],

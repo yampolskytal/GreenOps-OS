@@ -8,12 +8,14 @@ export const officialQuery = (q: GlobalQuery): GlobalQuery => ({
 });
 export const canSelectMeasure = (m: Measure) => m.includable && m.risk.level !== "blocked";
 export const initialMeasureIds: string[] = [];
-export function runtimeSegments(runtime: number | null, active?: number | null) {
+export function runtimeSegments(runtime: number | null, active?: number | null, unclassified = 0) {
   if (runtime == null || !Number.isFinite(runtime) || runtime < 0)
     return { active: null, inactive: null, unknown: null };
-  if (active == null || !Number.isFinite(active) || active < 0 || active > runtime)
+  if (active == null || !Number.isFinite(active) || active < 0 || active > runtime ||
+      !Number.isFinite(unclassified) || unclassified < 0 || active + unclassified > runtime + .01)
     return { active: null, inactive: null, unknown: runtime };
-  return { active, inactive: runtime - active, unknown: 0 };
+  const unknown = Math.min(unclassified, runtime - active);
+  return { active, inactive: runtime - active - unknown, unknown };
 }
 
 export const canDownloadExport = (isDemo: boolean) => !isDemo;

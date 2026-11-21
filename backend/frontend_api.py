@@ -12,11 +12,15 @@ from pathlib import Path
 
 from accounting import MarketSummary, market_reduction, merge_market_effects
 from assistant_router import route_question
+from bonus import forecast as baseline_forecast
+from forecast_scenarios import (MAX_FORECAST_YEARS, FORECAST_HORIZONS, active_from, dashboard_forecast,
+                                day_share, operational_growth, scale_effect)
 from greenops import END, number
 from planning import (DEFAULT_DAILY_RATE, PLAN_DECISIONS, dependency_closure, implementation_cost,
                       measure_decisions, satisfiable_measures)
 from templates import BASE_NAME, MEASURE_NAME, tables
 from response_cache import ResponseCache, encode, key_of
+from runtime import recent_runtime
 
 PERIOD = "Sep 2025 – Aug 2026"
 COST_TARGET, CO2_TARGET, MAX_DAYS = 25.0, 40.0, 15
@@ -246,7 +250,7 @@ class FrontendApi:
             "co2Market": market_kpi(self.historical_market, PERIOD, "kg CO₂e/year"),
             "marketCoverage": self.historical_market.coverage(),
             "monthly": monthly,
-            "forecastSupport": [{"metric": m, "horizons": [1, 2, 3]} for m in forecast_metrics],
+            "forecastSupport": [{"metric": m, "horizons": FORECAST_HORIZONS} for m in forecast_metrics],
             "topOpportunities": [m["id"] for m in sorted(plan["selected"], key=lambda m: -m["chf"])[:3]],
             "managementRisks": risks,
         }
@@ -274,13 +278,17 @@ class FrontendApi:
     def resources(self, q):
         markets = self.market_groups(q, ("resource",))["resource"]
         period = f"{q['from']}–{q['to']}"
+        ledger = defaultdict(list)
+        for row in self.lines(q):
+            ledger[row["resource"]].append(row)
         savings = defaultdict(float)
         flags = {}
         for m in self.r.measures:
             if m["chf"] > savings[m["resource"]]:
                 savings[m["resource"]], flags[m["resource"]] = m["chf"], m["name"]
-        ids = list(self.a.inventory) + [r for r in dict.fromkeys(m["resource"] for m in self.r.measures)
-                                        if r not in self.a.inventory and r in self.r.by_resource]
+        telemetry = self.recent_runtime
+        ids = dict.fromkeys([*self.a.inventory, *telemetry,
+                             *(m["resource"] for m in self.r.measures if m["resource"] in self.r.by_resource)])
         out = []
         for rid in ids:
             inv = self.a.inventory.get(rid, {})
@@ -291,35 +299,44 @@ class FrontendApi:
             if (q["department"] != "all" and department != q["department"]) or (q["provider"] != "all" and provider != q["provider"]):
                 continue
             env = (inv.get("environment") or (rows[0]["environment"] if rows else "") or "prod").lower()
-            metrics = self.r.metrics.get(rid, [])
-            def avg(field):
-                vals = [float(x[field]) for x in metrics if x.get(field) not in (None, "")]
-                return round(sum(vals) / len(vals), 1) if vals else None
-            kg = [sum(r["kg"][i] for r in rows if r["kg"]) for i in range(3)]
             item = {"id": rid, "name": rows[0]["tool"] if rows and rows[0]["tool"] else rid, "provider": provider,
                     "location": self.resource_location(rid),
                     "environment": "prod" if env.startswith("prod") else "dev" if env.startswith(("dev", "sbx", "sand")) else "test",
                     "department": department, "criticality": inv.get("criticality") or "medium",
-                    "runtimeH30d": float(inv["runtime_h_30d"]) if inv.get("runtime_h_30d") else 0,
+                    "runtimeH30d": None,
+                    **telemetry.get(rid, {}),
                     "idleCostChfYear": round(savings.get(rid, 0), 2)}
-            if inv.get("vcpu"):
-                item["vcpu"] = float(inv["vcpu"])
-            cpu = float(inv["cpu_utilisation_30d_pct"]) if inv.get("cpu_utilisation_30d_pct") else avg("cpu_avg_pct")
-            if cpu is not None:
-                item["cpuAvgPct"] = cpu
-            if (gpu := avg("gpu_avg_pct")) is not None:
-                item["gpuAvgPct"] = gpu
+            if (vcpu := number(inv.get("vcpu"))) is not None:
+                item["vcpu"] = vcpu
             if rid in flags:
                 item["flag"] = flags[rid]
-            if rows:
-                item["co2Location"] = {"value": rng(kg), "unit": "kg CO₂", "kind": "modeled",
-                                       "calc": {"title": f"Location-based CO₂ for {rid}", "formula": "Σ line energy × regional grid factor",
-                                                "units": "kg CO2e/year", "kind": "modeled", "period": PERIOD, "inputs": [],
-                                                "sources": sorted({r["ref"].split(":")[0] for r in rows}), "assumptions": [], "limitations": []}}
+            scoped = ledger[rid]
+            for field, key, label, unit, kind, formula in (
+                ("cost", "chf", "Normalized cost", "CHF", "financial", "Sum of billed amounts normalized to CHF"),
+                ("energy", "kwh", "Energy estimate", "kWh", "modeled", "Sum of ledger energy estimates"),
+                ("co2Location", "kg", "Location-based CO₂e", "kg CO₂e", "modeled", "Σ line energy × regional grid factor"),
+            ):
+                known = [r for r in scoped if r[key] is not None]
+                item[field] = None
+                if known:
+                    value = sum(r[key] for r in known) if key == "chf" else [sum(r[key][i] for r in known) for i in range(3)]
+                    uncovered = len(scoped) - len(known)
+                    missing = [f"{uncovered} ledger rows have no {label.lower()} value and are excluded."] if uncovered else []
+                    item[field] = {"value": rng(value), "unit": unit, "kind": kind,
+                                   "coverage": f"{len(known)} of {len(scoped)} ledger rows with values",
+                                   "missingInputs": missing,
+                                   "calc": {"title": f"{label} for {rid}", "formula": formula,
+                                            "units": unit, "kind": kind, "period": period, "inputs": [],
+                                            "sources": sorted({r["ref"].split(":")[0] for r in known}),
+                                            "assumptions": [], "limitations": missing}}
             item["co2Market"] = market_kpi(markets[rid], period, "kg CO₂e over selected period")
             item["marketCoverage"] = markets[rid].coverage()
             out.append(item)
         return out
+
+    @cached_property
+    def recent_runtime(self):
+        return recent_runtime(self.a)
 
     def locations(self, q):
         groups = defaultdict(list)
@@ -492,33 +509,46 @@ class FrontendApi:
         return {"measureIds": result["includedMeasureIds"], "result": result,
                 "searchComplete": plan["optimum_proven"]}
 
+    @cached_property
+    def long_term_baseline(self):
+        return baseline_forecast(self.a, MAX_FORECAST_YEARS, damp_growth=True)
+
     def forecast(self, q, metric, horizon, ids):
         if metric == "co2Market":
             return self.market_forecast(q, horizon, ids)
         key = {"cost": "chf", "energy": "kwh", "co2Location": "kg"}.get(metric)
         if not key:
             raise ValueError("Market-based forecasts are not supported by this backend.")
-        fc = self.w.views["forecast"]
-        b = self.a.baseline
-        base = rng(b[key])
-        sim = self.simulate(q, {"measureIds": ids}) if ids else None
-        saved = {"chf": sim["savingsChf"], "kwh": sim["savingsKwh"], "kg": sim["savingsCo2Kg"]}[key] if sim else 0
-        cut = min(1.0, saved / base["mid"]) if base["mid"] else 0
-        years = max(1, min(3, horizon))
-        annual = [{"year": 2026, "periodLabel": PERIOD, "baseline": base, "optimized": base}]
-        for i, r in enumerate(fc["results"][:years], start=1):
-            v = rng(r[key])
-            annual.append({"year": 2026 + i, "periodLabel": r["period"], "baseline": v,
-                           "optimized": {k: x * (1 - cut) for k, x in v.items()}})
-        points = []
-        for row in fc["monthly"][key][:12 * years]:
-            v = rng(row["values"])
-            points.append({"year": int(row["month"][:4]), "date": row["month"] + "-01",
-                           "baseline": v, "optimized": {k: x * (1 - cut) for k, x in v.items()},
-                           **({} if row["observed_base"] else {"coverage": "No baseline observation for this month · annual average used"})})
-        return {"metric": metric, "unit": {"chf": "CHF", "kwh": "kWh", "kg": "kg CO₂"}[key], "granularity": "monthly",
-                "growthAssumption": f"{fc['describe'][key]}. {fc['method']}", "points": points, "annualTotals": annual,
-                "implementationTiming": "Optimized path applies the selected measures' annual run-rate from the first forecast month."}
+        model = self.long_term_baseline
+        years = max(1, min(MAX_FORECAST_YEARS, horizon))
+        measures, excluded = self.resolve_selection(ids) if ids else ([], [])
+        points, future, drivers, scope_assumptions = dashboard_forecast(self.a, model, key, years, measures)
+        units = {"chf": "CHF", "kwh": "kWh", "kg": "kg CO₂e"}[key]
+        precision = 2 if key == "chf" else 3
+        base = rng(self.a.baseline[key])
+        annual = [{"year": 2026, "date": "2026-08-01", "periodLabel": PERIOD,
+                   "baseline": base, "optimized": base, "observed": base["mid"]}]
+        for entries in (points, future):
+            for point in entries:
+                for series in ("baseline", "optimized"):
+                    point[series] = rng([round(x, precision) for x in point[series]])
+        annual += future
+        long_run = self.a.factors["growth"]["values"][1]
+        limitations = ["Only one baseline year is observed. Long-run demand and prices are scenario assumptions."]
+        limitations.extend(row["reason"] for row in excluded)
+        methodology = {
+            "title": "Timed forecast scenario", "kind": "forecast", "period": PERIOD, "units": units,
+            "formula": "Seasonal baseline × compound growth + documented changes − dated recurring effects × affected workload growth + one-time CHF implementation",
+            "sources": sorted({"Normalized baseline ledger", self.a.factors["growth"]["source"], *(d["source"] for d in drivers)}),
+            "assumptions": ["Baseline growth converges to the configured long-run rate by year three. Recorded capacity changes use observed unit rates.",
+                            "Continuing operational effects scale with their affected workload after year one. Contract and other cost-only savings stay at their modeled run-rate.",
+                            "Unit prices and grid factors stay fixed unless the scenario records a change.", *scope_assumptions],
+            "inputs": [], "limitations": limitations,
+        }
+        return {"metric": metric, "unit": units, "granularity": "monthly", "points": points, "annualTotals": annual,
+                "growthAssumption": f"{model['describe'][key]}. Baseline growth converges to the configured {long_run:.1%}/year midpoint by year three.",
+                "implementationTiming": "Savings start at recorded renewals or the modeled rollout date. The cost path includes one-time implementation.",
+                "methodology": methodology, "drivers": drivers}
 
     def market_forecast(self, q, horizon, ids):
         historical = self.historical_market.result()
@@ -529,9 +559,15 @@ class FrontendApi:
         sim = self.simulate(q, {"measureIds": ids}) if ids else None
         savings = sim["marketSavings"] if sim else {}
         delta = savings.get("projectionRange") if ids else rng(0.0)
+        measures, _ = self.resolve_selection(ids) if ids else ([], [])
+        scope_growth = operational_growth(self.a, measures)
+        supported = [(m, effect["projectionRange"]) for m in measures
+                     if (effect := m.get("market_effect")) and effect["coverage"]["status"] != "no-change"
+                     and effect["projectionRange"] is not None]
         affected = savings.get("forecastLimitedMeasureIds", [])
         assumptions = ["Compound the configured activity growth on the fixed baseline-year residual-mix scope.",
                        "Hold the evidenced residual factors fixed for the scenario. No supplier contract renewal, new market coverage or dated market-intensity adjustment is assumed.",
+                       "Apply supported recurring effects from rollout and scale them after year one using the affected workload's growth.",
                        "Use opposite range endpoints for baseline emissions and savings to bound remaining emissions. The physical lower bound is zero."]
         limitations = ["Annual scenario totals for the modeled residual-mix portion only. Uncovered energy and effects without comparable market factors are excluded."]
         if affected:
@@ -541,28 +577,38 @@ class FrontendApi:
         if sim and sim["excluded"]:
             limitations.append("Excluded selections: " + "; ".join(row["id"] for row in sim["excluded"]) + ".")
         methodology = market_calc(coverage, PERIOD, "kg CO₂e/year", "forecast")
-        methodology["formula"] = "Covered residual emissions × (1 + activity growth)^year; subtract supported measure effects on the same scope before applying growth"
+        assumptions += [f"{m.get('name', m['id'])}: continuing effect changes {rates[1]:+.1%}/year after year one, using {source}."
+                        for m, _ in supported if m["id"] in scope_growth for rates, source in [scope_growth[m["id"]]]]
+        methodology["formula"] = "Covered residual emissions × compound activity growth − supported effects × affected workload growth × rollout share"
         methodology["assumptions"] += assumptions
         methodology["sources"] = sorted({*methodology["sources"], growth["source"]})
         methodology["limitations"] += limitations
         points = []
         if base is not None:
-            points.append({"year": 2026, "periodLabel": PERIOD, "baseline": rng(base), "optimized": rng(base),
-                           "observed": mid(historical), "coverage": scope_label, "marketCoverage": coverage})
-            for year in range(1, max(1, min(3, horizon)) + 1):
+            points.append({"year": 2026, "date": "2026-08-01", "periodLabel": PERIOD, "baseline": rng(base), "optimized": rng(base),
+                           **({"observed": mid(historical)} if historical == base else {}),
+                           "coverage": scope_label, "marketCoverage": coverage})
+            for year in range(1, max(1, min(MAX_FORECAST_YEARS, horizon)) + 1):
                 multipliers = [(1 + rate) ** year for rate in growth["values"]]
                 projected = [round(value * factor, 3) for value, factor in zip(base, multipliers)]
+                start = END.replace(year=END.year + year - 1)
+                end = start.replace(year=start.year + 1)
+                share = day_share(start, end, active_from(self.a))
+                scaled = [0.0] * 3
+                for m, values in supported:
+                    for i, value in enumerate(scale_effect(values, scope_growth.get(m["id"], (None, None))[0], year - 1)):
+                        scaled[i] += value
                 remaining = None if delta is None else [
-                    round(max(0, value - delta[k]) * factor, 3)
-                    for value, k, factor in zip(base, ("high", "mid", "low"), multipliers)
+                    round(max(0, value - scaled[2 - i] * share), 3)
+                    for i, value in enumerate(projected)
                 ]
-                points.append({"year": 2026 + year, "periodLabel": f"Sep {2025 + year}–Aug {2026 + year}",
+                points.append({"year": 2026 + year, "date": f"{2026 + year}-08-01", "periodLabel": f"Sep {2025 + year}–Aug {2026 + year}",
                                "baseline": rng(projected), "optimized": rng(remaining) if remaining is not None else None,
                                "coverage": scope_label, "marketCoverage": coverage})
-        return {"metric": "co2Market", "unit": "kg CO₂", "granularity": "annual", "points": points,
+        return {"metric": "co2Market", "unit": "kg CO₂e", "granularity": "annual", "points": points, "annualTotals": points,
                 "growthAssumption": f"Fixed residual factor scenario, with annual compound activity growth of "
                                     f"{', '.join(f'{rate:.1%}' for rate in growth['values'])} (low, mid, high).",
-                "implementationTiming": "Supported market-based effects use annual run rates from forecast year 1.",
+                "implementationTiming": "Supported market-based effects are prorated from the modeled rollout date.",
                 "methodology": methodology, "marketCoverage": coverage,
                 "marketSavings": savings, "marketScopeLabel": scope_label if points else "No supported residual-mix forecast scope."}
 

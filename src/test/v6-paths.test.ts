@@ -93,4 +93,20 @@ describe("V6 scenario chart data", () => {
     const c = buildScenarioChart([], "cost", [{ key: "plan", forecast: forecast("annual") }]);
     expect(c.historyCount).toBe(0);
   });
+  it("preserves a changing plan gap across all twelve projected quarters", () => {
+    const c = buildScenarioChart([], "cost", [{ key: "plan", forecast: {
+      ...forecast("monthly"),
+      points: Array.from({ length: 36 }, (_, i) => {
+        const d = new Date(Date.UTC(2026, 8 + i, 1));
+        const baseline = 500 + i, plan = baseline - (5 + Math.floor(i / 3) * 2);
+        return { year: d.getUTCFullYear(), date: d.toISOString().slice(0, 10),
+          baseline: { low: baseline, mid: baseline, high: baseline },
+          optimized: { low: plan, mid: plan, high: plan } };
+      }),
+    } }]);
+    expect(c.granularity).toBe("quarterly");
+    expect(c.rows).toHaveLength(12);
+    expect(c.rows.map((r) => Number(r["noChange"]) - Number(r["plan"])))
+      .toEqual(Array.from({ length: 12 }, (_, i) => 5 + i * 2));
+  });
 });
