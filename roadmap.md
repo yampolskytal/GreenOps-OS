@@ -1,7 +1,7 @@
 ## First-time recommended strategy (Preview only)
-- [ ] Persist guarded first-time initialization and separate suggested/committed plans
-- [ ] Show source-backed projections, loading/retry and explicit adoption/customization
-- [ ] Verify new visitors, saved/custom/cleared plans, themes, layouts and connected backend; run regressions
+- [x] Persist guarded first-time initialization and separate suggested/committed plans
+- [x] Show source-backed projections, loading/retry and explicit adoption/customization
+- [x] Verify new visitors, saved/custom/cleared plans, themes, layouts and connected backend; run regressions
 
 ## Production backend connection
 - [x] Secure same-origin proxy using saved backend secrets and an explicit endpoint allowlist
