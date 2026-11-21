@@ -7,6 +7,32 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("Information dock breakpoint", () => {
+  it("returns through multiple nested evidence levels without losing the parent panel", () => {
+    render(
+      <InspectorProvider>
+        <AnalyticalInspector title="Resource" trigger={<button>Open resource</button>}>
+          <p>Resource summary</p>
+          <AnalyticalInspector title="Measure" trigger={<button>Open measure</button>}>
+            <p>Measure evidence</p>
+            <AnalyticalInspector title="Calculation" trigger={<button>Open calculation</button>}>
+              <p>Source formula</p>
+            </AnalyticalInspector>
+          </AnalyticalInspector>
+        </AnalyticalInspector>
+      </InspectorProvider>,
+    );
+    fireEvent.click(screen.getByText("Open resource"));
+    fireEvent.click(screen.getByText("Open measure"));
+    fireEvent.click(screen.getByText("Open calculation"));
+    expect(screen.getByText("Source formula")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Back to previous details" }));
+    expect(screen.getByText("Measure evidence")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Back to summary" }));
+    expect(screen.getByText("Resource summary")).toBeVisible();
+    expect(
+      screen.getByLabelText("Analysis details").parentElement?.getAttribute("data-inspector"),
+    ).toBe("open");
+  });
   it("opens nested full details in the existing dock and returns to the original panel", () => {
     const onOpenChange = vi.fn();
     render(
