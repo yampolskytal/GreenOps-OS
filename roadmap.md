@@ -3,7 +3,7 @@
 - [x] Switch the existing adapter to source-backed responses without demo fallback or layout changes
 - [x] Verify GET/POST, endpoint responses, safe errors and credential isolation
 - [x] Add user-approved best-effort per-visitor request limits (reset with server instances)
-- [ ] Publish with user approval and verify production deployment
+- [x] Publish with user approval and verify production deployment
 
 ## Details-button flow sweep
 - [x] Verify selected-item details across dashboards, Studio, Explore, Current Plan, forecasts, data/report pages and nested assistant sources without changing saved data.
@@ -66,7 +66,7 @@
 - [x] Chat assistant panel (backend integration point)
 - [x] Submission Center (exact template CSVs, demo-blocked)
 - [x] Forecast + bonus views
-- [ ] Wire real endpoints — blocked: waiting for backend endpoint spec
+- [x] Wire deployed analytical endpoints through the secure same-origin proxy
 - [ ] Swap Loader for 21st.dev animation — blocked: user will provide component
 - [x] Refactor themes, five-section sidebar, shared dialogs, global search and current plan
 - [x] Simplify role dashboards and consolidate Explore / Data pages
