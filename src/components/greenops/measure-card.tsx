@@ -102,7 +102,12 @@ export function MeasureCard({
         blocked && "border-destructive/40",
       )}
     >
-      <div className="relative grid min-w-0 gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+      <div
+        className={cn(
+          "relative grid min-w-0 gap-3 p-4",
+          !compact && "lg:grid-cols-[minmax(0,1fr)_auto]",
+        )}
+      >
         <Button
           variant="ghost"
           className="h-auto min-w-0 flex-1 justify-between whitespace-normal p-0 text-left hover:bg-transparent"
@@ -121,7 +126,7 @@ export function MeasureCard({
           </span>
           <ChevronDown className={cn("shrink-0 transition-transform", open && "rotate-180")} />
         </Button>
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <div className={cn("flex flex-wrap items-center gap-2", !compact && "lg:justify-end")}>
           <RiskBadge level={m.risk.level} />
           {exception && (
             <span className="text-xs text-warning">Demo exception approved · conditional</span>
@@ -135,7 +140,7 @@ export function MeasureCard({
               .join(" · ") || "Not in any Path"}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2 lg:col-span-2 lg:justify-end">
+        <div className={cn("flex flex-wrap gap-2", !compact && "lg:col-span-2 lg:justify-end")}>
           {onBulkToggle && (
             <label className="mr-auto inline-flex items-center gap-2 text-xs text-muted-foreground">
               <Checkbox
