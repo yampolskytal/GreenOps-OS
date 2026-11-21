@@ -102,7 +102,7 @@ const exportsSchema = z.object({
   issues: list,
   submittable: z.boolean(),
 });
-export const responseSchemas: Record<string, z.ZodTypeAny> = {
+const responseSchemas: Record<string, z.ZodTypeAny> = {
   "/overview": z
     .object({
       baselinePeriod: z.string(),
@@ -291,7 +291,38 @@ export const responseSchemas: Record<string, z.ZodTypeAny> = {
       actions: z
         .array(
           z.discriminatedUnion("type", [
-            z.object({ type: z.literal("navigate"), to: z.string(), label: z.string() }),
+            z.object({
+              type: z.literal("navigate"),
+              to: z.string(),
+              hash: z.string().optional(),
+              label: z.string(),
+            }),
+            z.object({
+              type: z.literal("setFilters"),
+              label: z.string(),
+              department: z.string().optional(),
+              provider: z.string().optional(),
+              from: z
+                .string()
+                .regex(/^\d{4}-\d{2}$/)
+                .optional(),
+              to: z
+                .string()
+                .regex(/^\d{4}-\d{2}$/)
+                .optional(),
+            }),
+            z.object({
+              type: z.literal("setRole"),
+              role: z.enum(["ceo", "cfo", "it"]),
+              label: z.string(),
+            }),
+            z.object({
+              type: z.literal("stagePlan"),
+              measureIds: z.array(z.string()).max(30),
+              budgetChf: number,
+              priority: z.enum(["balanced", "cost", "co2"]),
+              label: z.string(),
+            }),
             z.object({ type: z.literal("highlight"), resourceId: z.string(), label: z.string() }),
             z.object({ type: z.literal("openMeasure"), measureId: z.string(), label: z.string() }),
             z.object({ type: z.literal("openSimulation"), label: z.string() }),

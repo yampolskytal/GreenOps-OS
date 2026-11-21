@@ -445,6 +445,11 @@ class FrontendApi:
         return {"carbonJobs": jobs, "pipelines": pipelines, "clusters": clusters, "aiModels": ai, "seats": seats}
 
     def chat(self, q, body):
+        from assistant_agent import agent_for
+        history = [m for m in (body.get("messages") or []) if isinstance(m, dict)][-20:]
+        return agent_for(self.w, self).answer(q, history)
+
+    def chat_legacy(self, q, body):
         history = body.get("messages") or []
         question = next((m.get("content", "") for m in reversed(history) if m.get("role") == "user"), "")
         context = next((m.get("context") for m in reversed(history) if m.get("role") == "assistant" and m.get("context")), None)

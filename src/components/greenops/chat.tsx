@@ -8,11 +8,16 @@ import { api } from "@/lib/api/client";
 import type { ChatAction, ChatMessage } from "@/lib/api/types";
 import { useApp, useGlobalQuery } from "@/lib/store";
 import { EvidencePopover } from "./ui";
+import { toast } from "sonner";
+import { createPath, findPathByName, replacePath } from "@/lib/paths";
+
+const ASSISTANT_PATH = "Assistant suggestion";
 
 const SUGGESTED = [
   "How many AI seats were bought but not used in August 2026?",
-  "What does it bring to start the GPU server only when needed?",
-  "May the production platform be switched off at night and at weekends?",
+  "Build a plan that meets both targets and let me preview it",
+  "Show only the IT department and open the cost breakdown",
+  "Forecast CO₂ for the next 3 years with the current plan",
 ];
 
 /** Persistent assistant. Backend LLM integration point: api.chat(). Voice (ElevenLabs) can plug in here later. */
@@ -50,10 +55,31 @@ export function ChatPanel() {
   };
   const run = (a: ChatAction) => {
     set({ chatOpen: false });
-    if (a.type === "navigate") navigate({ to: a.to });
+    if (a.type === "navigate") navigate(a.hash ? { to: a.to, hash: a.hash } : { to: a.to });
     else if (a.type === "openSimulation") navigate({ to: "/studio" });
     else if (a.type === "openMeasure") navigate({ to: "/studio", hash: `measure-${a.measureId}` });
-    else navigate({ to: "/it", hash: `res-${a.resourceId}` });
+    else if (a.type === "setFilters") {
+      const { type: _t, label: _l, ...filters } = a;
+      set(filters);
+    } else if (a.type === "setRole") {
+      set({ role: a.role });
+      navigate({ to: `/${a.role}` });
+    } else if (a.type === "stagePlan") {
+      // Saved as an uncommitted Path; committing to the Current Plan stays an explicit user step.
+      const plan = { measureIds: a.measureIds, budgetChf: a.budgetChf, priority: a.priority };
+      const existing = findPathByName(s.paths, ASSISTANT_PATH);
+      try {
+        set({
+          paths: existing
+            ? replacePath(s.paths, existing.id, plan)
+            : createPath(s.paths, { id: `assistant-${Date.now()}`, name: ASSISTANT_PATH, ...plan }),
+        });
+        toast.success(`Saved as Path "${ASSISTANT_PATH}" — not committed`);
+        navigate({ to: "/studio", hash: "paths" });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Could not save the Path");
+      }
+    } else navigate({ to: "/it", hash: `res-${a.resourceId}` });
   };
   return (
     <AnalyticalInspector
