@@ -124,7 +124,7 @@ class ServiceAuthAndCache(unittest.TestCase):
             accounts = tmp / "accounts.json"
             accounts.write_text(json.dumps({"viewer": {"role": "viewer", "salt": salt.hex(), "digest": digest.hex()}}))
             subprocess.run([sys.executable, "app.py", "build"], cwd=ROOT, check=True, capture_output=True)
-            with subprocess.Popen([sys.executable, "app.py", "serve", "--data", str(ROOT / "demo-data"),
+            with subprocess.Popen([sys.executable, "-X", "utf8", "app.py", "serve", "--data", str(ROOT / "demo-data"),
                                    "--state", str(tmp / "state.db"), "--accounts", str(accounts), "--port", "0"],
                                   cwd=ROOT, stdout=subprocess.PIPE, text=True, encoding="utf-8") as process:
                 try:

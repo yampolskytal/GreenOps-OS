@@ -12,6 +12,12 @@ import { cn } from "@/lib/utils";
 import { RiskBadge } from "./ui";
 import { PathMembership } from "./path-membership";
 import { DetailBlock, DetailDrawer } from "./details";
+
+function footprintAmount(value: number, unit: string, format: typeof kg) {
+  const magnitude = Math.abs(value);
+  return magnitude >= 1 ? format(magnitude) : `${magnitude < 0.01 ? "<0.01" : magnitude.toFixed(2)} ${unit}`;
+}
+
 export function MeasureCard({
   m,
   compact = false,
@@ -47,11 +53,42 @@ export function MeasureCard({
   }, [m.id, hash]);
   const blocked = !canSelectMeasure(m);
   const exception = s.demoExceptions[m.id]?.approved;
+  const decision = m.decision;
+  const evidenceOnly = decision?.status === "evidence-needed" || decision?.status === "no-benefit";
+  const quote = decision?.replacement;
+  const impact = [
+    m.savingsChf !== 0 &&
+      `${Math.abs(m.savingsChf) < 1 ? `CHF ${Math.abs(m.savingsChf).toFixed(2)}` : chf(Math.abs(m.savingsChf))} ${m.savingsChf > 0 ? "saved" : "added cost"}/year`,
+    m.savingsCo2KgLocation !== 0 &&
+      `${footprintAmount(m.savingsCo2KgLocation, "kg", kg)} CO₂e/year ${m.savingsCo2KgLocation > 0 ? "avoided" : "added"}`,
+    m.savingsKwh !== 0 &&
+      `${footprintAmount(m.savingsKwh, "kWh", kwh)}/year ${m.savingsKwh > 0 ? "saved" : "added"}`,
+    !m.savingsCo2KgLocation && !!m.savingsCo2KgMarket &&
+      `${footprintAmount(m.savingsCo2KgMarket, "kg", kg)} market-based CO₂e/year ${m.savingsCo2KgMarket > 0 ? "avoided" : "added"}`,
+  ].filter(Boolean);
   const details = (
     <div className="space-y-5">
-      <DetailBlock title="Recommended change">
+      <DetailBlock title={evidenceOnly ? "What to verify" : "Proposed change"}>
         <p>{m.change}</p>
       </DetailBlock>
+      {decision && (
+        <DetailBlock title="Planning decision">
+          <p>{decision.reason}</p>
+          {decision.nextStep && <p className="mt-2">{decision.nextStep}</p>}
+          {decision.scopedAnnualCostChf != null && (
+            <p className="mt-2">Observed annual billed subtotal · {chf(decision.scopedAnnualCostChf)}</p>
+          )}
+          {quote && (
+            <p className="mt-2">
+              {quote.couldMeetTargets && quote.maxAnnualQuoteChf != null
+                ? `The tested swap could meet both targets at ${chf(quote.maxAnnualQuoteChf)} per year or less, assuming the estimated rollout cost and equivalent service.`
+                : quote.remainingCo2GapKg > 0
+                  ? `The tested swap would still need ${kg(quote.remainingCo2GapKg)} CO₂e/year of additional savings.`
+                  : "The tested swap falls short with a nonnegative quote."}
+            </p>
+          )}
+        </DetailBlock>
+      )}
       <DetailBlock title="Why & possible consequences">
         <p>{m.risk.why || "Reason not supplied"}</p>
         <p className="mt-2 text-muted-foreground">{m.risk.consequences}</p>
@@ -65,7 +102,9 @@ export function MeasureCard({
       <DetailBlock title="Human approval">
         <p>{m.risk.approver ?? "Approver not specified; confirm responsibility."}</p>
         <p className="mt-1 text-muted-foreground">
-          {blocked
+          {evidenceOnly
+            ? "For investigation."
+            : blocked
             ? "Blocked as proposed"
             : m.risk.level === "review"
               ? "Pending human review; selection is not approval."
@@ -120,14 +159,19 @@ export function MeasureCard({
             </span>
             <span className="mt-1 block font-semibold">{m.title}</span>
             <span className="mt-1 block text-xs font-normal text-muted-foreground">
-              Annual savings: {chf(m.savingsChf)} · Annual CO₂ reduction:{" "}
-              {kg(m.savingsCo2KgLocation)} · Implementation effort: {m.effortPersonDays} person-days
+              {evidenceOnly || decision?.status === "protected" || decision?.status === "prerequisite"
+                ? decision?.reason
+                : [...impact, `${m.effortPersonDays} person-days`].join(" · ")}
             </span>
           </span>
           <ChevronDown className={cn("shrink-0 transition-transform", open && "rotate-180")} />
         </Button>
         <div className={cn("flex flex-wrap items-center gap-2", !compact && "lg:justify-end")}>
-          <RiskBadge level={m.risk.level} />
+          {evidenceOnly ? (
+            <span className="text-xs text-muted-foreground">
+              {decision?.status === "evidence-needed" ? "Needs evidence" : "No modeled benefit"}
+            </span>
+          ) : <RiskBadge level={m.risk.level} />}
           {exception && (
             <span className="text-xs text-warning">Demo exception approved · conditional</span>
           )}
@@ -141,7 +185,7 @@ export function MeasureCard({
           </span>
         </div>
         <div className={cn("flex flex-wrap gap-2", !compact && "lg:col-span-2 lg:justify-end")}>
-          {onBulkToggle && (
+          {onBulkToggle && !evidenceOnly && (
             <label className="mr-auto inline-flex items-center gap-2 text-xs text-muted-foreground">
               <Checkbox
                 checked={!!bulkSelected}
@@ -150,7 +194,7 @@ export function MeasureCard({
               Select
             </label>
           )}
-          {blocked && (
+          {blocked && !evidenceOnly && (
             <span className="inline-flex items-center gap-1 text-xs text-destructive">
               <Lock className="size-3" />{" "}
               {exception
@@ -158,7 +202,7 @@ export function MeasureCard({
                 : "Blocked — hypothetical Path opportunity only"}
             </span>
           )}
-          {!readOnly && <PathMembership measureIds={[m.id]} />}
+          {!readOnly && !evidenceOnly && <PathMembership measureIds={[m.id]} />}
           {!onBulkToggle && !readOnly && (
             <Button size="sm" variant="ghost" asChild>
               <Link to="/studio" hash={`measure-${m.id}`}>
@@ -200,9 +244,8 @@ export function MeasureCard({
                 <p className="text-sm">{m.risk.why || "Reason not supplied"}</p>
               </DetailBlock>
             </div>
-            {!compact && (
+            {!compact && !evidenceOnly && (
               <p className="text-xs text-muted-foreground">
-                Energy benefit: {kwh(m.savingsKwh)}/yr ·{" "}
                 {(m.risk.protectionWindows ?? []).join(" · ") || "Protection windows not specified"}
               </p>
             )}

@@ -11,13 +11,15 @@ from functools import cached_property
 
 from accounting import MarketSummary, market_reduction, merge_market_effects
 from assistant_router import route_question
-from greenops import END
+from greenops import END, number
+from planning import (DEFAULT_DAILY_RATE, PLAN_DECISIONS, dependency_closure, implementation_cost,
+                      measure_decisions, satisfiable_measures)
 from templates import BASE_NAME, MEASURE_NAME, tables
 from response_cache import ResponseCache, encode, key_of
 
 PERIOD = "Sep 2025 – Aug 2026"
 COST_TARGET, CO2_TARGET, MAX_DAYS = 25.0, 40.0, 15
-DEFAULT_RATE = 1100
+DEFAULT_RATE = DEFAULT_DAILY_RATE
 LOCATIONS = {
     "ch": ("zurich", "Zurich area", "Switzerland", 47.37, 8.54),
     "de": ("frankfurt", "Frankfurt area", "Germany", 50.11, 8.68),
@@ -112,6 +114,21 @@ class FrontendApi:
         # or imported dataset gets a new workspace, adapter and therefore an empty cache.
         self.responses = ResponseCache()
 
+    @cached_property
+    def decisions(self):
+        decisions = measure_decisions(self.measures.values())
+        for option in self.w.views.get("investment-options", []):
+            replacement = option["replacement_test"]
+            decision = decisions[option["id"]]
+            if decision["status"] == "evidence-needed" and replacement:
+                decision["replacement"] = {
+                    "measureIds": replacement["replaces"],
+                    "maxAnnualQuoteChf": replacement["maximum_annual_quote_chf"],
+                    "remainingCo2GapKg": replacement["carbon_gap_kg_after_replacement"],
+                    "couldMeetTargets": replacement["can_close_both_with_nonnegative_quote"],
+                }
+        return decisions
+
     # ---------- helpers
     def lines(self, q):
         return [l for l in self.a.lines
@@ -188,7 +205,8 @@ class FrontendApi:
             "evidence": files_of(m.get("evidence", [])),
             "assumptions": [f"Implementation CHF {m['implementation_chf']:,}; first-year net CHF {m['first_year_net_chf']:,}.",
                             f"Savings ranges: kWh {[round(x, 1) for x in m['kwh']]}, kg CO2e {[round(x, 1) for x in m['kg']]}."],
-            "includable": not m["hard_blockers"],
+            "includable": self.decisions[m["id"]]["status"] in PLAN_DECISIONS,
+            "decision": self.decisions[m["id"]],
         }
 
     # ---------- routes
@@ -332,7 +350,7 @@ class FrontendApi:
                 "category": category(m), "impactChfYear": m["chf"], "impactKwhYear": mid(m["kwh"]),
                 "impactCo2KgYear": mid(m["kg"]), "evidence": files_of(m.get("evidence", [])),
                 "assumptions": list(m["blockers"]), "risk": "blocked" if m["hard_blockers"] else "review" if m["blockers"] else "low",
-                "action": m["change"], "measureId": m["id"]} for m in self.r.measures]
+                "action": m["change"], "measureId": m["id"], "decision": self.decisions[m["id"]]} for m in self.r.measures]
         contra = self.w.views["contradictions"]
         examples = defaultdict(list)
         for f in contra["findings"]:
@@ -342,7 +360,7 @@ class FrontendApi:
             ex = examples.get(kind, [])
             out.append({"id": f"F-C-{kind}", "title": kind.replace("_", " ").capitalize(), "description": f"{count} records flagged.",
                         "resource": ", ".join(sorted({str(e.get("scope") or e.get("ref", "").split(":")[0]) for e in ex}))[:120] or "ledger",
-                        "category": "conflict", "impactChfYear": 0, "impactKwhYear": 0, "impactCo2KgYear": 0,
+                        "category": "conflict", "impactChfYear": None, "impactKwhYear": None, "impactCo2KgYear": None,
                         "evidence": [{"source": e.get("ref", ""), "detail": str(e.get("decision") or e.get("detail") or "")[:200]} for e in ex],
                         "assumptions": [], "risk": "review", "action": "Review in Data quality."})
         return out
@@ -350,34 +368,63 @@ class FrontendApi:
     def measure_list(self, q):
         return [self.to_measure(m) for m in self.r.measures]
 
-    def simulate(self, q, body):
-        ids = [i for i in body.get("measureIds", []) if isinstance(i, str)]
-        budget = float(body.get("budgetChf", 16500))
-        rate = float(body.get("chfPerPersonDay", DEFAULT_RATE))
-        chosen, excluded, scopes, groups = [], [], set(), set()
-        for i in ids:
+    def resolve_selection(self, ids):
+        eligible, excluded = {}, {}
+        for i in dict.fromkeys(i for i in ids if isinstance(i, str)):
             m = self.measures.get(i)
             if not m:
-                excluded.append({"id": i, "reason": "Unknown measure for this dataset."})
+                excluded[i] = "Unknown measure for this dataset."
                 continue
-            claimed = set(m.get("scopes") or [m["resource"]])
-            if m["hard_blockers"]:
-                excluded.append({"id": i, "reason": "Hard blocker: " + "; ".join(m["hard_blockers"])})
-            elif claimed & scopes:
-                excluded.append({"id": i, "reason": f"Overlaps another selected measure on {', '.join(sorted(claimed & scopes))}."})
-            elif m.get("exclusive") and m["exclusive"] in groups:
-                excluded.append({"id": i, "reason": f"Mutually exclusive group {m['exclusive']} already selected."})
+            decision = self.decisions[i]
+            if decision["status"] not in PLAN_DECISIONS:
+                excluded[i] = decision["reason"]
             else:
-                chosen.append(m)
-                scopes |= claimed
-                if m.get("exclusive"):
-                    groups.add(m["exclusive"])
-        ids_kept = {m["id"] for m in chosen}
-        for m in list(chosen):
-            missing = set(m.get("requires", [])) - ids_kept
-            if missing:
-                chosen.remove(m)
-                excluded.append({"id": m["id"], "reason": "Requires " + ", ".join(sorted(missing))})
+                eligible[i] = m
+
+        ready = satisfiable_measures(eligible.values())
+        for i in sorted(eligible.keys() - ready):
+            required = set(eligible[i].get("requires", ())) - ready
+            excluded[i] = "Requires an eligible dependency chain including " + ", ".join(sorted(required)) + "."
+        eligible = {i: m for i, m in eligible.items() if i in ready}
+
+        while True:
+            chosen, conflicts, scopes, groups = {}, {}, set(), set()
+            for i, m in eligible.items():
+                claimed = set(m.get("scopes") or [m["resource"]])
+                group = m.get("exclusive")
+                if claimed & scopes:
+                    conflicts[i] = f"Overlaps another selected measure on {', '.join(sorted(claimed & scopes))}."
+                elif group in groups:
+                    conflicts[i] = f"Mutually exclusive group {group} already selected."
+                else:
+                    chosen[i] = m
+                    scopes |= claimed
+                    if group:
+                        groups.add(group)
+            valid = satisfiable_measures(chosen.values())
+            needed = dependency_closure(chosen, [i for i in chosen if i in valid and
+                                                 self.decisions[i]["status"] == "candidate"])
+            dropped = (chosen.keys() - valid) or (chosen.keys() - needed)
+            if not dropped:
+                excluded.update(conflicts)
+                return list(chosen.values()), [{"id": i, "reason": reason} for i, reason in excluded.items()]
+            for i in sorted(dropped):
+                required = set(chosen[i].get("requires", ())) - valid
+                excluded[i] = ("Requires " + ", ".join(sorted(required)) + "." if required else
+                               "This prerequisite belongs with a supported dependent measure.")
+                del eligible[i]
+
+    @staticmethod
+    def plan_limits(body):
+        budget = number(body.get("budgetChf", 16500))
+        rate = number(body.get("chfPerPersonDay", DEFAULT_RATE))
+        if budget is None or not 0 <= budget <= 16500 or rate is None or not 1 <= rate <= 100000:
+            raise ValueError("Use a budget from CHF 0 to 16,500 and a positive daily implementation rate.")
+        return budget, rate
+
+    def simulate(self, q, body):
+        budget, rate = self.plan_limits(body)
+        chosen, excluded = self.resolve_selection(body.get("measureIds", []))
         base_chf, base_kg = self.baseline()
         chf = sum(m["chf"] for m in chosen)
         kwh = sum(mid(m["kwh"]) for m in chosen)
@@ -390,7 +437,10 @@ class FrontendApi:
                           "forecastLimitedMeasureIds": [mid for mid, effect in effects if effect["projectionPartial"] or
                                                       effect["coverage"]["status"] == "unavailable"]}
         days = sum(m["days"] for m in chosen)
-        effort_chf = sum(m["implementation_chf"] - m["days"] * DEFAULT_RATE + m["days"] * rate for m in chosen)
+        effort_chf = sum(implementation_cost(m, rate) for m in chosen)
+        first_year = sum(m.get("first_year_chf", m["chf"]) for m in chosen)
+        baseline_high = self.a.baseline["kg"][2]
+        conservative = sum(m["kg"][0] for m in chosen) / baseline_high * 100 if baseline_high else None
         cost_pct = chf / base_chf * 100 if base_chf else 0
         co2_pct = kg / base_kg * 100 if base_kg else 0
         constraints = [
@@ -408,18 +458,21 @@ class FrontendApi:
                 "savingsCo2KgMarket": round(market["range"][1], 3) if market["range"] is not None else None,
                 "savingsCo2KgMarketRange": rng(market["range"]) if market["range"] is not None else None,
                 "marketCoverage": market["coverage"], "marketSavings": market_savings,
-                "effortDays": days, "effortChf": effort_chf,
+                "effortDays": days, "effortChf": effort_chf, "includedMeasureIds": [m["id"] for m in chosen],
+                "firstYearGrossChf": round(first_year, 2), "firstYearNetChf": round(first_year - effort_chf, 2),
+                "conservativeCo2Pct": conservative,
+                "costHeadroomChf": round(chf - base_chf * COST_TARGET / 100, 2) if base_chf else None,
+                "co2HeadroomKg": round(kg - base_kg * CO2_TARGET / 100, 3) if base_kg else None,
                 "costReductionPct": cost_pct, "co2ReductionPct": co2_pct, "constraints": constraints,
                 "feasible": bool(chosen) and all(c["met"] for c in constraints), "reasons": reasons, "excluded": excluded,
                 "paybackMonths": effort_chf / chf * 12 if chf > 0 else None}
 
-    @staticmethod
-    def optimize_inputs(body):
+    @classmethod
+    def optimize_inputs(cls, body):
         """Normalize an optimize request; equal tuples always produce equal results for one review state."""
-        rate = float(body.get("chfPerPersonDay", DEFAULT_RATE)) or DEFAULT_RATE
-        budget = int(max(0, min(16500, float(body.get("budgetChf", 16500)))))
+        budget, rate = cls.plan_limits(body)
         days = min(MAX_DAYS, int(budget / rate * 2) / 2)
-        objective = {"balanced": "midpoint", "cost": "first-year", "co2": "conservative"}.get(body.get("priority"), "midpoint")
+        objective = {"balanced": "midpoint", "cost": "first-year-net", "co2": "conservative"}.get(body.get("priority"), "midpoint")
         return rate, budget, days, objective
 
     def review_version(self):
@@ -431,9 +484,11 @@ class FrontendApi:
 
     def optimize(self, q, body):
         rate, budget, days, objective = self.optimize_inputs(body)
-        plan = self.w.package(budget, days, "planning", objective)
+        plan = self.w.package(budget, days, "planning", objective, daily_rate=rate)
         ids = [m["id"] for m in plan["selected"]]
-        return {"measureIds": ids, "result": self.simulate(q, {"measureIds": ids, "budgetChf": budget, "chfPerPersonDay": rate})}
+        result = self.simulate(q, {"measureIds": ids, "budgetChf": budget, "chfPerPersonDay": rate})
+        return {"measureIds": result["includedMeasureIds"], "result": result,
+                "searchComplete": plan["optimum_proven"]}
 
     def forecast(self, q, metric, horizon, ids):
         if metric == "co2Market":
@@ -647,12 +702,11 @@ class FrontendApi:
     def export_measures(self, q, body):
         ids = body.get("measureIds") or []
         sim = self.simulate(q, {"measureIds": ids})
-        excluded = {e["id"] for e in sim["excluded"]}
-        plan = dict(self.w.plan, selected=[self.measures[i] for i in ids if i in self.measures and i not in excluded])
+        plan = dict(self.w.plan, selected=[self.measures[i] for i in sim["includedMeasureIds"]])
         csv = tables(self.a, plan, self.w.template_root)[MEASURE_NAME]
         issues = (["Demo dataset — not a valid submission."] if self.a.demo else []) + sim["reasons"] + [f"{e['id']}: {e['reason']}" for e in sim["excluded"]]
         return {"filename": MEASURE_NAME, "csv": "﻿" + csv.lstrip("﻿"), "issues": issues,
-                "submittable": not self.a.demo and sim["feasible"]}
+                "submittable": not self.a.demo and sim["feasible"] and not sim["excluded"]}
 
 
 class UnknownRoute(LookupError):

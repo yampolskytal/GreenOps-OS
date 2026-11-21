@@ -32,6 +32,8 @@ def combine_production(autoscale, rate, annual_quote, hypothetical=False):
 
 
 def investment_options(reports, plan):
+    from planning import satisfiable_measures
+
     selected = plan["selected"]
     options = []
     for m in reports.measures:
@@ -48,7 +50,10 @@ def investment_options(reports, plan):
         for drop in islice(combinations_by_size, 10000):
             remove = mandatory + list(drop)
             kept = [r for r in remaining if r not in remove]
-            if (sum(r["days"] for r in kept) + m["days"] > plan["day_limit"]
+            scenario = [*kept, m]
+            if (len(satisfiable_measures(scenario)) != len(scenario)
+                    or m.get("hard_blockers")
+                    or sum(r["days"] for r in kept) + m["days"] > plan["day_limit"]
                     or sum(r["implementation_chf"] for r in kept) + m["implementation_chf"] > plan["budget_chf"]):
                 continue
             result = total(kept)

@@ -162,6 +162,23 @@ export interface Evidence {
   detail: string;
 }
 
+type ImpactMetric = "cost" | "energy" | "co2Location" | "co2Market";
+
+export interface MeasureDecision {
+  status: "candidate" | "prerequisite" | "protected" | "evidence-needed" | "no-benefit";
+  reason: string;
+  nextStep: string | null;
+  scopedAnnualCostChf: number | null;
+  benefits: ImpactMetric[];
+  tradeoffs: ImpactMetric[];
+  replacement?: {
+    measureIds: string[];
+    maxAnnualQuoteChf: number | null;
+    remainingCo2GapKg: number;
+    couldMeetTargets: boolean;
+  };
+}
+
 export interface Measure {
   id: string;
   title: string;
@@ -187,6 +204,7 @@ export interface Measure {
   evidence: Evidence[];
   assumptions: string[];
   includable: boolean;
+  decision?: MeasureDecision;
 }
 
 export interface Finding {
@@ -213,6 +231,7 @@ export interface Finding {
   risk: RiskLevel;
   action: string;
   measureId?: string;
+  decision?: MeasureDecision;
 }
 
 export interface SimulationInput {
@@ -238,6 +257,12 @@ export interface SimulationResult {
   marketSavings?: MarketSavings;
   effortDays: number;
   effortChf: number;
+  includedMeasureIds?: string[];
+  firstYearGrossChf?: number;
+  firstYearNetChf?: number;
+  conservativeCo2Pct?: number | null;
+  costHeadroomChf?: number | null;
+  co2HeadroomKg?: number | null;
   costReductionPct: number;
   co2ReductionPct: number;
   constraints: Constraint[];
@@ -255,6 +280,7 @@ export interface OptimizeInput {
 export interface OptimizeResult {
   measureIds: string[];
   result: SimulationResult;
+  searchComplete?: boolean;
 }
 
 export interface ForecastPoint {

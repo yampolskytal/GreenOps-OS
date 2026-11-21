@@ -22,6 +22,13 @@ The Python backend lives in `backend/`. The application uses the same-origin `/a
 | exportBaseline / exportMeasures | GET exports/baseline, POST exports/measures | `templates.tables` with the organizer templates |
 | importFiles | POST imports | not supported over HTTP — restart backend with `--data` |
 
+## Planning decisions
+
+- `/measures` and `/findings` return a decision with the supported benefit metrics, adverse impacts, and the evidence or protection reason. A quote request retains its billed scope and may include the outcome of a modeled replacement. A single-metric benefit remains eligible.
+- `/simulation` excludes research leads, protected actions, unsupported measures and unresolved dependency chains. A zero-impact prerequisite counts only with a supported dependent measure. Existing saved proposals are revalidated when simulated or exported.
+- `/optimize` uses the same implementation rate, scopes, dependencies and budget as simulation. The cost priority uses first-year savings net of implementation cost. The balanced priority uses annual run-rate savings and midpoint location-based CO₂e. The carbon priority uses the conservative emissions range. The response reports whether the search completed.
+- Simulation reports signed margins against the numerical targets, first-year gross and net CHF, and a conservative carbon sensitivity. The official cost target still uses the annual run rate.
+
 ## Market-based CO₂e
 
 - Overview history, daily footprint and breakdown rows carry `co2KgMarket`, `co2KgMarketRange` and `marketCoverage`. The monthly calculation is in `evidence.co2KgMarket`. A supported subtotal can be partial. Unavailable figures are `null`, while a sourced zero remains numeric.

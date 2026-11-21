@@ -140,13 +140,14 @@ class Workspace:
                               "method": "Historical replay only. Uses a proxy for local coal and gas generation intensity, excluding imports and treating unmodeled categories as zero contribution. No operational booking."},
         }
 
-    def package(self, budget=16500, days=15, mode="planning", objective="midpoint", *, exclude=(), catalog=None):
+    def package(self, budget=16500, days=15, mode="planning", objective="midpoint", *, exclude=(), catalog=None,
+                daily_rate=1100):
         entries = self.store.history(self.run_id, "review", 10000) if self.store else []
         approvals = {}
         for row in entries:
             p = row["payload"]
             approvals.setdefault(p["measure"], p | {"actor": row["actor"], "created": row["created"]})
-        package = (catalog or self.reports).optimize(budget, days, mode, objective, approvals, exclude)
+        package = (catalog or self.reports).optimize(budget, days, mode, objective, approvals, exclude, daily_rate)
         savings = package["savings"]
         measures = [r["id"] for r in package["selected"]]
         package["figures"] = {

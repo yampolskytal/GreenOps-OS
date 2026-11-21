@@ -36,7 +36,7 @@ import { createPath, MAX_PATHS, replacePath } from "@/lib/paths";
 import { useCommitPlan } from "@/lib/use-commit";
 import { officialQuery } from "@/lib/planning";
 import { reveal } from "@/lib/reveal";
-import { chf } from "@/lib/format";
+import { chf, kg, pct } from "@/lib/format";
 import { seo } from "@/lib/seo";
 import { recommendationOptions } from "@/lib/starting-plan";
 export const Route = createFileRoute("/studio")({
@@ -49,8 +49,8 @@ export const Route = createFileRoute("/studio")({
 });
 const PRIOS = [
   { id: "balanced" as const, label: "Balanced" },
-  { id: "cost" as const, label: "Cost savings" },
-  { id: "co2" as const, label: "CO₂ reduction" },
+  { id: "cost" as const, label: "First-year net savings" },
+  { id: "co2" as const, label: "Conservative CO₂ reduction" },
 ];
 function Studio() {
   const hash = useRouterState({ select: (r) => r.location.hash });
@@ -73,6 +73,7 @@ function Studio() {
     [commitOpen, setCommitOpen] = useState(false),
     [viewOpen, setViewOpen] = useState(false);
   const [search, setSearch] = useState(""),
+    [browse, setBrowse] = useState("plan"),
     [risk, setRisk] = useState("all"),
     [category, setCategory] = useState("all"),
     [resource, setResource] = useState("all"),
@@ -124,8 +125,8 @@ function Studio() {
             </span>
           </header>
           <p className="mt-2 text-xs text-muted-foreground">
-            {PRIOS.find((p) => p.id === prio)?.label} · budget {chf(budget)} · best found, not
-            guaranteed optimal.
+            {PRIOS.find((p) => p.id === prio)?.label} · budget {chf(budget)}
+            {pkg?.searchComplete === true ? " · Search complete" : pkg?.searchComplete === false ? " · Best package found within the search limit" : ""}
           </p>
           {recommended.isError && (
             <p role="alert" className="mt-4 text-sm text-destructive">
@@ -141,6 +142,18 @@ function Studio() {
                   .length ?? 0}{" "}
                 require review
               </p>
+              {pkg.result.firstYearNetChf != null && (
+                <p className="mt-2 text-sm">
+                  First-year gross {chf(pkg.result.firstYearGrossChf)} · net {chf(pkg.result.firstYearNetChf)} after implementation
+                </p>
+              )}
+              {pkg.result.costHeadroomChf != null && pkg.result.co2HeadroomKg != null && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {chf(Math.abs(pkg.result.costHeadroomChf))} {pkg.result.costHeadroomChf < 0 ? "below" : "above"} the annual cost savings target ·{" "}
+                  {kg(Math.abs(pkg.result.co2HeadroomKg))} CO₂e {pkg.result.co2HeadroomKg < 0 ? "below" : "above"} the midpoint carbon target
+                  {pkg.result.conservativeCo2Pct != null && ` · Conservative carbon reduction ${pct(pkg.result.conservativeCo2Pct)}`}
+                </p>
+              )}
               <div className="mt-5">
                 <Q q={overview}>
                   {(o) => (
@@ -201,6 +214,18 @@ function Studio() {
             />
           </label>
           {[
+            {
+              label: "Decision",
+              value: browse,
+              change: setBrowse,
+              options: [
+                ["plan", "Plan candidates"],
+                ["evidence-needed", "Needs evidence"],
+                ["protected", "Protected actions"],
+                ["no-benefit", "No modeled benefit"],
+                ["all", "Full catalog"],
+              ],
+            },
             {
               label: "Risk",
               value: risk,
@@ -288,6 +313,7 @@ function Studio() {
             variant="ghost"
             onClick={() => {
               setSearch("");
+              setBrowse("plan");
               setRisk("all");
               setCategory("all");
               setResource("all");
@@ -322,6 +348,10 @@ function Studio() {
                   m.id === linkedMeasureId ||
                   ((!search ||
                     `${m.title} ${m.resource}`.toLowerCase().includes(search.toLowerCase())) &&
+                    (browse === "all" ||
+                      (browse === "plan" && (m.includable || !m.decision)) ||
+                      (browse === "protected" && m.risk.level === "blocked") ||
+                      m.decision?.status === browse) &&
                     (risk === "all" || m.risk.level === risk) &&
                     (category === "all" || m.service === category) &&
                     (resource === "all" || m.resource === resource) &&

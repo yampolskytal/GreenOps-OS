@@ -304,6 +304,8 @@ def case_candidates(r, existing):
         candidate["approval"] = "Head of Finance and Head of IT"
         if rid == "dp-prod":
             candidate["availability_preserving"] = True
+        if rid == "pbi-kap":
+            candidate["protected_dependencies"] = ["pbi-07"]
         if quote:
             quoted = required_number(quote, "annual_chf")
             if quote.get("equivalent_service") is not True:

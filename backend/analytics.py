@@ -4,7 +4,9 @@ from statistics import mean
 
 from accounting import market_reduction
 from greenops import END, START, day, inside, key, month, natural, number, resource, total
-from planning import additional_candidates, apply_policy, contract_ticket, platform_tickets
+from planning import (DEFAULT_DAILY_RATE, PLAN_DECISIONS, additional_candidates, apply_policy,
+                      contract_ticket, dependency_closure, implementation_cost, measure_decisions,
+                      platform_tickets, satisfiable_measures)
 from case_measures import case_candidates
 from verification import evidence_record, required_number
 from records import fingerprint
@@ -244,29 +246,40 @@ class Reports:
             for r in self.a.policy.get("protection_register", [])
         )
 
-    def optimize(self, budget=16500, days=15, mode="planning", objective="midpoint", reviews=None, excluded_ids=()):
+    def optimize(self, budget=16500, days=15, mode="planning", objective="midpoint", reviews=None,
+                 excluded_ids=(), daily_rate=DEFAULT_DAILY_RATE):
         """Exact branch-and-bound on eligible, disjoint scopes, with a bounded proof budget."""
         b = self.a.baseline
         reviews = reviews or {}
         excluded_ids = frozenset(excluded_ids)
+        decisions = measure_decisions(self.measures)
+
         def gains(item):
-            cash = item["first_year_chf"] if objective == "first-year" else item["chf"]
+            cash = item["chf"]
+            if objective in ("first-year", "first-year-net"):
+                cash = item["first_year_chf"]
+            if objective == "first-year-net":
+                cash -= implementation_cost(item, daily_rate)
             i, j = (0, 2) if objective == "conservative" else (1, 1)
             return (cash / (b["chf"] * .25) if b["chf"] > 0 else 0,
                     item["kg"][i] / (b["kg"][j] * .40) if b["kg"][j] > 0 else 0)
-        def score(cost, carbon, used):
-            return min(cost, carbon, 1), cost + carbon, -used
+        def score(cost, carbon, used, spend, count):
+            return min(cost, carbon, 1), cost + carbon, -used, -spend, -count
         def permitted(item):
             review = reviews.get(item["id"], {})
             approved = (review.get("decision") == "approved" and
                         review.get("fingerprint") == item["review_fingerprint"])
-            if (item["hard_blockers"] or item["id"] in excluded_ids or
+            if (decisions[item["id"]]["status"] not in PLAN_DECISIONS or item["id"] in excluded_ids or
                     (review.get("decision") == "rejected" and review.get("fingerprint") == item["review_fingerprint"])):
                 return False
             return (approved if mode == "approved" else
                     (mode == "conditional" or self.a.policy.get("case_measures") or not item["blockers"] or approved))
-        items = sorted((r for r in self.measures if permitted(r) and any(gains(r))),
-                       key=lambda r: (-sum(gains(r)) / r["days"], r["id"]))
+        allowed = [r for r in self.measures if permitted(r) and r["days"] <= days and
+                   implementation_cost(r, daily_rate) <= budget]
+        ready = satisfiable_measures(allowed)
+        available = {r["id"]: r for r in allowed if r["id"] in ready}
+        active = dependency_closure(available, [i for i, r in available.items() if max(gains(r)) > 0])
+        items = sorted((available[i] for i in active), key=lambda r: (-sum(gains(r)) / max(.5, r["days"]), r["id"]))
         gain = [gains(r) for r in items]
         # A relaxed knapsack upper bound ignores conflicts and CHF, while
         # preserving person-days. Bound the two objectives independently.
@@ -277,28 +290,29 @@ class Reports:
             for remaining in range(capacity + 1):
                 skip = suffix[i + 1][remaining]
                 suffix[i][remaining] = tuple(max(x, y + z) for x, y, z in zip(skip, gain[i], suffix[i + 1][remaining - effort])) if effort <= remaining else skip
-        best, best_items = score(0, 0, 0), []
+        best, best_items = score(0, 0, 0, 0, 0), []
         visited = 0
         stack = [(0, 0, 0, 0, 0, (), frozenset(), frozenset())]
         while stack and visited < 100000:
             i, used, spend, cost, carbon, selected, scopes, exclusive = stack.pop()
             visited += 1
-            current = score(cost, carbon, used)
+            current = score(cost, carbon, used, spend, len(selected))
             selected_ids = {r["id"] for r in selected}
             if current > best and all(set(r["requires"]) <= selected_ids for r in selected):
                 best, best_items = current, selected
-            if i == len(items) or used >= days:
+            if i == len(items):
                 continue
             c, g = suffix[i][round((days - used) * 2)]
-            if score(cost + c, carbon + g, used) < best:
+            if score(cost + c, carbon + g, used, spend, len(selected)) < best:
                 continue
             item = items[i]
             stack.append((i + 1, used, spend, cost, carbon, selected, scopes, exclusive))
             group = item["exclusive"]
-            claimed = set(item.get("scopes", [item["resource"]]))
+            claimed = set(item.get("scopes") or [item["resource"]])
+            item_cost = implementation_cost(item, daily_rate)
             if (not claimed & scopes and (not group or group not in exclusive) and
-                    used + item["days"] <= days and spend + item["implementation_chf"] <= budget):
-                stack.append((i + 1, used + item["days"], spend + item["implementation_chf"],
+                    used + item["days"] <= days and spend + item_cost <= budget):
+                stack.append((i + 1, used + item["days"], spend + item_cost,
                               cost + gain[i][0], carbon + gain[i][1], selected + (item,),
                               scopes | claimed, exclusive | {group} if group else exclusive))
         savings = total(best_items)
@@ -307,26 +321,27 @@ class Reports:
         co2_pct = savings["kg"][1] / b["kg"][1] if b["kg"][1] > 0 else None
         conservative = savings["kg"][0] / b["kg"][2] if b["kg"][2] > 0 else None
         days_used = sum(r["days"] for r in best_items)
+        spent = sum(implementation_cost(r, daily_rate) for r in best_items)
+        first_year = round(sum(r["first_year_chf"] for r in best_items), 2)
         chosen = [r | {"requires_approval": r.get("requires_approval", False) and not
                        (reviews.get(r["id"], {}).get("decision") == "approved" and
                         reviews.get(r["id"], {}).get("fingerprint") == r["review_fingerprint"])} for r in best_items]
         return {"selected": chosen, "excluded": [r for r in self.measures if r not in best_items],
                 "pending_approvals": [r["id"] for r in chosen if r["requires_approval"]],
-                "capacity_remaining": {"days": days - days_used, "chf": budget - sum(r["implementation_chf"] for r in best_items)},
+                "capacity_remaining": {"days": days - days_used, "chf": budget - spent},
                 "catalog_upper_bound": {"chf": round(suffix[0][capacity][0] * b["chf"] * .25, 2) if objective == "midpoint" else None,
                                         "kg": round(suffix[0][capacity][1] * b["kg"][1] * .40, 4) if objective == "midpoint" else None,
                                         "method": "Independent optimistic bound by effort only. Overlap and CHF can only lower the achievable totals."},
-                "budget_chf": budget, "day_limit": days, "spent_chf": sum(r["implementation_chf"] for r in best_items), "days": days_used,
+                "budget_chf": budget, "day_limit": days, "spent_chf": spent, "days": days_used,
                 "savings": {k: savings[k] for k in ("chf", "kwh", "kg")},
-                "first_year_chf": round(sum(r["first_year_chf"] for r in best_items), 2),
-                "first_year_net_chf": round(sum(r["first_year_net_chf"] for r in best_items), 2),
+                "first_year_chf": first_year, "first_year_net_chf": round(first_year - spent, 2),
                 "mode": mode, "objective": objective, "objective_attainment": list(best[:2]),
                 "cost_fraction": cost_pct, "carbon_fraction": co2_pct, "conservative_carbon_fraction": conservative,
                 "target_met": cost_pct is not None and co2_pct is not None and cost_pct >= .25 and co2_pct >= .40,
                 "cost_gap_chf": max(0, b["chf"] * .25 - savings["chf"]),
                 "carbon_gap_kg": max(0, b["kg"][1] * .40 - savings["kg"][1]),
                 "states_checked": visited, "optimum_proven": not stack,
-                "method": "Maximize the lower share of the two targets, capped at target attainment. Then maximize combined attainment and prefer less effort on ties. At most one measure per resource. All proposed changes require owner sign-off."}
+                "method": "Maximize the lower share of the two objectives, capped at target attainment. Then maximize combined attainment and break ties by less effort, lower implementation cost and fewer measures. Overlapping scopes are excluded and dependencies must be satisfied."}
 
     def reconcile(self):
         led = defaultdict(list)

@@ -19,6 +19,7 @@ from assistant_router import route_question, ai_usage_report
 import frontend_api
 from evidence import explain, totals_explained
 from greenops import CORE, SCHEMA, total
+from planning import PLAN_DECISIONS, measure_decisions
 from templates import tables
 
 
@@ -246,9 +247,12 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                         plan = work.package(mode=mode)
                         selected = {m["id"]: m for m in plan["selected"]}
                         items = plan["selected"] if route == "waste" else [*plan["selected"], *plan["excluded"]]
-                        result = [dict(explain(m), requires_approval=m["requires_approval"], included=m["id"] in selected,
-                                       evidence_status="blocked" if m["status"] == "blocked" else
-                                       "owner review required" if m["requires_approval"] else "eligible")
+                        decisions = measure_decisions(items)
+                        result = [dict(explain(m, decisions[m["id"]]), requires_approval=m["requires_approval"], included=m["id"] in selected,
+                                       evidence_status={"protected": "blocked", "evidence-needed": "evidence needed",
+                                                        "no-benefit": "no modeled benefit"}.get(
+                                           decisions[m["id"]]["status"],
+                                           "owner review required" if m["requires_approval"] else "eligible"))
                                   for m in sorted(items, key=lambda m: (-(m["chf"] if rank == "chf" else m["kg"][1]), m["id"]))]
                     elif route == "issue-queue":
                         result = work.issue_queue()
@@ -264,7 +268,7 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                         if item is None:
                             self.write(404, {"error": "Unknown measure"})
                             return
-                        result = explain(item)
+                        result = explain(item, measure_decisions(work.reports.measures)[item["id"]])
                     elif route in ("questions/1", "questions/2", "questions/3"):
                         result = work.answers[{"1":"unused-seats", "2":"gpu", "3":"production"}[route[-1]]]
                     elif route == "settings":
@@ -387,8 +391,8 @@ def serve(workspace, port, static, *, host="127.0.0.1", accounts=None, catalog=N
                     if not item or payload.get("fingerprint") != item["review_fingerprint"] or decision not in ("approved", "rejected"):
                         raise ValueError("Choose a current measure and decision.")
                     if not 4 <= len(evidence) <= 2000 or (decision == "approved" and
-                            (item["hard_blockers"] or item.get("pilot_evidence_complete") is False
-                             or item.get("quote_status") == "quote required" or not all(payload.get(k) is True for k in checks))):
+                            (measure_decisions(work.reports.measures)[item["id"]]["status"] not in PLAN_DECISIONS
+                             or item.get("pilot_evidence_complete") is False or not all(payload.get(k) is True for k in checks))):
                         raise ValueError("Record verifiable evidence and attest protection, dependencies and rollback. Hard blocks cannot be overridden.")
                     entry = {"measure": item["id"], "fingerprint": item["review_fingerprint"], "decision": decision, "evidence": evidence}
                     entry.update({k: payload.get(k) is True for k in checks})

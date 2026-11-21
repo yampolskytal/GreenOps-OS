@@ -6,6 +6,21 @@ const range = z
   .object({ low: number, mid: number, high: number })
   .refine((r) => r.low <= r.mid && r.mid <= r.high, "Invalid low/mid/high range");
 const riskLevel = z.enum(["low", "review", "blocked"]);
+const impactMetric = z.enum(["cost", "energy", "co2Location", "co2Market"]);
+const measureDecision = z.object({
+  status: z.enum(["candidate", "prerequisite", "protected", "evidence-needed", "no-benefit"]),
+  reason: z.string(),
+  nextStep: z.string().nullable(),
+  scopedAnnualCostChf: number.nullable(),
+  benefits: z.array(impactMetric),
+  tradeoffs: z.array(impactMetric),
+  replacement: z.object({
+    measureIds: list,
+    maxAnnualQuoteChf: number.nullable(),
+    remainingCo2GapKg: number,
+    couldMeetTargets: z.boolean(),
+  }).optional(),
+}).optional();
 const factor = z.object({ label: z.string(), low: z.string(), mid: z.string(), high: z.string(), source: z.string() });
 const marketCoverage = z.object({
   status: z.enum(["covered", "partial", "unavailable", "no-change"]),
@@ -67,6 +82,7 @@ const measure = z
     evidence,
     assumptions: list,
     includable: z.boolean(),
+    decision: measureDecision,
   })
   .passthrough();
 const simulation = z
@@ -80,6 +96,12 @@ const simulation = z
     marketSavings,
     effortDays: number,
     effortChf: number,
+    includedMeasureIds: z.array(z.string()).optional(),
+    firstYearGrossChf: number.optional(),
+    firstYearNetChf: number.optional(),
+    conservativeCo2Pct: number.nullable().optional(),
+    costHeadroomChf: number.nullable().optional(),
+    co2HeadroomKg: number.nullable().optional(),
     costReductionPct: number,
     co2ReductionPct: number,
     constraints: z.array(
@@ -194,11 +216,12 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
         assumptions: list,
         risk: riskLevel,
         action: z.string().default("Action not supplied"),
+        decision: measureDecision,
       })
       .passthrough(),
   ),
   "/simulation": simulation,
-  "/optimize": z.object({ measureIds: list, result: simulation }),
+  "/optimize": z.object({ measureIds: list, result: simulation, searchComplete: z.boolean().optional() }),
   "/forecast": z
     .object({
       metric: z.enum(["cost", "energy", "co2Location", "co2Market"]),

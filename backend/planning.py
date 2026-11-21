@@ -267,6 +267,81 @@ def additional_candidates(reports):
     return candidates
 
 
+DEFAULT_DAILY_RATE = 1100
+PLAN_DECISIONS = frozenset(("candidate", "prerequisite"))
+
+
+def implementation_cost(item, daily_rate=DEFAULT_DAILY_RATE):
+    return item["implementation_chf"] + item["days"] * (daily_rate - DEFAULT_DAILY_RATE)
+
+
+def measure_decisions(items):
+    """Separate accountable evidence work from modeled implementation options."""
+    by_id = {m["id"]: m for m in items}
+    decisions = {}
+    for m in by_id.values():
+        baseline = m.get("baseline", {})
+        market = m.get("kg_market")
+        impacts = {"cost": m["chf"], "energy": m["kwh"][1], "co2Location": m["kg"][1],
+                   "co2Market": market[1] if market is not None else None}
+        status, reason, next_step = "no-benefit", "The current model shows no positive impact.", None
+        if m["hard_blockers"]:
+            status, reason = "protected", " ".join(m["hard_blockers"])
+        elif m.get("quote_status") == "quote required":
+            status, reason = "evidence-needed", "Savings are unquantified until procurement supplies a comparable quote."
+            next_step = "Obtain a dated quote for the same billed scope and service level."
+        elif any(v is not None and v > 0 for v in impacts.values()):
+            status, reason = "candidate", "At least one modeled impact is positive."
+            if m["chf"] > 0 and m.get("energy_fraction") == 0 and not any(
+                    impacts[k] for k in ("energy", "co2Location", "co2Market")):
+                reason = "The economic benefit comes from a contract or price change. Usage is assumed unchanged."
+            elif m.get("cost_fraction") and not m["chf"] and not baseline.get("chf"):
+                reason = "Modeled operational benefit on the covered activity. No attributable spend was established."
+        elif m.get("cost_fraction") and baseline.get("missing_cost"):
+            status, reason = "evidence-needed", "Missing billed amounts prevent an estimate of the proposed savings."
+            next_step = "Reconcile the affected invoice lines with Finance."
+        elif m.get("energy_fraction") and (baseline.get("missing_energy") or baseline.get("missing_carbon")):
+            status, reason = "evidence-needed", "The affected usage lacks sufficient energy or emissions evidence."
+            next_step = "Verify the affected meter and applicable emissions factors with the owner."
+        elif any(values is not None and values[2] > 0 for values in (m["kwh"], m["kg"], market)):
+            status, reason = "evidence-needed", "A benefit appears only in the optimistic case."
+            next_step = "Pilot the measure and replace the uncertain input before booking savings."
+        elif m.get("energy_fraction") and not baseline.get("lines", 1):
+            status, reason = "evidence-needed", "No attributable activity is available for this scope."
+            next_step = "Confirm the resource-to-meter mapping and collect activity data."
+        decisions[m["id"]] = {"status": status, "reason": reason, "nextStep": next_step,
+                               "scopedAnnualCostChf": baseline.get("chf") if m.get("quote_status") else None,
+                               "benefits": [k for k, v in impacts.items() if v is not None and v > 0],
+                               "tradeoffs": [k for k, v in impacts.items() if v is not None and v < 0]}
+
+    dependent = dependency_closure(by_id, [i for i, d in decisions.items() if d["status"] == "candidate"])
+    for ident in dependent:
+        decision = decisions[ident]
+        if decision["status"] == "no-benefit" and not decision["tradeoffs"]:
+            decision.update(status="prerequisite", reason="Required by a measure with modeled benefits.")
+    return decisions
+
+
+def dependency_closure(items, roots):
+    needed, pending = set(), list(roots)
+    while pending:
+        ident = pending.pop()
+        if ident not in needed and ident in items:
+            needed.add(ident)
+            pending.extend(items[ident].get("requires", ()))
+    return needed
+
+
+def satisfiable_measures(items):
+    """Resolve complete dependencies. Missing prerequisites and cycles stay out."""
+    ready = set()
+    while True:
+        newly_ready = {m["id"] for m in items if m["id"] not in ready and set(m.get("requires", ())) <= ready}
+        if not newly_ready:
+            return ready
+        ready.update(newly_ready)
+
+
 def apply_policy(reports, item):
     a = reports.a
     p = a.policy.get("measure_rules", {}).get(item["id"], {})
@@ -289,6 +364,11 @@ def apply_policy(reports, item):
         item["hard_blockers"].append("Ambiguous resource identity.")
     if any(r.get("retention_lock") for r in item["protection"]) and "backup" in key(item["name"]):
         item["hard_blockers"].append("Protected retention and copy arrangements.")
+    # Commercial capacity changes need to surface the protection of dependent workloads.
+    # They carry separate service-equivalence and readiness evidence in case_measures.
+    dependent = set(item.get("protected_dependencies", ()))
+    item["protection"].extend(r for r in a.policy.get("protection_register", [])
+                              if dependent.intersection(r.get("resources", [])) and r not in item["protection"])
     if item["hard_blockers"]:
         item["blockers"].extend(item["hard_blockers"])
     requires = p.get("migration_cost_chf", 0)

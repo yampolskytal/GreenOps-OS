@@ -24,13 +24,14 @@ def totals_explained(b, sources):
     }
 
 
-def explain(m):
+def explain(m, decision=None):
     inputs = {"baseline": m["baseline"], "cost_fraction": m["cost_fraction"], "energy_fraction": m["energy_fraction"]}
     if m.get("components"):
         inputs = {"components": [{"id": c["id"], "chf": c["chf"], "kwh": c["kwh"], "kg": c["kg"]} for c in m["components"]]}
     inputs.update(m.get("calculation_inputs", {}))
     refs = m["evidence"]
     return {"id": m["id"], "status": m["status"], "approver": m["approval"], "protections": m["protection"],
+            **({"decision": decision} if decision is not None else {}),
             "limitations": m["blockers"], "location_method": m["method"],
             "figures": {"annual_cost_savings": figure(m["chf"], "CHF/year", m["method"], inputs, refs),
                         "energy_savings": figure(m["kwh"][1], "kWh/year", m["method"], inputs, refs + ["factors.json"], m["kwh"][0], m["kwh"][2]),

@@ -94,7 +94,8 @@ export function WasteFindings() {
                   .filter(
                     (f) =>
                       risk === "all" ||
-                      (risk === "actionable" && f.risk !== "blocked") ||
+                      (risk === "actionable" && f.risk !== "blocked" &&
+                        (!f.decision || f.decision.status === "candidate" || f.decision.status === "prerequisite")) ||
                       f.risk === risk,
                   )
                   .sort((a, b) =>
@@ -121,7 +122,7 @@ export function WasteFindings() {
                             <MeasureCard m={m} readOnly />
                             <Button asChild size="sm" variant="link" className="mt-1">
                               <Link to="/studio" hash={`measure-${m.id}`}>
-                                Review optimization
+                                {m.decision?.status === "evidence-needed" ? "Inspect evidence" : "Review optimization"}
                               </Link>
                             </Button>
                           </>
@@ -130,10 +131,11 @@ export function WasteFindings() {
                             <div className="min-w-0 flex-1">
                               <p className="text-xs text-muted-foreground">{f.resource}</p>
                               <h3 className="mt-1 text-sm font-semibold">{f.title}</h3>
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {chf(f.impactChfYear)} · {kg(f.impactCo2KgYear)} CO₂ ·{" "}
-                                {kwh(f.impactKwhYear)}
-                              </p>
+                              {f.impactChfYear != null || f.impactCo2KgYear != null || f.impactKwhYear != null ? (
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                  {chf(f.impactChfYear)} · {kg(f.impactCo2KgYear)} CO₂ · {kwh(f.impactKwhYear)}
+                                </p>
+                              ) : <p className="mt-1 text-xs text-muted-foreground">{f.description}</p>}
                             </div>
                             <RiskBadge level={f.risk} />
                             <DetailDrawer
