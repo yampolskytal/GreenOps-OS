@@ -13,6 +13,8 @@ import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
 import { api } from "@/lib/api/client";
 import { managementRecommendation } from "@/lib/management-recommendations";
+import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
+import { useDisplayedPlan } from "@/lib/store";
 export const Route = createFileRoute("/ceo")({
   head: () =>
     seo(
@@ -22,6 +24,7 @@ export const Route = createFileRoute("/ceo")({
   component: Ceo,
 });
 function Ceo() {
+  const plan = useDisplayedPlan();
   const ov = useOverview(true),
     sim = useSimulation(),
     ms = useMeasures();
@@ -29,16 +32,18 @@ function Ceo() {
     <AppShell
       kicker="CEO · Executive briefing"
       title="Results. Targets. Decisions."
-      subtitle="Current Plan · official September 2025–August 2026 baseline · projected outcomes, not executed changes."
+      subtitle={`${plan.label} · official September 2025–August 2026 baseline · projected outcomes, not executed changes.`}
     >
+      <PlanningProjection>
       <section id="targets" className="border-b pb-6">
         <h2 className="mb-5 text-lg font-semibold">Are we meeting our targets?</h2>
         <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
       </section>
       <section className="border-b py-6">
         <h2 className="mb-5 text-lg font-semibold">What are we saving?</h2>
-        <Q q={ov}>{(o) => <Q q={sim}>{(r) => <PlanOutcomes overview={o} result={r} />}</Q>}</Q>
+        <Q q={ov}>{(o) => <Q q={sim}>{(r) => <PlanOutcomes overview={o} result={r} afterLabel={plan.suggested ? "After suggested strategy" : "After Current Plan"} />}</Q>}</Q>
       </section>
+      </PlanningProjection>
       <section id="decisions" className="py-6">
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Management attention</h2>

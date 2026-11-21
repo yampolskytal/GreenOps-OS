@@ -6,7 +6,8 @@ import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
 import { Button } from "@/components/ui/button";
 import type { Forecast } from "@/lib/api/types";
 import { useForecast } from "@/lib/queries";
-import { useApp } from "@/lib/store";
+import { useDisplayedPlan } from "@/lib/store";
+import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/forecast")({
   head: () =>
@@ -17,33 +18,34 @@ export const Route = createFileRoute("/forecast")({
   component: ForecastPage,
 });
 function ForecastPage() {
-  const { s } = useApp();
+  const plan = useDisplayedPlan();
   const [metric, setMetric] = useState<Forecast["metric"]>("cost");
   const fc = useForecast(metric, 1);
   const f = fc.data;
   return (
     <AppShell
       kicker="Know the limits · Forecasts"
-      title="Current Plan forecast"
-      subtitle="Actual monthly history, then projections without changes and with your committed Current Plan. Projections are not realized savings."
+      title={`${plan.label} forecast`}
+      subtitle={`Actual monthly history, then projections without changes and with your ${plan.suggested ? "suggested starting strategy" : "committed Current Plan"}. Projections are not realized savings.`}
     >
       <section data-analysis-region id="forecast">
+        <PlanningProjection>
         <ScenarioForecastPanel
-          title="Committed Current Plan vs. without changes"
+          title={`${plan.label} vs. without changes`}
           onState={(x) => setMetric(x.metric)}
           selections={[
             {
               key: "plan",
-              label: "With Current Plan",
+              label: `With ${plan.label}`,
               color: "var(--scenario-plan)",
-              measureIds: s.measureIds,
+              measureIds: plan.measureIds,
               toggleable: false,
             },
           ]}
         />
         <p className="mt-3 text-xs text-muted-foreground">
-          {s.measureIds.length
-            ? `${s.measureIds.length} committed measures.`
+          {plan.measureIds.length
+            ? `${plan.measureIds.length} ${plan.suggested ? "suggested" : "committed"} measures.`
             : "No measures committed yet — both scenario lines match."}{" "}
           <Link to="/current-plan" className="underline underline-offset-2">
             Review Current Plan
@@ -56,7 +58,7 @@ function ForecastPage() {
         {f && (
           <DetailDrawer
             title="Forecast assumptions & calculation"
-            description="Current Plan"
+            description={plan.label}
             trigger={
               <Button variant="outline" className="mt-5">
                 Assumptions & Calculation
@@ -66,8 +68,8 @@ function ForecastPage() {
             <DetailBlock title="Growth assumptions">
               <p>{f.growthAssumption}</p>
             </DetailBlock>
-            <DetailBlock title="Committed measures">
-              <p>{s.measureIds.join(" · ") || "No measures committed"}</p>
+            <DetailBlock title={plan.suggested ? "Suggested measures" : "Committed measures"}>
+              <p>{plan.measureIds.join(" · ") || "No measures committed"}</p>
             </DetailBlock>
             <DetailBlock title="Implementation timing">
               <p>{f.implementationTiming ?? "Not supplied"}</p>
@@ -92,6 +94,7 @@ function ForecastPage() {
             </DetailBlock>
           </DetailDrawer>
         )}
+        </PlanningProjection>
       </section>
     </AppShell>
   );

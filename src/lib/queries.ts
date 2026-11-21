@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api, getPlanningApi } from "./api/client";
 import type { Forecast } from "./api/types";
-import { useApp, useGlobalQuery } from "./store";
+import { useApp, useGlobalQuery, useDisplayedPlan } from "./store";
 import { officialQuery } from "./planning";
 import { approvedDemoIds } from "./proposals";
 
@@ -46,24 +46,29 @@ export const useBonus = () => {
 export const useForecast = (metric: Forecast["metric"], horizon: number, enabled = true) => {
   const q = useGlobalQuery();
   const { s } = useApp();
+  const plan = useDisplayedPlan();
   const exceptions = approvedDemoIds(s.demoExceptions, api.isDemo);
   return useQuery({
-    queryKey: k("forecast", q, [metric, horizon, s.measureIds, exceptions]),
-    enabled,
+    queryKey: k("forecast", q, [metric, horizon, plan.measureIds, exceptions]),
+    enabled: enabled && plan.ready,
     queryFn: () =>
-      getPlanningApi(exceptions).getForecast(officialQuery(q), metric, horizon, s.measureIds),
+      getPlanningApi(exceptions).getForecast(officialQuery(q), metric, horizon, plan.measureIds),
   });
 };
 /** Simulation of the currently selected package (shared across views). */
 export const useSimulation = () => {
   const q = officialQuery(useGlobalQuery());
   const { s } = useApp();
+  const plan = useDisplayedPlan();
+  const suggestedResult = plan.suggested ? s.initialization.candidate?.result : undefined;
   return useQuery({
-    queryKey: k("sim", q, [s.measureIds, s.budgetChf, s.demoExceptions]),
+    queryKey: k("sim", q, [plan.measureIds, plan.budgetChf, s.demoExceptions]),
+    enabled: plan.ready,
+    ...(suggestedResult ? { initialData: suggestedResult, staleTime: Infinity } : {}),
     queryFn: () =>
       getPlanningApi(approvedDemoIds(s.demoExceptions, api.isDemo)).simulate(q, {
-        measureIds: s.measureIds,
-        budgetChf: s.budgetChf,
+        measureIds: plan.measureIds,
+        budgetChf: plan.budgetChf,
         chfPerPersonDay: 1100,
       }),
   });

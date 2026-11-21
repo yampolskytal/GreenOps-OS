@@ -6,7 +6,8 @@ import { ComparisonBoard } from "@/components/greenops/compare";
 import { ForecastChart } from "@/components/greenops/forecast-chart";
 import { Button } from "@/components/ui/button";
 import { useForecast, useOverview, useSimulation } from "@/lib/queries";
-import { useApp } from "@/lib/store";
+import { useApp, useDisplayedPlan } from "@/lib/store";
+import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
 import { chf, kchf } from "@/lib/format";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
 import { TargetPanel } from "@/components/greenops/targets";
@@ -31,6 +32,7 @@ function Cfo() {
       !!ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)),
     );
   const { s } = useApp();
+  const plan = useDisplayedPlan();
   const measures = useMeasures();
   return (
     <AppShell
@@ -49,17 +51,17 @@ function Cfo() {
         />
         <KpiCard
           label="Potential annual savings"
-          value={sim.data?.savingsChf ?? null}
+          value={plan.ready ? sim.data?.savingsChf ?? null : null}
           format={kchf}
-          sub="Projected · selected plan"
+          sub={`Projected · ${plan.label}`}
           tone="good"
           icon={<PiggyBank className="size-4" />}
         />
         <KpiCard
           label="Implementation budget used"
-          value={sim.data?.effortChf ?? null}
+          value={plan.ready ? sim.data?.effortChf ?? null : null}
           format={chf}
-          sub={`${s.measureIds.length} measures selected`}
+          sub={plan.ready ? `${plan.measureIds.length} measures selected` : "Awaiting recommendation"}
           icon={<Hammer className="size-4" />}
         />
       </div>
@@ -81,12 +83,13 @@ function Cfo() {
           <ComparisonBoard finance />
         </ChartCard>
         <ChartCard title="Budget & optimization">
+          <PlanningProjection>
           <Q q={sim}>
             {(r) => (
               <div className="space-y-5">
                 <div>
-                  <p className="text-xs text-muted-foreground">Selected plan</p>
-                  <p className="mt-1 font-semibold">{s.measureIds.length} proposed measures</p>
+                  <p className="text-xs text-muted-foreground">{plan.label}</p>
+                  <p className="mt-1 font-semibold">{plan.measureIds.length} proposed measures</p>
                 </div>
                 {[
                   ["Implementation expenditure", chf(r.effortChf)],
@@ -116,11 +119,14 @@ function Cfo() {
               </div>
             )}
           </Q>
+          </PlanningProjection>
         </ChartCard>
       </div>
       <section className="mt-8 border-t pt-6">
-        <h2 className="mb-5 text-lg font-semibold">Challenge Targets · Current Plan</h2>
+        <h2 className="mb-5 text-lg font-semibold">Challenge Targets · {plan.label}</h2>
+        <PlanningProjection>
         <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
+        </PlanningProjection>
       </section>
       <section className="mt-8 border-t pt-6">
         <ChartCard
@@ -137,7 +143,7 @@ function Cfo() {
           {ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)) ? (
             <Q q={fc}>
               {(f) => (
-                <ForecastChart f={f} format={kchf} height={260} history={ov.data?.monthly ?? []} />
+                <ForecastChart f={f} format={kchf} height={260} history={ov.data?.monthly ?? []} planLabel={plan.label} />
               )}
             </Q>
           ) : (

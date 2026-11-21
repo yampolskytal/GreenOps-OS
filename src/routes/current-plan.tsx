@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ClipboardCheck, FileSpreadsheet, TrendingUp } from "lucide-react";
+import { ArrowRight, ClipboardCheck, FileSpreadsheet, TrendingUp, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
 import { AppShell } from "@/components/greenops/shell";
 import { Button } from "@/components/ui/button";
 import { Q, KpiCard } from "@/components/greenops/ui";
 import { TargetPanel } from "@/components/greenops/targets";
 import { MeasureCard } from "@/components/greenops/measure-card";
-import { useApp } from "@/lib/store";
+import { useApp, useDisplayedPlan } from "@/lib/store";
 import { useMeasures, useSimulation, useOverview } from "@/lib/queries";
 import { api } from "@/lib/api/client";
 import { chf, kg, kwh } from "@/lib/format";
@@ -23,18 +26,21 @@ export const Route = createFileRoute("/current-plan")({
   component: CurrentPlanPage,
 });
 function CurrentPlanPage() {
-  const { s } = useApp();
+  const { s, commitPlan } = useApp();
+  const plan = useDisplayedPlan();
+  const [clearOpen, setClearOpen] = useState(false);
+  const [clearError, setClearError] = useState<string | null>(null);
   const sim = useSimulation();
   const overview = useOverview(true);
   const measures = useMeasures();
-  const selected = measures.data?.filter((m) => s.measureIds.includes(m.id)) ?? [];
+  const selected = measures.data?.filter((m) => plan.measureIds.includes(m.id)) ?? [];
   const blocked = selected.filter((m) => !m.includable || m.risk.level === "blocked").length;
   const review = selected.filter((m) => m.risk.level === "review").length;
   const missing = selected.filter((m) => !m.evidence?.length).length;
   return (
     <AppShell
-      kicker="Committed strategy"
-      title="Current Plan"
+      kicker={plan.suggested ? "Suggested strategy · not adopted" : "Committed strategy"}
+      title={plan.label}
       subtitle="Your saved proposal. Projected benefits are not evidence of executed or approved operational changes."
       actions={
         <Button asChild variant="outline">
@@ -51,12 +57,13 @@ function CurrentPlanPage() {
       >
         <span className="flex items-center gap-2 font-medium">
           <ClipboardCheck className="size-5 text-primary" />
-          {s.measureIds.length} committed measures
+          {plan.ready ? `${plan.measureIds.length} ${plan.suggested ? "suggested" : "committed"} measures` : "Awaiting recommended strategy"}
         </span>
         <span className="text-xs text-muted-foreground">
           Saved on this device · {api.isDemo ? "DEMO projection" : "Active provider calculations"}
         </span>
       </div>
+      <PlanningProjection>
       <Q q={sim}>
         {(r) => (
           <>
@@ -65,7 +72,7 @@ function CurrentPlanPage() {
                 Saved proposal — not submission-ready
               </p>
             )}
-            <Q q={overview}>{(o) => <PlanOutcomes overview={o} result={r} />}</Q>
+            <Q q={overview}>{(o) => <PlanOutcomes overview={o} result={r} afterLabel={plan.suggested ? "After suggested strategy" : "After Current Plan"} />}</Q>
             <div className="mt-6 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
               <KpiCard label="Projected annual cost savings" value={r.savingsChf} format={chf} />
               <KpiCard
@@ -132,6 +139,7 @@ function CurrentPlanPage() {
           </>
         )}
       </Q>
+      </PlanningProjection>
       <section className="mt-8 border-t pt-6">
         <h2 className="mb-5 text-lg font-semibold">Selected measures & evidence</h2>
         <Q q={measures}>
@@ -140,12 +148,12 @@ function CurrentPlanPage() {
               {selected.map((m) => (
                 <MeasureCard key={m.id} m={m} readOnly compact />
               ))}
-              {!s.measureIds.length && (
+              {plan.ready && !plan.measureIds.length && (
                 <p className="py-6 text-muted-foreground">
                   No committed measures. Build a strategy in Optimization Studio.
                 </p>
               )}
-              {selected.length < s.measureIds.length && (
+              {selected.length < plan.measureIds.length && (
                 <p className="text-warning">
                   Some saved measures are unavailable from this provider. Review them before
                   submission.
@@ -156,9 +164,10 @@ function CurrentPlanPage() {
         </Q>
       </section>
       <Q q={measures}>
-        {(all) => <DemoExceptions measures={all.filter((m) => s.measureIds.includes(m.id))} />}
+        {(all) => <DemoExceptions measures={all.filter((m) => plan.measureIds.includes(m.id))} />}
       </Q>
       <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
+        {(plan.measureIds.length > 0 || plan.suggested) && <Button variant="outline" onClick={() => { setClearError(null); setClearOpen(true); }}><Trash2 />Clear plan</Button>}
         <Button asChild variant="outline">
           <Link to="/studio" hash="paths">
             Compare Paths
@@ -178,6 +187,16 @@ function CurrentPlanPage() {
           </Link>
         </Button>
       </div>
+      <Dialog open={clearOpen} onOpenChange={setClearOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Clear your plan?</DialogTitle><DialogDescription>Your Paths stay saved. This plan will remain empty after refreshing; no starting plan will be restored.</DialogDescription></DialogHeader>
+          {clearError && <p role="alert" className="text-sm text-destructive">{clearError}</p>}
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => setClearOpen(false)}>Keep plan</Button>
+            <Button variant="destructive" onClick={() => { try { commitPlan({ measureIds: [], budgetChf: s.budgetChf, priority: s.priority }); setClearOpen(false); } catch { setClearError("Your plan could not be cleared on this device."); } }}>Confirm clear</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

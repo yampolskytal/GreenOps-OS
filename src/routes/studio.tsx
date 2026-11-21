@@ -38,6 +38,7 @@ import { officialQuery } from "@/lib/planning";
 import { reveal } from "@/lib/reveal";
 import { chf } from "@/lib/format";
 import { seo } from "@/lib/seo";
+import { recommendationOptions } from "@/lib/starting-plan";
 export const Route = createFileRoute("/studio")({
   head: () =>
     seo(
@@ -81,9 +82,8 @@ function Studio() {
     [maxEffort, setMaxEffort] = useState("");
   const commit = useCommitPlan(ms.data);
   const recommended = useQuery({
-    queryKey: ["recommended-package", q, debouncedBudget, prio],
-    queryFn: () =>
-      api.optimize(q, { budgetChf: debouncedBudget, priority: prio, chfPerPersonDay: 1100 }),
+    ...recommendationOptions(q, debouncedBudget, prio),
+    ...(s.initialization.status === "suggested" && s.initialization.candidate && debouncedBudget === 16500 && prio === "balanced" ? { initialData: s.initialization.candidate } : {}),
     enabled: hydrated && budget === debouncedBudget,
   });
   const recalculating = budget !== debouncedBudget || recommended.isFetching;
@@ -96,7 +96,7 @@ function Studio() {
     >
       <div className="grid gap-6 xl:grid-cols-[.7fr_1.3fr]">
         <ChartCard title="Recommendation settings">
-          <BudgetSlider value={budget} onChange={setBudget} />
+          <BudgetSlider value={budget} onChange={(value) => { setBudget(value); set({ budgetChf: value }); }} />
           <p className="mb-2 mt-6 text-sm font-medium">Optimization priority</p>
           <div className="flex flex-wrap gap-1">
             {PRIOS.map((p) => (
@@ -105,7 +105,7 @@ function Studio() {
                 size="sm"
                 aria-pressed={prio === p.id}
                 variant={prio === p.id ? "secondary" : "ghost"}
-                onClick={() => setPriority(p.id)}
+                onClick={() => { setPriority(p.id); set({ priority: p.id }); }}
               >
                 {p.label}
               </Button>

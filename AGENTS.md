@@ -39,7 +39,7 @@ use the editor.
 - Calculations live in the Python backend under `backend/`; the TypeScript frontend never imports raw datasets. `backend/frontend_api.py` is the only place that maps backend structures to `types.ts` — change field mapping there, not in UI components.
 
 - Imported visualization engines take adapter data only and resolve theme tokens before canvas painting; missing cells stay visibly distinct, so rendering never invents analytical values.
-- Planning has only the committed Current Plan and up to three saved Paths (no preview basket); Paths carry a stable color slot and only validated explicit commits replace the plan, so experiments never mutate saved selections.
+- Planning has a separate first-visit suggestion, committed Current Plan and up to three Paths (no preview basket); persisted initialization guards legacy/cleared state, shared optimizer queries deduplicate requests, and only validated explicit commits replace the plan.
 - Official exports use the fixed baseline query and cache prepared files against the plan/query context, so display filters and stale files cannot alter a submission.
 - Prebundle route-only React hook libraries at startup and reject outdated optimizer requests, so hot reload cannot mix React dispatchers from different dependency generations.
 

@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/greenops/details";
 import { ResourceDetails } from "@/components/greenops/resource-details";
 import { MeasureCard } from "@/components/greenops/measure-card";
-import { useMeasures, useResources, useOverview } from "@/lib/queries";
+import { useMeasures, useResources, useOverview, useSimulation } from "@/lib/queries";
+import { useDisplayedPlan } from "@/lib/store";
+import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
+import { TargetPanel } from "@/components/greenops/targets";
 import { runtimeSegments } from "@/lib/planning";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
 import { seo } from "@/lib/seo";
@@ -20,6 +23,8 @@ export const Route = createFileRoute("/it")({
   component: It,
 });
 function It() {
+  const plan = useDisplayedPlan();
+  const sim = useSimulation();
   const rs = useResources(),
     ms = useMeasures(),
     ov = useOverview();
@@ -29,6 +34,12 @@ function It() {
       title="Operational efficiency, safely"
       subtitle="Separate recorded workload from runtime—and review dependencies before making a change."
     >
+      <PlanningProjection>
+        <section className="mb-6 border-b pb-6">
+          <h2 className="mb-4 text-lg font-semibold">{plan.label} · operational requirements</h2>
+          <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
+        </section>
+      </PlanningProjection>
       <Q q={rs}>
         {(res) => (
           <>

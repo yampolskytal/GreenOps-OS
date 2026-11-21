@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useApp } from "@/lib/store";
+import { useApp, useDisplayedPlan } from "@/lib/store";
 import { api } from "@/lib/api/client";
 import type { Measure } from "@/lib/api/types";
 import {
@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { approvedDemoIds, isImplementableProposal, numericalWarnings } from "@/lib/proposals";
 
 export function PathComparison() {
+  const displayed = useDisplayedPlan();
   const { s, set } = useApp();
   const measures = useMeasures();
   const [name, setName] = useState("");
@@ -159,13 +160,13 @@ export function PathComparison() {
               color: `var(--path-${pathSlot(s.paths, p)})`,
               measureIds: p.measureIds,
             })),
-            {
+            ... (displayed.ready ? [{
               key: "plan",
-              label: "Current Plan",
+              label: displayed.label,
               color: "var(--scenario-plan)",
-              measureIds: s.measureIds,
+              measureIds: displayed.measureIds,
               defaultHidden: true,
-            },
+            }] : []),
           ]}
         />
       </div>

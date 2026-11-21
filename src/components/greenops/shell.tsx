@@ -43,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { DataHealth } from "./data-health";
 import { ChatPanel } from "./chat";
 import { InspectorProvider } from "./analytical-inspector";
+import { StartingPlanNotice } from "./starting-plan-notice";
 export const ROLES: {
   id: Role;
   to: "/ceo" | "/cfo" | "/it";
@@ -318,6 +319,7 @@ export function AppShell({
               </div>
               {actions}
             </div>
+            <StartingPlanNotice />
             {children}
           </main>
         </div>

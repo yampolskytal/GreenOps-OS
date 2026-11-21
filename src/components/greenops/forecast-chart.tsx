@@ -26,11 +26,13 @@ export function ForecastChart({
   format,
   height = 320,
   history = [],
+  planLabel = "Current Plan",
 }: {
   f: Forecast;
   format: (n: number) => string;
   height?: number;
   history?: MonthlyObservation[];
+  planLabel?: string;
 }) {
   const reduced = useReducedMotion();
   const [active, setActive] = useState<number | null>(null);
@@ -184,7 +186,7 @@ export function ForecastChart({
         </span>
         <span className="flex items-center gap-2">
           <span className="w-6 border-t-2 border-dashed border-forecast-plan" />
-          With Current Plan
+          With {planLabel}
         </span>
         {hasBands && <span>Shaded bands: supplied low–high uncertainty</span>}
         <span className="text-muted-foreground">
@@ -196,7 +198,7 @@ export function ForecastChart({
           viewBox={`0 0 ${W} ${H}`}
           className="block w-full"
           role="img"
-          aria-label={`${f.unit}: actual history, without changes and Current Plan projections`}
+          aria-label={`${f.unit}: actual history, without changes and ${planLabel} projections`}
         >
           {[0, 1, 2, 3, 4].map((i) => {
             const value = min + ((max - min) * i) / 4;
@@ -311,7 +313,7 @@ export function ForecastChart({
                 Without changes: {selected.baseline ? format(selected.baseline.mid) : "Unavailable"}
               </span>
               <span>
-                Current Plan: {selected.optimized ? format(selected.optimized.mid) : "Unavailable"}
+                {planLabel}: {selected.optimized ? format(selected.optimized.mid) : "Unavailable"}
               </span>
               {selected.baseline && selected.optimized && (
                 <span>
