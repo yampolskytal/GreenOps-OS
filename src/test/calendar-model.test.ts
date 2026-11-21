@@ -117,4 +117,35 @@ describe("footprint periods and integrity", () => {
     );
     expect(grid.cells.find((d) => d.date === "2026-08-02")?.day).toBe(6);
   });
+  it("uses inclusive custom dates for both geometry and scales", () => {
+    const grid = buildFootprintGrid(
+      [
+        { date: "2026-08-27", count: 10000 },
+        { date: "2026-08-31", count: 10 },
+        { date: "2026-09-02", count: 25 },
+        { date: "2026-09-03", count: 20000 },
+      ],
+      Date.parse("2026-09-02"),
+      1,
+      undefined,
+      Date.parse("2026-08-28"),
+    );
+    expect(grid.cells).toHaveLength(6);
+    expect(grid.weeks).toBe(2);
+    expect(grid.cells[0]).toMatchObject({ date: "2026-08-28", week: 0, day: 4 });
+    expect(grid.cells.at(-1)).toMatchObject({ date: "2026-09-02", week: 1, day: 2 });
+    expect(grid.colorDomain).toMatchObject({ min: 10, max: 25 });
+  });
+  it("keeps a partial month aligned to weekday slots", () => {
+    const grid = buildFootprintGrid(
+      [],
+      Date.parse("2026-08-31"),
+      1,
+      "2026-08",
+      Date.parse("2026-08-30"),
+    );
+    expect(grid.cells).toHaveLength(2);
+    expect(grid.cells[0]).toMatchObject({ date: "2026-08-30", week: 6, day: 0 });
+    expect(grid.cells[1]).toMatchObject({ date: "2026-08-31", week: 0, day: 1 });
+  });
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
 import { Q, RiskBadge } from "@/components/greenops/ui";
 import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
@@ -33,7 +33,7 @@ function Findings() {
 export function WasteFindings() {
   const fs = useFindings(),
     ms = useMeasures();
-  const [risk, setRisk] = useState("actionable");
+  const [risk, setRisk] = useState("all");
   const [sort, setSort] = useState("risk");
   return (
     <div>
@@ -117,7 +117,14 @@ export function WasteFindings() {
                     return (
                       <div id={`finding-${f.id}`} key={f.id}>
                         {m ? (
-                          <MeasureCard m={m} />
+                          <>
+                            <MeasureCard m={m} readOnly />
+                            <Button asChild size="sm" variant="link" className="mt-1">
+                              <Link to="/studio" hash={`measure-${m.id}`}>
+                                Review optimization
+                              </Link>
+                            </Button>
+                          </>
                         ) : (
                           <article className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4">
                             <div className="min-w-0 flex-1">

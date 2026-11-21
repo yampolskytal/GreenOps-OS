@@ -1,6 +1,14 @@
 // GreenOps adaptation of the supplied LineChart6: metric cards, dotted plot, cursor and active point.
-import { useState } from "react";
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { useState, useId } from "react";
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceDot,
+} from "recharts";
 import { useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import type { HistoricalMetric, Overview } from "@/lib/api/types";
@@ -15,6 +23,8 @@ import { chf, kg, kwh } from "@/lib/format";
 import { api } from "@/lib/api/client";
 import { DetailBlock, DetailDrawer } from "./details";
 import { CalcInfo } from "./ui";
+import { historicalDomain } from "@/lib/historical-domain";
+import { reveal } from "@/lib/reveal";
 
 const METRICS = [
   { key: "costChf" as const, label: "Cost", unit: "CHF/month", format: chf },
@@ -37,6 +47,12 @@ export function HistoricalPerformance({
   const [metric, setMetric] = useState<HistoricalMetric>(first.key);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const reduced = useReducedMotion();
+  const summaryId = useId();
+  const [zero, setZero] = useState(false);
+  const chooseMonth = (month: string) => {
+    setSelectedMonth(month);
+    reveal(summaryId);
+  };
   const current = METRICS.find((m) => m.key === metric) ?? METRICS[0];
   const rows = overview.monthly;
   const selected = rows.find((r) => r.month === selectedMonth);
@@ -45,6 +61,8 @@ export function HistoricalPerformance({
     : "Unavailable";
   const evidence = selected?.evidence?.[metric];
   const total = monthlyTotal(rows, metric);
+  const values = rows.map((r) => r[metric]).filter(isAvailable);
+  const domain = historicalDomain(values, zero);
   return (
     <section data-analysis-region className="min-w-0 border-b py-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -115,7 +133,6 @@ export function HistoricalPerformance({
               aria-pressed={metric === m.key}
               onClick={() => {
                 setMetric(m.key);
-                setSelectedMonth(null);
               }}
               className={`h-auto min-h-28 flex-col items-start justify-center whitespace-normal rounded-none border-r p-4 text-left ${metric === m.key ? "bg-muted" : ""}`}
             >
@@ -151,7 +168,7 @@ export function HistoricalPerformance({
                 data={rows}
                 margin={{ top: 15, left: 5, right: 28, bottom: 10 }}
                 onClick={(state) => {
-                  if (typeof state?.activeLabel === "string") setSelectedMonth(state.activeLabel);
+                  if (typeof state?.activeLabel === "string") chooseMonth(state.activeLabel);
                 }}
               >
                 <XAxis
@@ -164,7 +181,8 @@ export function HistoricalPerformance({
                 />
                 <YAxis
                   width={95}
-                  domain={[0, "auto"]}
+                  domain={domain}
+                  tickCount={5}
                   axisLine={false}
                   tickLine={false}
                   tickFormatter={current.format}
@@ -201,6 +219,15 @@ export function HistoricalPerformance({
                     );
                   }}
                 />
+                {selected && isAvailable(selected[metric]) && (
+                  <ReferenceDot
+                    x={selected.month}
+                    y={selected[metric]}
+                    r={6}
+                    fill="var(--chart-2)"
+                    stroke="var(--foreground)"
+                  />
+                )}
                 <Line
                   type="linear"
                   dataKey={metric}
@@ -218,6 +245,16 @@ export function HistoricalPerformance({
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="num text-xs text-muted-foreground">
+              {current.unit} · observed min{" "}
+              {values.length ? current.format(Math.min(...values)) : "Unavailable"} · max{" "}
+              {values.length ? current.format(Math.max(...values)) : "Unavailable"}
+            </p>
+            <Button size="sm" variant="ghost" aria-pressed={zero} onClick={() => setZero(!zero)}>
+              {zero ? "Focused axis" : "Start at zero"}
+            </Button>
           </div>
           <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span className="w-6 border-t-2 border-chart-2" />
@@ -238,23 +275,36 @@ export function HistoricalPerformance({
                 variant={selectedMonth === r.month ? "secondary" : "outline"}
                 className="shrink-0"
                 aria-label={`${monthLabel(r.month)} ${current.label}: ${isAvailable(r[metric]) ? current.format(r[metric]) : "Unavailable"}`}
-                onClick={() => setSelectedMonth(r.month)}
+                aria-pressed={selectedMonth === r.month}
+                onClick={() => chooseMonth(r.month)}
               >
                 {monthLabel(r.month)}
               </Button>
             ))}
           </div>
           {selected && (
-            <div role="status" className="mt-3 flex flex-wrap gap-3 text-sm">
-              <b>{monthLabel(selected.month)}</b>
-              <span>
-                {isAvailable(selected[metric]) ? current.format(selected[metric]) : "Unavailable"}
-              </span>
-              <span className="text-muted-foreground">
-                {selected.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}
-              </span>
-              {evidence && <CalcInfo calc={evidence} />}
-            </div>
+            <section id={summaryId} role="status" className="mt-5 border-t pt-4">
+              <header className="mb-3 flex flex-wrap items-center gap-3">
+                <h3 className="font-semibold">{monthLabel(selected.month)}</h3>
+                <span className="text-xs text-muted-foreground">
+                  {selected.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}
+                </span>
+              </header>
+              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {METRICS.map((m) => {
+                  const calculation = selected.evidence?.[m.key];
+                  return (
+                    <div key={m.key} className="min-w-0 border-b pb-3">
+                      <dt className="text-xs text-muted-foreground">{m.label}</dt>
+                      <dd className="num mt-2 break-words text-base">
+                        {isAvailable(selected[m.key]) ? m.format(selected[m.key]) : "Unavailable"}
+                      </dd>
+                      {calculation && <CalcInfo calc={calculation} />}
+                    </div>
+                  );
+                })}
+              </dl>
+            </section>
           )}
         </>
       ) : (

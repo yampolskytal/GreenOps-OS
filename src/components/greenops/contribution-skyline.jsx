@@ -81,15 +81,16 @@ export const computeStats = (cells) => {
   };
 };
 /** A label on each week whose first day starts a new month; a cramped first label is dropped. */
-export const monthLabels = (cells, weeks, locale = "en-US") => {
+export const monthLabels = (cells, locale = "en-US") => {
   const fmt = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" });
   const out = [];
   let prev = -1;
-  for (let w = 0; w < weeks; w++) {
-    const c = cells[w * 7];
-    if (!c) break;
+  let previousWeek = -1;
+  for (const c of cells) {
+    if (c.week === previousWeek) continue;
+    previousWeek = c.week;
     const m = +c.date.slice(5, 7);
-    if (m !== prev) out.push({ week: w, label: fmt.format(dayMs(c.date)) });
+    if (m !== prev) out.push({ week: c.week, label: fmt.format(dayMs(c.date)) });
     prev = m;
   }
   if (out.length > 1 && out[1].week - out[0].week < 3) out.shift();
@@ -341,7 +342,7 @@ export default function ContributionSkyline({
       stats: computeStats(grid.cells),
       months: month
         ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label, week) => ({ label, week }))
-        : monthLabels(grid.cells, grid.weeks, locale),
+        : monthLabels(grid.cells, locale),
     };
   }, [data, footprintGrid, month, endKey, seed, weekStart, locale]);
   const [innerView, setInnerView] = React.useState(defaultView);
@@ -528,7 +529,7 @@ export default function ContributionSkyline({
       for (let d = 0; d < 7 && d < n; d++) {
         const dow = new Date(dayMs(m.cells[d].date)).getUTCDay();
         if (!m.monthly && (dow === 1 || dow === 3 || dow === 5 || dow === 0))
-          weekdayRows.push({ day: d, label: wf.format(dayMs(m.cells[d].date)) });
+          weekdayRows.push({ day: m.cells[d].day, label: wf.format(dayMs(m.cells[d].date)) });
       }
       if (hovered >= n) hovered = -1;
       if (pinned >= n) pinned = -1;

@@ -1,3 +1,17 @@
+## Screenshot refinements
+- [x] Link management attention to its exact recommendation
+- [x] Deepen four-tier footprint blues in both themes
+- [x] Keep the information dock open when changing selections
+
+## V7 refinement
+- [x] Shared comparison alignment, IT resource rows and single-line badges
+- [x] Atomic bulk Path saving, automatic recommendations and contextual browsing filters
+- [x] Non-compliant local proposals and CEO-only demo exception audit
+- [x] Executive overview and read-only Current Plan with before/after visuals
+- [x] Historical axis/month summaries, footprint date range and contextual scope
+- [x] Outside-click inspector dismissal and action-result visibility
+- [x] Functional regressions and rendered QA across both themes and required widths
+
 ## V6 Unified Path Planning
 - [x] Remove separate Preview basket; Paths + Current Plan only; V5 Paths/plan migrated (old Preview was never persisted, nothing to offer)
 - [x] One-step Path creation by name, multi-select Add to Paths with create-and-add, bulk add
@@ -6,9 +20,9 @@
 - [x] Forecasts show genuine monthly history; annual forecasts shown as yearly monthly-average points only
 - [x] Recommended package: generate scrolls to result, Save as Path (new/replace), Commit as Current Plan
 - [x] Commit navigates to Current Plan; actions scroll/highlight their result; search hash reveal
-- [ ] Simplify CEO dashboard hierarchy
-- [ ] Explore comparison bar alignment and footprint calendar control grouping
-- [ ] Full V6 layout audit at all widths
+- [x] Simplify CEO dashboard hierarchy
+- [x] Explore comparison bar alignment and footprint calendar control grouping
+- [x] Full V6 layout audit at all widths
 - [ ] Use uploaded line-charts-4 template exactly — blocked: message(1).txt not attached to this remix
 
 # Roadmap — GreenOps OS frontend

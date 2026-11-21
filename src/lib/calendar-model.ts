@@ -62,9 +62,14 @@ export function buildFootprintGrid(
   endMs: number,
   weekStart = 0,
   month?: string,
+  fromMs?: number,
 ) {
-  let start = month ? Date.parse(`${month}-01T00:00:00Z`) : endMs - 364 * DAY_MS;
-  if (!Number.isFinite(start))
+  let start = fromMs ?? (month ? Date.parse(`${month}-01T00:00:00Z`) : endMs - 364 * DAY_MS);
+  const end =
+    month && fromMs === undefined
+      ? Date.UTC(new Date(start).getUTCFullYear(), new Date(start).getUTCMonth() + 1, 0)
+      : endMs;
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start > end)
     return {
       cells: [],
       weeks: 0,
@@ -74,10 +79,8 @@ export function buildFootprintGrid(
       monthly: Boolean(month),
     };
   const offset = (new Date(start).getUTCDay() - weekStart + 7) % 7;
-  if (!month) start -= offset * DAY_MS;
-  const end = month
-    ? Date.UTC(new Date(start).getUTCFullYear(), new Date(start).getUTCMonth() + 1, 0)
-    : endMs;
+  const leadingSlots = month || fromMs !== undefined ? offset : 0;
+  if (!month && fromMs === undefined) start -= offset * DAY_MS;
   const supplied = new Map(data.map((d) => [d.date, d]));
   const cells = [];
   for (let ms = start, i = 0; ms <= end; ms += DAY_MS, i++) {
@@ -86,7 +89,7 @@ export function buildFootprintGrid(
     const count = finiteValue(value?.count) ? value.count : null;
     const colorValue = value?.colorCount === undefined ? count : value.colorCount;
     const colorCount = finiteValue(colorValue) ? colorValue : null;
-    const position = i + (month ? offset : 0);
+    const position = i + leadingSlots;
     cells.push({
       date,
       count,
@@ -104,8 +107,8 @@ export function buildFootprintGrid(
       height: cell.count === null ? 0 : (heightDomain?.position(cell.count) ?? 0),
       level: cell.colorCount === null ? 0 : (colorDomain?.level(cell.colorCount) ?? 0),
     })),
-    weeks: month ? 7 : Math.ceil(cells.length / 7),
-    rows: month ? Math.ceil((cells.length + offset) / 7) : 7,
+    weeks: month ? 7 : Math.ceil((cells.length + leadingSlots) / 7),
+    rows: month ? Math.ceil((cells.length + leadingSlots) / 7) : 7,
     heightDomain,
     colorDomain,
     monthly: Boolean(month),

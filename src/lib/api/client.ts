@@ -212,3 +212,47 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
 const baseUrl = import.meta.env["VITE_API_BASE_URL"] as string | undefined;
 /** Set VITE_API_BASE_URL to switch from demo data to the team backend. */
 export const api: GreenOpsApi = baseUrl ? createHttpApi(baseUrl) : demoApi;
+
+/** UI-only demo exceptions never cross the real provider boundary or alter source restrictions. */
+export function getPlanningApi(exceptionIds: string[]): GreenOpsApi {
+  if (!api.isDemo || !exceptionIds.length) return api;
+  const approved = demoMeasures.map((m) =>
+    exceptionIds.includes(m.id)
+      ? { ...m, includable: true, risk: { ...m.risk, level: "review" as const } }
+      : m,
+  );
+  return {
+    ...demoApi,
+    simulate: async (_q, input) =>
+      evaluatePackage(approved, input.measureIds, base, input.budgetChf, input.chfPerPersonDay),
+    getForecast: async (q, metric, horizon, ids = []) => {
+      const f = await demoApi.getForecast(q, metric, horizon, []);
+      const result = evaluatePackage(approved, ids, base, 16500, 1100);
+      const baseline = f.points[0]?.baseline.mid;
+      if (!baseline) return f;
+      const savings =
+        metric === "cost"
+          ? result.savingsChf
+          : metric === "energy"
+            ? result.savingsKwh
+            : metric === "co2Location"
+              ? result.savingsCo2Kg
+              : approved
+                  .filter((m) => ids.includes(m.id) && m.includable && m.risk.level !== "blocked")
+                  .reduce((sum, m) => sum + m.savingsCo2KgMarket, 0);
+      const cut = Math.min(1, savings / baseline);
+      return {
+        ...f,
+        growthAssumption: `${f.growthAssumption} Conditional DEMO exceptions included; not implementation approval.`,
+        points: f.points.map((p, index) => ({
+          ...p,
+          optimized: {
+            low: p.baseline.low * (index ? 1 - cut : 1),
+            mid: p.baseline.mid * (index ? 1 - cut : 1),
+            high: p.baseline.high * (index ? 1 - cut : 1),
+          },
+        })),
+      };
+    },
+  };
+}

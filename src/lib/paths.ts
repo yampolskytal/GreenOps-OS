@@ -72,8 +72,23 @@ export function setPathMembership(paths: SavedPath[], measureId: string, pathIds
 /** Bulk: adds every measure to each chosen Path; other Paths stay untouched. */
 export function addMeasuresToPaths(paths: SavedPath[], measureIds: string[], pathIds: string[]) {
   return paths.map((p) =>
-    pathIds.includes(p.id) ? { ...p, measureIds: [...new Set([...p.measureIds, ...measureIds])] } : p,
+    pathIds.includes(p.id)
+      ? { ...p, measureIds: [...new Set([...p.measureIds, ...measureIds])] }
+      : p,
   );
+}
+/** One atomic bulk operation, including name-based creation or selection. */
+export function saveMeasuresToPaths(
+  paths: SavedPath[],
+  measureIds: string[],
+  pathIds: string[],
+  name: string,
+  defaults: Omit<SavedPath, "id" | "name" | "measureIds">,
+  newId: string,
+) {
+  const target = name.trim() ? ensurePath(paths, name, defaults, newId) : null;
+  const ids = [...new Set([...pathIds, ...(target ? [target.id] : [])])];
+  return { paths: addMeasuresToPaths(target?.paths ?? paths, [...new Set(measureIds)], ids), ids };
 }
 export function removeFromPath(paths: SavedPath[], pathId: string, measureId: string) {
   return paths.map((p) =>
@@ -81,7 +96,9 @@ export function removeFromPath(paths: SavedPath[], pathId: string, measureId: st
   );
 }
 export function replacePath(paths: SavedPath[], pathId: string, patch: Partial<SavedPath>) {
-  return paths.map((p) => (p.id === pathId ? { ...p, ...patch, id: p.id, ...(p.slot ? { slot: p.slot } : {}) } : p));
+  return paths.map((p) =>
+    p.id === pathId ? { ...p, ...patch, id: p.id, ...(p.slot ? { slot: p.slot } : {}) } : p,
+  );
 }
 
 export interface PathAddition {
@@ -113,7 +130,9 @@ export function recommendAdditions(
   const score = (m: Measure) => {
     const e = Math.max(0.5, m.effortPersonDays);
     const total = weightCo2 + weightCost || 1;
-    return ((weightCo2 / total) * m.savingsCo2KgLocation * 30 + (weightCost / total) * m.savingsChf) / e;
+    return (
+      ((weightCo2 / total) * m.savingsCo2KgLocation * 30 + (weightCost / total) * m.savingsChf) / e
+    );
   };
   return candidates
     .sort((a, b) => score(b) - score(a))

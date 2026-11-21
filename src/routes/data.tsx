@@ -7,6 +7,14 @@ import { useQuality, useOverview } from "@/lib/queries";
 import { Q } from "@/components/greenops/ui";
 import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
+import { useApp } from "@/lib/store";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 export const Route = createFileRoute("/data")({
   head: () =>
     seo(
@@ -16,6 +24,7 @@ export const Route = createFileRoute("/data")({
   component: DataReports,
 });
 function DataReports() {
+  const { s, set } = useApp();
   const quality = useQuality(),
     ov = useOverview();
   return (
@@ -35,7 +44,21 @@ function DataReports() {
               <div className="mb-6 flex flex-wrap gap-x-10 gap-y-4 border-b pb-6 text-sm">
                 <div>
                   <p className="text-muted-foreground">Current dataset</p>
-                  <p className="num mt-1">{d.version}</p>
+                  <Select
+                    value={s.datasetVersion}
+                    onValueChange={(v) => set({ datasetVersion: v })}
+                  >
+                    <SelectTrigger aria-label="Dataset selection" className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...new Set([s.datasetVersion, d.version])].map((v) => (
+                        <SelectItem key={v} value={v}>
+                          {v}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Latest import</p>

@@ -38,7 +38,7 @@ import {
 import { api } from "@/lib/api/client";
 import type { Role } from "@/lib/api/types";
 import { useApp } from "@/lib/store";
-import { useFindings, useMeasures, useResources, useBreakdowns, useQuality } from "@/lib/queries";
+import { useFindings, useMeasures, useResources, useBreakdowns } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { DataHealth } from "./data-health";
 import { ChatPanel } from "./chat";
@@ -53,143 +53,6 @@ export const ROLES: {
   { id: "cfo", to: "/cfo", label: "CFO", Icon: Calculator },
   { id: "it", to: "/it", label: "IT Manager", Icon: Server },
 ];
-function Filters() {
-  const { s, set } = useApp();
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState({
-    from: s.from,
-    to: s.to,
-    department: s.department,
-    provider: s.provider,
-    datasetVersion: s.datasetVersion,
-  });
-  const quality = useQuality();
-  const b = useBreakdowns();
-  const count = Number(s.department !== "all") + Number(s.provider !== "all");
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => {
-        setOpen(o);
-        if (o)
-          setDraft({
-            from: s.from,
-            to: s.to,
-            department: s.department,
-            provider: s.provider,
-            datasetVersion: s.datasetVersion,
-          });
-      }}
-    >
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <SlidersHorizontal />
-          Filters{count > 0 && <span className="num">{count}</span>}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Reporting filters</DialogTitle>
-          <DialogDescription>
-            Display selections are shared across roles. Official submissions keep the baseline year.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          {[
-            {
-              key: "department" as const,
-              label: "Department",
-              options: [
-                ["all", "All departments"],
-                ...(b.data?.byDepartment.map((d) => [d.label, d.label]) ?? []),
-              ],
-            },
-            {
-              key: "provider" as const,
-              label: "Provider",
-              options: [
-                ["all", "All providers"],
-                ...(b.data?.byProvider.map((d) => [d.label, d.label]) ?? []),
-              ],
-            },
-            {
-              key: "datasetVersion" as const,
-              label: "Dataset",
-              options: [
-                [
-                  quality.data?.version ?? s.datasetVersion,
-                  quality.data?.version ?? s.datasetVersion,
-                ],
-              ],
-            },
-          ].map((field) => (
-            <label key={field.key} className="block text-sm">
-              {field.label}
-              <Select
-                value={draft[field.key]}
-                onValueChange={(v) => setDraft((d) => ({ ...d, [field.key]: v }))}
-              >
-                <SelectTrigger className="mt-1" aria-label={field.label}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {field.options.map(([v, l]) => (
-                    <SelectItem key={v} value={v ?? ""}>
-                      {l}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-          ))}
-          <div className="grid grid-cols-2 gap-3">
-            <label className="text-sm">
-              From
-              <Input
-                type="month"
-                value={draft.from}
-                onChange={(e) => setDraft((d) => ({ ...d, from: e.target.value }))}
-              />
-            </label>
-            <label className="text-sm">
-              To
-              <Input
-                type="month"
-                value={draft.to}
-                onChange={(e) => setDraft((d) => ({ ...d, to: e.target.value }))}
-              />
-            </label>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            onClick={() =>
-              setDraft({
-                ...draft,
-                from: "2025-09",
-                to: "2026-08",
-                department: "all",
-                provider: "all",
-              })
-            }
-          >
-            Reset
-          </Button>
-          <Button
-            disabled={!draft.from || !draft.to || draft.from > draft.to}
-            onClick={() => {
-              set(draft);
-              setOpen(false);
-            }}
-          >
-            Apply
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 function GlobalSearch() {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -302,6 +165,10 @@ export function AppShell({
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const current = ROLES.find((r) => r.to === path)?.id ?? s.role ?? "ceo";
+  useEffect(() => {
+    const dashboardRole = ROLES.find((r) => r.to === path)?.id;
+    if (dashboardRole && dashboardRole !== s.role) set({ role: dashboardRole });
+  }, [path, s.role, set]);
   const hash = useRouterState({ select: (r) => r.location.hash });
   useEffect(() => {
     if (hash) reveal(hash.replace(/^#/, ""));
@@ -426,10 +293,9 @@ export function AppShell({
           <DemoBanner />
           <header className="flex flex-wrap items-center gap-3 border-b bg-background px-5 py-3 lg:px-8">
             <span className="mr-auto text-xs text-muted-foreground">
-              {s.from} — {s.to}
+              GreenOps OS · {api.isDemo ? "Demo workspace" : "Connected workspace"}
             </span>
             <GlobalSearch />
-            <Filters />
             <DataHealth />
             <Button
               variant="ghost"
@@ -442,7 +308,7 @@ export function AppShell({
             </Button>
           </header>
           <main className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 lg:px-8">
-            <div className="mb-8 flex flex-wrap items-end gap-4">
+            <div className="mb-8 grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-primary">{kicker}</p>
                 <h1 className="mt-2 text-3xl font-semibold">{title}</h1>

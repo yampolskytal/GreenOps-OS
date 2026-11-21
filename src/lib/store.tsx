@@ -19,6 +19,10 @@ export interface AppState {
   theme: "dark" | "light";
   sidebarCollapsed: boolean;
   paths: SavedPath[];
+  demoExceptions: Record<
+    string,
+    { approved: boolean; reason: string; decidedAt: string; role: "ceo" }
+  >;
 }
 const initial: AppState = {
   role: null,
@@ -34,13 +38,15 @@ const initial: AppState = {
   theme: "dark",
   sidebarCollapsed: false,
   paths: [],
+  demoExceptions: {},
 };
 const KEY = "greenops-state-v1";
 
 type CtxValue = {
   hydrated: boolean;
   s: AppState;
-  set: (p: Partial<AppState>) => void;
+  set: (p: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => void;
+  decideException: (measureId: string, reason: string, approved: boolean) => void;
   commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => void;
 };
 // Keep one context instance across hot reloads so the provider and consumers always match.
@@ -50,6 +56,7 @@ const fallback: CtxValue = {
   hydrated: false,
   s: initial,
   set: () => {},
+  decideException: () => {},
   commitPlan: () => {
     throw new Error("Plan storage unavailable");
   },
@@ -94,7 +101,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     () => ({
       hydrated: ready,
       s,
-      set: (p: Partial<AppState>) => setS((x) => ({ ...x, ...p })),
+      set: (p: Partial<AppState> | ((state: AppState) => Partial<AppState>)) =>
+        setS((x) => ({ ...x, ...(typeof p === "function" ? p(x) : p) })),
+      decideException: (measureId: string, reason: string, approved: boolean) =>
+        setS((x) => {
+          if (x.role !== "ceo") return x;
+          return {
+            ...x,
+            demoExceptions: {
+              ...x.demoExceptions,
+              [measureId]: { approved, reason, role: "ceo", decidedAt: new Date().toISOString() },
+            },
+          };
+        }),
       commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => {
         const next = { ...s, ...plan };
         localStorage.setItem(KEY, JSON.stringify(next));

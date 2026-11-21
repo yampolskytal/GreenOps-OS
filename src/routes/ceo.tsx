@@ -1,159 +1,96 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Coins, Cloud, PiggyBank } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
-import { ChartCard, KpiCard, Q, RiskBadge } from "@/components/greenops/ui";
-import { MeasureCard } from "@/components/greenops/measure-card";
+import { ChartCard, Q, RiskBadge } from "@/components/greenops/ui";
 import { TargetPanel } from "@/components/greenops/targets";
-import { DetailDrawer } from "@/components/greenops/details";
+import { PlanOutcomes } from "@/components/greenops/plan-outcomes";
+import { DemoExceptions } from "@/components/greenops/demo-exceptions";
+import { ComparisonBoard } from "@/components/greenops/compare";
 import { Button } from "@/components/ui/button";
 import { useMeasures, useOverview, useSimulation } from "@/lib/queries";
-import { kchf, kg } from "@/lib/format";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
 import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
+import { api } from "@/lib/api/client";
+import { managementRecommendation } from "@/lib/management-recommendations";
 export const Route = createFileRoute("/ceo")({
   head: () =>
     seo(
       "Executive Dashboard — GreenOps OS",
-      "Annual spending, location-based emissions and projected progress of the shared optimization plan.",
+      "Executive target progress, before-and-after savings, management decisions and demo exceptions.",
     ),
   component: Ceo,
 });
 function Ceo() {
-  const ov = useOverview(),
+  const ov = useOverview(true),
     sim = useSimulation(),
     ms = useMeasures();
   return (
     <AppShell
-      kicker="CEO · Dashboard"
-      title="The executive snapshot"
-      subtitle="Current performance and the projected impact of your selected plan."
+      kicker="CEO · Executive briefing"
+      title="Results. Targets. Decisions."
+      subtitle="Current Plan · official September 2025–August 2026 baseline · projected outcomes, not executed changes."
     >
-      <Q q={ov}>
-        {(o) => (
-          <>
-            <div className="grid gap-6 border-b pb-6 md:grid-cols-3">
-              <KpiCard
-                label="Annual digital spending"
-                value={o.cost.value.mid}
-                format={kchf}
-                sub={o.baselinePeriod}
-                calc={o.cost.calc}
-                icon={<Coins className="size-4" />}
-              />
-              <KpiCard
-                label="Location-based CO₂"
-                value={o.co2Location.value.mid}
-                format={kg}
-                sub={o.baselinePeriod}
-                calc={o.co2Location.calc}
-                icon={<Cloud className="size-4" />}
-              />
-              <KpiCard
-                label="Potential annual savings"
-                value={sim.data?.savingsChf ?? null}
-                format={kchf}
-                sub="Projected · selected plan"
-                tone="good"
-                icon={<PiggyBank className="size-4" />}
-              />
-            </div>
-            <div className="mt-4">
-              <EmissionsEvidence overview={o} />
-            </div>
-            <div id="monthly">
-              <HistoricalPerformance overview={o} />
-            </div>
-            <section id="targets" className="border-b py-5">
-              <ChartCard
-                title="Projected optimization targets"
-                subtitle="Current Plan · projections, not historical results"
-              >
-                <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
-                <Button asChild variant="link" className="mt-4 px-0">
-                  <Link to="/studio">
-                    Review optimization plan
-                    <ArrowRight />
-                  </Link>
-                </Button>
-              </ChartCard>
-            </section>
-            <section className="mt-8">
-              <h2 className="mb-4 text-lg font-semibold">Top opportunities</h2>
-              <Q q={ms}>
-                {(all) => (
-                  <div className="space-y-3">
-                    {!o.topOpportunities.some((id) => all.some((m) => m.id === id)) && (
-                      <p className="py-4 text-sm text-muted-foreground">
-                        {o.topOpportunities.length
-                          ? "Opportunity details are unavailable from this provider."
-                          : "No opportunities supplied for this view."}
-                      </p>
-                    )}
-                    {o.topOpportunities
-                      .map((id) => all.find((m) => m.id === id))
-                      .filter((m) => m != null)
-                      .slice(0, 3)
-                      .map((m) => (
-                        <MeasureCard key={m.id} m={m} />
-                      ))}
-                  </div>
-                )}
-              </Q>
-            </section>
-            <section className="mt-8 border-t pt-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-lg font-semibold">
-                  Management attention{" "}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    ({o.managementRisks.length})
-                  </span>
-                </h2>
-                <DetailDrawer
-                  title="Management attention"
-                  trigger={
-                    <Button variant="outline" size="sm">
-                      View All
-                    </Button>
-                  }
-                >
-                  <div className="space-y-5">
-                    {o.managementRisks.map((r) => (
-                      <div key={r.title}>
-                        <RiskBadge level={r.level} />
-                        <h3 className="mt-2 font-semibold">{r.title}</h3>
-                        <p className="mt-1 text-muted-foreground">{r.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                </DetailDrawer>
-              </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                {o.managementRisks.slice(0, 2).map((r) => (
-                  <div key={r.title}>
+      <section id="targets" className="border-b pb-6">
+        <h2 className="mb-5 text-lg font-semibold">Are we meeting our targets?</h2>
+        <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
+      </section>
+      <section className="border-b py-6">
+        <h2 className="mb-5 text-lg font-semibold">What are we saving?</h2>
+        <Q q={ov}>{(o) => <Q q={sim}>{(r) => <PlanOutcomes overview={o} result={r} />}</Q>}</Q>
+      </section>
+      <section id="decisions" className="py-6">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Management attention</h2>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/studio">
+              Review strategy <ArrowRight />
+            </Link>
+          </Button>
+        </header>
+        <Q q={ov}>
+          {(o) => (
+            <div className="grid gap-4 lg:grid-cols-3">
+              {o.managementRisks.slice(0, 3).map((r) => {
+                const recommendation = managementRecommendation(r, ms.data ?? [], api.isDemo);
+                return (
+                  <article key={r.title} className="rounded-lg border bg-card p-4">
                     <RiskBadge level={r.level} />
-                    <h3 className="mt-2 text-sm font-semibold">{r.title}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-            <section className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
-              <p className="max-w-2xl text-sm text-muted-foreground">
-                <b className="text-foreground">Next decision:</b> review the highest-impact
-                opportunities before committing effort. The selected plan remains a projection until
-                changes are implemented.
-              </p>
-              <Button asChild>
-                <Link to="/explore">
-                  Explore drivers
-                  <ArrowRight />
-                </Link>
-              </Button>
-            </section>
-          </>
-        )}
-      </Q>
+                    <h3 className="mt-3 font-medium">{r.title}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{r.detail}</p>
+                    {recommendation && (
+                      <Button asChild size="sm" variant="link" className="mt-3 px-0">
+                        <Link to="/studio" hash={`measure-${recommendation.id}`}>
+                          Review recommendations <ArrowRight />
+                        </Link>
+                      </Button>
+                    )}
+                  </article>
+                );
+              })}
+              {!o.managementRisks.length && (
+                <p className="text-sm text-muted-foreground">No management risks supplied.</p>
+              )}
+            </div>
+          )}
+        </Q>
+      </section>
+      <Q q={ms}>{(measures) => <DemoExceptions measures={measures} />}</Q>
+      <section className="mt-8 border-t pt-6">
+        <ChartCard title="Spending drivers">
+          <ComparisonBoard finance />
+        </ChartCard>
+      </section>
+      <div id="monthly">
+        <Q q={ov}>
+          {(o) => (
+            <>
+              <HistoricalPerformance overview={o} />
+              <EmissionsEvidence overview={o} />
+            </>
+          )}
+        </Q>
+      </div>
     </AppShell>
   );
 }

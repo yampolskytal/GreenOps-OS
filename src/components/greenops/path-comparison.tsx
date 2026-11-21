@@ -1,4 +1,5 @@
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { Check, Pencil, Plus, Trash2, ArrowRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import { AnalyticalInspector } from "./analytical-inspector";
 import { ScenarioForecastPanel } from "./scenario-forecast";
 import { RiskBadge } from "./ui";
 import { cn } from "@/lib/utils";
+import { approvedDemoIds, isImplementableProposal, numericalWarnings } from "@/lib/proposals";
 
 export function PathComparison() {
   const { s, set } = useApp();
@@ -43,6 +45,19 @@ export function PathComparison() {
   const [committing, setCommitting] = useState<SavedPath | null>(null);
   const commit = useCommitPlan(measures.data);
   const openPath = s.paths.find((p) => p.id === openId) ?? null;
+  const hash = useRouterState({ select: (r) => r.location.hash });
+  const linkedPathId =
+    hash.startsWith("path-") && s.paths.some((p) => p.id === hash.slice(5)) ? hash.slice(5) : null;
+  useEffect(() => {
+    const open = (event: Event) => {
+      if (event instanceof CustomEvent && typeof event.detail === "string") setOpenId(event.detail);
+    };
+    window.addEventListener("greenops-open-path", open);
+    return () => window.removeEventListener("greenops-open-path", open);
+  }, []);
+  useEffect(() => {
+    if (linkedPathId) setOpenId(linkedPathId);
+  }, [linkedPathId]);
   const submitName = () => {
     const trimmed = name.trim();
     if (!trimmed) return setNote("Type a name, then press Enter to create a Path.");
@@ -50,7 +65,12 @@ export function PathComparison() {
     if (!existing && s.paths.length >= MAX_PATHS)
       return setNote("You already have three Paths. Rename, edit or delete one to make room.");
     try {
-      const r = ensurePath(s.paths, trimmed, { budgetChf: s.budgetChf, priority: s.priority }, crypto.randomUUID());
+      const r = ensurePath(
+        s.paths,
+        trimmed,
+        { budgetChf: s.budgetChf, priority: s.priority },
+        crypto.randomUUID(),
+      );
       if (r.created) set({ paths: r.paths });
       setName("");
       setNote(r.created ? null : `“${trimmed}” already exists — opened it.`);
@@ -67,7 +87,8 @@ export function PathComparison() {
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">Compare Paths</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            {s.paths.length}/{MAX_PATHS} alternative strategies · editing a Path never changes your Current Plan
+            {s.paths.length}/{MAX_PATHS} alternative strategies · editing a Path never changes your
+            Current Plan
           </p>
         </div>
         <form
@@ -79,7 +100,9 @@ export function PathComparison() {
         >
           <Input
             aria-label="Path name"
-            placeholder={s.paths.length >= MAX_PATHS ? "Type a Path name to open it" : "New Path name"}
+            placeholder={
+              s.paths.length >= MAX_PATHS ? "Type a Path name to open it" : "New Path name"
+            }
             maxLength={60}
             value={name}
             onChange={(e) => {
@@ -119,7 +142,9 @@ export function PathComparison() {
               commit.setError(null);
               setCommitting(path);
             }}
-            onRename={(n) => set({ paths: s.paths.map((p) => (p.id === path.id ? { ...p, name: n } : p)) })}
+            onRename={(n) =>
+              set({ paths: s.paths.map((p) => (p.id === path.id ? { ...p, name: n } : p)) })
+            }
           />
         ))}
       </div>
@@ -230,7 +255,9 @@ function CommitPathDialog({
         </DialogHeader>
         {r && (
           <ul className="num space-y-1 text-sm">
-            <li>Annual savings: {chf(r.savingsChf)} ({pct(r.costReductionPct)})</li>
+            <li>
+              Annual savings: {chf(r.savingsChf)} ({pct(r.costReductionPct)})
+            </li>
             <li>
               Location-based CO₂ reduction: {kg(r.savingsCo2Kg)} ({pct(r.co2ReductionPct)})
             </li>
@@ -241,8 +268,9 @@ function CommitPathDialog({
         )}
         {r && !r.feasible && (
           <p className="text-sm text-warning">
-            Not submission-ready: {r.reasons.join(" ") || "misses numerical targets."} It can still be
-            saved as a proposal.
+            Not submission-ready:{" "}
+            {numericalWarnings(r).join("; ") || r.reasons.join(" ") || "misses numerical targets."}{" "}
+            It can still be saved as a proposal.
           </p>
         )}
         {error && (
@@ -252,10 +280,14 @@ function CommitPathDialog({
         )}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" disabled={pending} onClick={onCancel}>
-            Cancel
+            Keep editing
           </Button>
           <Button disabled={pending || !r} onClick={onConfirm}>
-            {pending ? "Validating…" : "Confirm commit"}
+            {pending
+              ? "Validating…"
+              : r && numericalWarnings(r).length
+                ? "Save as non-compliant Current Plan"
+                : "Confirm commit"}
           </Button>
         </div>
       </DialogContent>
@@ -286,8 +318,10 @@ function PathCard({
   const sim = usePathSimulation(path);
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(path.name);
+  const { s } = useApp();
+  const approved = approvedDemoIds(s.demoExceptions, api.isDemo);
   const chosen = measures.filter((m) => path.measureIds.includes(m.id));
-  const blocked = chosen.filter((m) => m.risk.level === "blocked" || !m.includable).length;
+  const blocked = chosen.filter((m) => !isImplementableProposal(m, approved)).length;
   const review = chosen.filter((m) => m.risk.level === "review").length;
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
   const key = (e: KeyboardEvent) => {
@@ -325,7 +359,14 @@ function PathCard({
               }
             }}
           >
-            <Input aria-label="Rename Path" value={name} maxLength={60} autoFocus onChange={(e) => setName(e.target.value)} onKeyDown={stop} />
+            <Input
+              aria-label="Rename Path"
+              value={name}
+              maxLength={60}
+              autoFocus
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={stop}
+            />
             <Button aria-label="Save Path name" size="icon" disabled={!name.trim()}>
               <Check />
             </Button>
@@ -339,10 +380,22 @@ function PathCard({
           </div>
         )}
         <div className="flex shrink-0 gap-0.5" onClick={stop} onKeyDown={stop}>
-          <Button size="icon" variant="ghost" aria-label={`Rename ${path.name}`} title="Rename" onClick={() => setRenaming(!renaming)}>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={`Rename ${path.name}`}
+            title="Rename"
+            onClick={() => setRenaming(!renaming)}
+          >
             {renaming ? <X /> : <Pencil />}
           </Button>
-          <Button size="icon" variant="ghost" aria-label={`Delete ${path.name}`} title="Delete" onClick={onDelete}>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={`Delete ${path.name}`}
+            title="Delete"
+            onClick={onDelete}
+          >
             <Trash2 />
           </Button>
         </div>
@@ -379,7 +432,11 @@ function PathCard({
           <Pencil />
           Edit measures
         </Button>
-        <Button size="sm" disabled={!path.measureIds.length || blocked > 0 || sim.isPending} onClick={onCommit}>
+        <Button
+          size="sm"
+          disabled={!path.measureIds.length || blocked > 0 || sim.isPending}
+          onClick={onCommit}
+        >
           Commit to Current Plan
           <ArrowRight />
         </Button>
@@ -408,16 +465,22 @@ function PathInspector({ path, measures }: { path: SavedPath; measures: Measure[
               <div className="flex items-start justify-between gap-2">
                 <p className="min-w-0 break-words font-medium">{m.title}</p>
                 <RiskBadge level={m.risk.level} />
+                {s.demoExceptions[m.id]?.approved && (
+                  <span className="text-xs text-warning">Demo exception approved</span>
+                )}
               </div>
               <p className="num mt-1 text-xs text-muted-foreground">
-                {chf(m.savingsChf)}/yr · {kg(m.savingsCo2KgLocation)} CO₂/yr · {m.effortPersonDays} PD
+                {chf(m.savingsChf)}/yr · {kg(m.savingsCo2KgLocation)} CO₂/yr · {m.effortPersonDays}{" "}
+                PD
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{m.risk.why || m.description}</p>
               <Button
                 size="sm"
                 variant="ghost"
-                className="mt-2"
-                onClick={() => set({ paths: removeFromPath(s.paths, path.id, m.id) })}
+                className="mt-2 text-destructive"
+                onClick={() =>
+                  set((state) => ({ paths: removeFromPath(state.paths, path.id, m.id) }))
+                }
               >
                 <X />
                 Remove from Path
@@ -441,23 +504,26 @@ function PathInspector({ path, measures }: { path: SavedPath; measures: Measure[
               <div className="flex items-start justify-between gap-2">
                 <p className="min-w-0 break-words font-medium">{m.title}</p>
                 <RiskBadge level={m.risk.level} />
+                {s.demoExceptions[m.id]?.approved && (
+                  <span className="text-xs text-warning">Demo exception approved</span>
+                )}
               </div>
               <p className="num mt-1 text-xs text-muted-foreground">
-                +{chf(m.savingsChf)}/yr · +{kg(m.savingsCo2KgLocation)} CO₂/yr · +{m.effortPersonDays} PD
+                +{chf(m.savingsChf)}/yr · +{kg(m.savingsCo2KgLocation)} CO₂/yr · +
+                {m.effortPersonDays} PD
               </p>
               <p className="mt-1 text-xs">{reason}</p>
               <Button
                 size="sm"
                 variant="outline"
-                className="mt-2"
+                className="mt-2 border-info/50 text-info"
                 onClick={() =>
-                  set({
-                    paths: setPathMembership(
-                      s.paths,
-                      m.id,
-                      [...s.paths.filter((p) => p.measureIds.includes(m.id)).map((p) => p.id), path.id],
-                    ),
-                  })
+                  set((state) => ({
+                    paths: setPathMembership(state.paths, m.id, [
+                      ...state.paths.filter((p) => p.measureIds.includes(m.id)).map((p) => p.id),
+                      path.id,
+                    ]),
+                  }))
                 }
               >
                 <Plus />

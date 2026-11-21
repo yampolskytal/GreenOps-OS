@@ -23,7 +23,7 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [desktop, setDesktop] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1180px)");
+    const mq = window.matchMedia("(min-width: 768px)");
     const update = () => setDesktop(mq.matches);
     update();
     mq.addEventListener("change", update);
@@ -45,6 +45,7 @@ export function AnalyticalInspector({
   children,
   open: requestedOpen,
   onOpenChange,
+  fullWidth = false,
 }: {
   title: string;
   description?: ReactNode;
@@ -52,11 +53,13 @@ export function AnalyticalInspector({
   children: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  fullWidth?: boolean;
 }) {
   const ctx = useContext(InspectorContext);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const wasOpen = useRef(false);
+  const previousFocus = useRef<HTMLElement | null>(null);
   const open = ctx?.active === id;
   const setActive = ctx?.setActive;
   const current = useRef(ctx);
@@ -64,8 +67,11 @@ export function AnalyticalInspector({
   const callback = useRef(onOpenChange);
   callback.current = onOpenChange;
   useEffect(() => {
-    if (requestedOpen === true) setActive?.(id);
-    else if (requestedOpen === false && current.current?.active === id) setActive?.(null);
+    if (requestedOpen === true) {
+      previousFocus.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setActive?.(id);
+    } else if (requestedOpen === false && current.current?.active === id) setActive?.(null);
   }, [requestedOpen, id, setActive]);
   useEffect(() => {
     if (wasOpen.current && !open) callback.current?.(false);
@@ -74,7 +80,9 @@ export function AnalyticalInspector({
   const close = () => {
     setActive?.(null);
     callback.current?.(false);
-    anchor.current?.querySelector<HTMLElement>("button")?.focus();
+    (anchor.current?.querySelector<HTMLElement>("button") ?? previousFocus.current)?.focus({
+      preventScroll: true,
+    });
   };
   useEffect(() => {
     if (!open) return;
@@ -82,11 +90,37 @@ export function AnalyticalInspector({
       if (event.key === "Escape") {
         setActive?.(null);
         callback.current?.(false);
-        anchor.current?.querySelector<HTMLElement>("button")?.focus();
+        (anchor.current?.querySelector<HTMLElement>("button") ?? previousFocus.current)?.focus({
+          preventScroll: true,
+        });
       }
     };
+    const outside = (event: PointerEvent) => {
+      const target = event.target;
+      if (
+        !(target instanceof Element) ||
+        current.current?.target?.contains(target) ||
+        anchor.current?.contains(target)
+      )
+        return;
+      if (
+        target.closest(
+          "[data-radix-popper-content-wrapper], [role=dialog], [role=listbox], [role=menu], [data-inspector-owned], [data-inspector-trigger]",
+        )
+      )
+        return;
+      setActive?.(null);
+      callback.current?.(false);
+      (anchor.current?.querySelector<HTMLElement>("button") ?? previousFocus.current)?.focus({
+        preventScroll: true,
+      });
+    };
     document.addEventListener("keydown", escape);
-    return () => document.removeEventListener("keydown", escape);
+    document.addEventListener("pointerdown", outside);
+    return () => {
+      document.removeEventListener("keydown", escape);
+      document.removeEventListener("pointerdown", outside);
+    };
   }, [open, setActive]);
   useEffect(
     () => () => {
@@ -98,8 +132,11 @@ export function AnalyticalInspector({
     <>
       <span
         ref={anchor}
-        className="inline-flex max-w-full"
+        data-inspector-trigger
+        className={fullWidth ? "block w-full min-w-0" : "inline-flex max-w-full"}
         onClick={() => {
+          previousFocus.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setActive?.(open ? null : id);
           callback.current?.(!open);
         }}

@@ -22,6 +22,7 @@ import { Route as ImportRouteImport } from './routes/import'
 import { Route as ItRouteImport } from './routes/it'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as SubmissionRouteImport } from './routes/submission'
+import { Route as ApiV2SplatRouteImport } from './routes/api/v2/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +89,11 @@ const SubmissionRoute = SubmissionRouteImport.update({
   path: '/submission',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV2SplatRoute = ApiV2SplatRouteImport.update({
+  id: '/api/v2/$',
+  path: '/api/v2/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/it': typeof ItRoute
   '/studio': typeof StudioRoute
   '/submission': typeof SubmissionRoute
+  '/api/v2/$': typeof ApiV2SplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/it': typeof ItRoute
   '/studio': typeof StudioRoute
   '/submission': typeof SubmissionRoute
+  '/api/v2/$': typeof ApiV2SplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/it': typeof ItRoute
   '/studio': typeof StudioRoute
   '/submission': typeof SubmissionRoute
+  '/api/v2/$': typeof ApiV2SplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/it'
     | '/studio'
     | '/submission'
+    | '/api/v2/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/it'
     | '/studio'
     | '/submission'
+    | '/api/v2/$'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/it'
     | '/studio'
     | '/submission'
+    | '/api/v2/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   ItRoute: typeof ItRoute
   StudioRoute: typeof StudioRoute
   SubmissionRoute: typeof SubmissionRoute
+  ApiV2SplatRoute: typeof ApiV2SplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubmissionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v2/$': {
+      id: '/api/v2/$'
+      path: '/api/v2/$'
+      fullPath: '/api/v2/$'
+      preLoaderRoute: typeof ApiV2SplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   ItRoute: ItRoute,
   StudioRoute: StudioRoute,
   SubmissionRoute: SubmissionRoute,
+  ApiV2SplatRoute: ApiV2SplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

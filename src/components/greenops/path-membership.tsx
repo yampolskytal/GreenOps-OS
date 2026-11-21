@@ -8,11 +8,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useApp } from "@/lib/store";
 import {
   addMeasuresToPaths,
-  createPath,
   findPathByName,
   MAX_PATHS,
   pathSlot,
   setPathMembership,
+  saveMeasuresToPaths,
 } from "@/lib/paths";
 import { reveal } from "@/lib/reveal";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
@@ -38,53 +38,57 @@ export function PathMembership({
   const [checked, setChecked] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const viewPaths = () => {
-    if (pathname === "/studio") reveal("paths");
-    else void navigate({ to: "/studio", hash: "paths" });
+  const viewPaths = (pathId?: string) => {
+    const target = pathId ? `path-${pathId}` : "paths";
+    if (pathname === "/studio") {
+      reveal(target);
+      if (pathId) window.dispatchEvent(new CustomEvent("greenops-open-path", { detail: pathId }));
+    } else void navigate({ to: "/studio", hash: target });
   };
   const confirm = (paths: typeof s.paths, ids: string[]) => {
     const names = paths.filter((p) => ids.includes(p.id)).map((p) => p.name);
     toast.success(
       names.length
-        ? `${bulk ? `${measureIds.length} measures added to` : "Saved in"} ${names.join(", ")}`
+        ? `${bulk ? `${new Set(measureIds).size} recommendations added to` : "Saved in"} ${names.join(", ")}`
         : "Removed from all Paths",
-      { action: { label: "View Paths", onClick: viewPaths } },
+      { action: { label: "View Path", onClick: () => viewPaths(ids[0]) } },
     );
   };
   const save = () => {
-    const next = bulk
-      ? addMeasuresToPaths(s.paths, measureIds, checked)
-      : setPathMembership(s.paths, measureIds[0] ?? "", checked);
-    set({ paths: next });
-    confirm(next, checked);
+    if (name.trim()) return createAndAdd();
+    set((state) => ({
+      paths: bulk
+        ? addMeasuresToPaths(state.paths, measureIds, checked)
+        : setPathMembership(state.paths, measureIds[0] ?? "", checked),
+    }));
+    confirm(s.paths, checked);
     setOpen(false);
     onDone?.();
   };
   const createAndAdd = () => {
     const trimmed = name.trim();
     if (!trimmed) return setError("Type a name for the new Path.");
-    const existing = findPathByName(s.paths, trimmed);
-    if (existing) {
-      setChecked((ids) => [...new Set([...ids, existing.id])]);
-      setName("");
-      setError(`“${existing.name}” already exists — it is now selected.`);
-      return;
-    }
     try {
-      const id = crypto.randomUUID();
-      const created = createPath(s.paths, {
-        id,
-        name: trimmed,
-        measureIds: [],
-        budgetChf: s.budgetChf,
-        priority: s.priority,
-      });
-      const ids = [...new Set([...checked, id])];
-      const next = bulk
-        ? addMeasuresToPaths(created, measureIds, ids)
-        : setPathMembership(created, measureIds[0] ?? "", ids);
-      set({ paths: next });
-      confirm(next, ids);
+      const newId = crypto.randomUUID();
+      const result = saveMeasuresToPaths(
+        s.paths,
+        measureIds,
+        checked,
+        trimmed,
+        { budgetChf: s.budgetChf, priority: s.priority },
+        newId,
+      );
+      set((state) => ({
+        paths: saveMeasuresToPaths(
+          state.paths,
+          measureIds,
+          checked,
+          trimmed,
+          { budgetChf: state.budgetChf, priority: state.priority },
+          newId,
+        ).paths,
+      }));
+      confirm(result.paths, result.ids);
       setName("");
       setOpen(false);
       onDone?.();
@@ -103,19 +107,28 @@ export function PathMembership({
         setName("");
         if (value)
           setChecked(
-            bulk ? [] : s.paths.filter((p) => p.measureIds.includes(measureIds[0] ?? "")).map((p) => p.id),
+            bulk
+              ? []
+              : s.paths.filter((p) => p.measureIds.includes(measureIds[0] ?? "")).map((p) => p.id),
           );
       }}
     >
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" disabled={!measureIds.length}>
+        <Button
+          variant="outline"
+          className="border-info/50 text-info"
+          size="sm"
+          disabled={!measureIds.length}
+        >
           <BookmarkPlus />
           {label}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" collisionPadding={12} className="w-[min(320px,calc(100vw-24px))]">
-        <h3 className="font-semibold">{bulk ? `Add ${measureIds.length} measures to Paths` : "Add to Paths"}</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Paths only · Current Plan stays unchanged</p>
+        <h3 className="font-semibold">Choose Paths</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Paths only · Current Plan stays unchanged
+        </p>
         <div className="my-4 space-y-3">
           {s.paths.map((p) => (
             <label key={p.id} className="flex items-center gap-3 text-sm">
@@ -125,12 +138,17 @@ export function PathMembership({
                   setChecked((ids) => (value ? [...ids, p.id] : ids.filter((id) => id !== p.id)))
                 }
               />
-              <span className="inline-block size-2.5 shrink-0 rounded-full" style={{ background: `var(--path-${pathSlot(s.paths, p)})` }} />
+              <span
+                className="inline-block size-2.5 shrink-0 rounded-full"
+                style={{ background: `var(--path-${pathSlot(s.paths, p)})` }}
+              />
               <span className="min-w-0 break-words">{p.name}</span>
               <span className="ml-auto text-xs text-muted-foreground">{p.measureIds.length}</span>
             </label>
           ))}
-          {!s.paths.length && <p className="text-sm text-muted-foreground">No Paths yet — name one below.</p>}
+          {!s.paths.length && (
+            <p className="text-sm text-muted-foreground">No Paths yet — name one below.</p>
+          )}
         </div>
         {s.paths.length < MAX_PATHS ? (
           <form
@@ -151,8 +169,15 @@ export function PathMembership({
               placeholder="New Path name, then Enter"
             />
             {typed && (
-              <Button type="submit" variant="secondary" size="sm" className="h-auto w-full whitespace-normal py-2">
-                {match ? `Select “${match.name}”` : `Create “${typed}” and add ${bulk ? "these measures" : "this measure"}`}
+              <Button
+                type="submit"
+                variant="secondary"
+                size="sm"
+                className="h-auto w-full whitespace-normal py-2"
+              >
+                {match
+                  ? `Select “${match.name}”`
+                  : `Create “${typed}” and add ${bulk ? "these measures" : "this measure"}`}
               </Button>
             )}
           </form>
@@ -166,8 +191,12 @@ export function PathMembership({
             {error}
           </p>
         )}
-        <Button className="w-full" onClick={save} disabled={!s.paths.length || (bulk && !checked.length)}>
-          {bulk ? "Add to selected Paths" : "Save memberships"}
+        <Button
+          className="w-full"
+          onClick={save}
+          disabled={!name.trim() && (!s.paths.length || (bulk && !checked.length))}
+        >
+          {name.trim() ? "Create / Save to Paths" : "Save to Paths"}
         </Button>
       </PopoverContent>
     </Popover>

@@ -17,23 +17,21 @@ const q = {
   provider: "AWS",
 };
 describe("refactor planning integrity", () => {
-  it("rejects commitments over the CHF 16,500 official budget", async () => {
+  it("allows local proposals over the CHF 16,500 submission budget", async () => {
     const result = await demoApi.simulate(q, {
       measureIds: [],
       budgetChf: 17000,
       chfPerPersonDay: 1100,
     });
-    expect(validatePreview([], demoMeasures, 17000, result)).toContain("16,500");
+    expect(validatePreview([], demoMeasures, 17000, result)).toBeNull();
   });
-  it("rejects commitments over 15 person-days", async () => {
+  it("allows local proposals over the 15-person-day submission limit", async () => {
     const result = await demoApi.simulate(q, {
       measureIds: [],
       budgetChf: 16500,
       chfPerPersonDay: 1100,
     });
-    expect(validatePreview([], demoMeasures, 16500, { ...result, effortDays: 15.5 })).toContain(
-      "15 person-days",
-    );
+    expect(validatePreview([], demoMeasures, 16500, { ...result, effortDays: 15.5 })).toBeNull();
   });
   it("keeps blocked measures out of committed packages", async () => {
     const result = await demoApi.simulate(q, {

@@ -406,11 +406,11 @@ export function RiskBadge({ level }: { level: RiskLevel }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+        "risk-badge inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded border px-2 text-[11px] font-semibold",
         m.cls,
       )}
     >
-      <m.Icon className="h-3 w-3" />
+      <m.Icon className="h-3 w-3 shrink-0" />
       {m.label}
     </span>
   );

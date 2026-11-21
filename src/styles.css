@@ -86,10 +86,10 @@
   --destructive: oklch(0.710627 0.166148 22.216);
   --info: oklch(0.72 0.12 240);
   --forecast: oklch(0.716017 0.109231 271.712);
-  --heat-1: oklch(0.924366 0.027695 258.365);
-  --heat-2: oklch(0.80686 0.071341 267.935);
-  --heat-3: oklch(0.698164 0.10399 268.758);
-  --heat-4: oklch(0.589489 0.10539 267.925);
+  --heat-1: oklch(0.88 0.055 255);
+  --heat-2: oklch(0.72 0.12 255);
+  --heat-3: oklch(0.56 0.18 255);
+  --heat-4: oklch(0.40 0.17 255);
   --radius: 0.5rem;
   --surface: var(--card);
   --card-foreground: var(--foreground);
@@ -146,10 +146,10 @@ html.light {
   --destructive: oklch(0.557269 0.184145 25.492);
   --info: oklch(0.52 0.13 240);
   --forecast: oklch(0.540885 0.126395 269.592);
-  --heat-1: oklch(0.951095 0.017385 264.485);
-  --heat-2: oklch(0.835943 0.054852 266.766);
-  --heat-3: oklch(0.699686 0.09655 268.464);
-  --heat-4: oklch(0.540885 0.126395 269.592);
+  --heat-1: oklch(0.88 0.055 255);
+  --heat-2: oklch(0.72 0.12 255);
+  --heat-3: oklch(0.56 0.18 255);
+  --heat-4: oklch(0.40 0.17 255);
   --radius: 0.5rem;
   --surface: var(--card);
   --card-foreground: var(--foreground);
@@ -345,7 +345,7 @@ html.light {
 .inspector-slot {
   display: none;
 }
-@media (min-width: 1180px) {
+@media (min-width: 768px) {
   .inspector-layout[data-inspector="open"] {
     grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 390px);
   }
@@ -393,11 +393,31 @@ html.light {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.greenops-shell main :where(button, a[data-slot="button"]) {
+.greenops-shell main :where(button:not([role="checkbox"]), a[data-slot="button"]) {
   max-width: 100%;
   white-space: normal;
   height: auto;
   min-height: 36px;
+}
+.greenops-shell [role="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  padding: 0;
+  flex: 0 0 16px;
+}
+.greenops-shell .risk-badge {
+  height: 24px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.greenops-shell .comparison-row {
+  display: grid;
+  justify-items: stretch;
+}
+.greenops-shell .runtime-resource {
+  display: grid;
+  justify-items: stretch;
 }
 .app-navigation {
   overflow-y: auto;
@@ -432,7 +452,7 @@ html.light {
   }
 }
 
-@media (max-width: 1179px) {
+@media (max-width: 767px) {
   .inspector-layout[data-inspector="open"] .inspector-main {
     visibility: hidden;
     height: 0;
@@ -458,13 +478,20 @@ html.light {
   scroll-margin-top: 96px;
 }
 @keyframes reveal-flash {
-  0% { box-shadow: 0 0 0 2px var(--ring); }
-  100% { box-shadow: 0 0 0 2px transparent; }
+  0% {
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
 }
 .reveal-flash {
   animation: reveal-flash 1.6s ease-out;
   border-radius: var(--radius);
 }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-flash { animation: none; outline: 2px solid var(--ring); }
+  .reveal-flash {
+    animation: none;
+    outline: 2px solid var(--ring);
+  }
 }
