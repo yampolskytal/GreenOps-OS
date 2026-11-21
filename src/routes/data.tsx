@@ -84,8 +84,7 @@ function DataReports() {
             assumptions. Monthly/daily values and scenario effects must be supplied separately.
           </p>
           <p className="mt-6 text-xs text-muted-foreground">
-            Import history and additional JSONL validation require the team backend; no local upload
-            changes your analytics.
+            Dropping CSVs checks their headers. Once the local backend confirms an import, dashboards use the new dataset.
           </p>
         </TabsContent>
         <TabsContent value="submission">

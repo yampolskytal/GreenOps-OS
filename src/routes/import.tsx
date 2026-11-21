@@ -84,7 +84,10 @@ export function DataManagement() {
         files.filter((f) => !f.error && f.missing.length === 0).map((f) => f.file),
       );
       setRes(r);
-      if (r.accepted && r.datasetVersion) set({ datasetVersion: r.datasetVersion });
+      if (r.accepted && r.datasetVersion) {
+        set({ datasetVersion: r.datasetVersion });
+        void qc.invalidateQueries();
+      }
     } catch (e) {
       setRes({
         accepted: false,

@@ -220,12 +220,14 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
     getDailyFootprint: (q) => req(`/metrics/daily?${qs(q)}`),
     getDataQuality: (q) => req(`/data-quality?${qs(q)}`),
     getBonus: (q) => req(`/bonus?${qs(q)}`),
-    importFiles: async () => ({
-      accepted: false,
-      message:
-        "Imports are not enabled in this public workspace. An authenticated administrator connection is required. No files were uploaded and no figures changed.",
-      issues: [],
-    }),
+    importFiles: async (files) => {
+      if (!import.meta.env.DEV || !["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        return { accepted: false, message: "Imports are disabled in the public workspace. No files were uploaded.", issues: [] };
+      }
+      const body = new FormData();
+      for (const file of files) body.append("files", file, file.name);
+      return req("/imports", { method: "POST", body });
+    },
     chat: (q, history: ChatMessage[], planMeasureIds = []) =>
       post(`/chat?${qs(q)}`, {
         messages: history.slice(-20).map(({ role, content, context }) => ({
