@@ -40,3 +40,4 @@ use the editor.
 - Imported visualization engines take adapter data only and resolve theme tokens before canvas painting; missing cells stay visibly distinct, so rendering never invents analytical values.
 - Budget and priority changes request debounced suggestions through GreenOpsApi; replacing an existing plan requires confirmation, so recommendations never mutate user selections implicitly.
 - Official exports use the fixed baseline query and cache prepared files against the plan/query context, so display filters and stale files cannot alter a submission.
+- Prebundle route-only React hook libraries at startup and reject outdated optimizer requests, so hot reload cannot mix React dispatchers from different dependency generations.
