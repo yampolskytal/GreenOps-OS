@@ -1,12 +1,5 @@
 import { Activity, AlertTriangle } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { AnalyticalInspector } from "./analytical-inspector";
 import { useQuality } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,8 +9,10 @@ export function DataHealth() {
   const q = useQuality();
   const warn = q.data?.datasets.filter((d) => d.status !== "ok").length ?? 0;
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <AnalyticalInspector
+      title="Data health"
+      description="Missing values are never treated as zero without an explicit rule."
+      trigger={
         <Button variant="outline" size="sm" className="gap-1.5 text-xs">
           <Activity className={cn("h-3.5 w-3.5", warn ? "text-warning" : "text-success")} />
           Data health
@@ -27,17 +22,10 @@ export function DataHealth() {
             </span>
           )}
         </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            Data health <DemoTag />
-          </SheetTitle>
-          <SheetDescription>
-            Missing values are never treated as zero without an explicit rule.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="px-4 pb-8">
+      }
+    >
+        <DemoTag />
+        <div className="pb-8">
           <Q q={q}>
             {(d) => {
               const tot = (k: "missing" | "duplicates" | "conflicts" | "unmapped" | "drafts") =>
@@ -124,7 +112,6 @@ export function DataHealth() {
             }}
           </Q>
         </div>
-      </SheetContent>
-    </Sheet>
+    </AnalyticalInspector>
   );
 }
