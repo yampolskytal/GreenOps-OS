@@ -1,13 +1,16 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Sora", system-ui, sans-serif;
-  --font-sans: "Manrope", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-display: "Geist", system-ui, sans-serif;
+  --font-sans: "Geist", system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --color-forecast-actual: var(--forecast-actual);
+  --color-forecast-without: var(--forecast-without);
+  --color-forecast-plan: var(--forecast-plan);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -55,6 +58,9 @@
 }
 
 :root {
+  --forecast-actual: oklch(0.724261 0.01552 264.471);
+  --forecast-without: oklch(0.710627 0.166148 22.216);
+  --forecast-plan: oklch(0.800349 0.18206 151.711);
   --background: oklch(0.154098 0.004578 264.432);
   --foreground: oklch(0.970151 0 89.876);
   --card: oklch(0.204236 0.008553 264.367);
@@ -66,7 +72,7 @@
   --success: oklch(0.800349 0.18206 151.711);
   --warning: oklch(0.836861 0.164422 84.429);
   --destructive: oklch(0.710627 0.166148 22.216);
-  --info: oklch(0.716017 0.109231 271.712);
+  --info: oklch(0.72 0.12 240);
   --forecast: oklch(0.716017 0.109231 271.712);
   --heat-1: oklch(0.924366 0.027695 258.365);
   --heat-2: oklch(0.80686 0.071341 267.935);
@@ -106,6 +112,9 @@
   --overlay: oklch(0.12 0.005 265 / 0.45);
 }
 html.light {
+  --forecast-actual: oklch(0.515969 0.018881 262.69);
+  --forecast-without: oklch(0.557269 0.184145 25.492);
+  --forecast-plan: oklch(0.538284 0.128381 153.994);
   --background: oklch(0.972949 0.00287 264.542);
   --foreground: oklch(0.204236 0.008553 264.367);
   --card: oklch(1 0 89.876);
@@ -117,7 +126,7 @@ html.light {
   --success: oklch(0.538284 0.128381 153.994);
   --warning: oklch(0.575484 0.122288 70.148);
   --destructive: oklch(0.557269 0.184145 25.492);
-  --info: oklch(0.540885 0.126395 269.592);
+  --info: oklch(0.52 0.13 240);
   --forecast: oklch(0.540885 0.126395 269.592);
   --heat-1: oklch(0.951095 0.017385 264.485);
   --heat-2: oklch(0.835943 0.054852 266.766);
@@ -183,7 +192,7 @@ html.light {
 }
 
 @utility num {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
 }
@@ -246,6 +255,7 @@ html.light {
   }
 }
 .recommendation .details-section {
+  visibility: hidden;
   display: grid;
   grid-template-rows: 0fr;
   transition:
@@ -254,6 +264,7 @@ html.light {
   opacity: 0;
 }
 .recommendation .details-section.open {
+  visibility: visible;
   grid-template-rows: 1fr;
   opacity: 1;
 }
@@ -357,25 +368,70 @@ html.light {
   border-radius: var(--radius);
   padding: 12px;
 }
-.calendar-chart-frame[data-view="3d"] {
-  padding-top: 260px;
-}
 .calendar-floating-legend {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 10;
-  background: var(--popover);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px;
+  margin-bottom: 16px;
 }
-.calendar-floating-legend[data-collapsed="true"] + .calendar-renderer {
-  margin-top: -105px;
+.greenops-shell main :where(section, article, header, p, h1, h2, h3, h4) {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
-@media (min-width: 700px) {
-  .calendar-chart-frame[data-view="3d"] {
-    padding-top: 140px;
+.greenops-shell main :where(button, a[data-slot="button"]) {
+  max-width: 100%;
+  white-space: normal;
+  height: auto;
+  min-height: 36px;
+}
+.app-navigation {
+  overflow-y: auto;
+}
+@media (max-width: 1023px) {
+  .app-navigation {
+    width: 64px;
+  }
+  .app-navigation nav a {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .app-navigation nav a > span,
+  .app-navigation > a > span + span,
+  .app-navigation [data-slot="select-trigger"] > span {
+    min-width: 0;
+  }
+  .app-navigation [data-slot="select-trigger"] {
+    width: 40px;
+    padding-inline: 2px;
+  }
+}
+@media (max-width: 480px) {
+  .greenops-shell main {
+    padding-inline: 12px;
+  }
+  .greenops-shell main h1 {
+    font-size: 24px;
+  }
+  .greenops-shell > div > header {
+    padding-inline: 12px;
+  }
+}
+
+@media (max-width: 1179px) {
+  .inspector-layout[data-inspector="open"] .inspector-main {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+  .inspector-layout[data-inspector="open"] .inspector-slot {
+    display: block;
+    height: 100dvh;
+    background: var(--background);
+  }
+}
+
+@media (max-width: 1023px) {
+  .app-navigation [data-slot="select-trigger"] {
+    justify-content: center;
+  }
+  .app-navigation [data-slot="select-trigger"] > svg {
+    display: none;
   }
 }

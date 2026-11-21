@@ -9,6 +9,7 @@ import { useForecast, useOverview, useSimulation } from "@/lib/queries";
 import { useApp } from "@/lib/store";
 import { chf, kchf } from "@/lib/format";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
+import { TargetPanel } from "@/components/greenops/targets";
 import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/cfo")({
@@ -115,6 +116,10 @@ function Cfo() {
         </ChartCard>
       </div>
       <section className="mt-8 border-t pt-6">
+        <h2 className="mb-5 text-lg font-semibold">Challenge Targets · Current Plan</h2>
+        <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
+      </section>
+      <section className="mt-8 border-t pt-6">
         <ChartCard
           title="Financial outlook"
           action={
@@ -127,7 +132,11 @@ function Cfo() {
           }
         >
           {ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)) ? (
-            <Q q={fc}>{(f) => <ForecastChart f={f} format={kchf} height={260} />}</Q>
+            <Q q={fc}>
+              {(f) => (
+                <ForecastChart f={f} format={kchf} height={260} history={ov.data?.monthly ?? []} />
+              )}
+            </Q>
           ) : (
             <p className="text-sm text-muted-foreground">
               Three-year cost projections are not available from this provider.

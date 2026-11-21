@@ -1,14 +1,15 @@
 // Adapted from uploaded EstimatedDateBadge: compact status card, chevron, animated expansion and traced border.
-import { useState } from "react";
-import { ChevronDown, Plus, Check, Lock, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, Plus, Check, Lock } from "lucide-react";
 import type { Measure } from "@/lib/api/types";
 import { chf, kg, kwh } from "@/lib/format";
 import { useApp } from "@/lib/store";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { canSelectMeasure } from "@/lib/planning";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RiskBadge } from "./ui";
+import { PathMembership } from "./path-membership";
 import { DetailBlock, DetailDrawer } from "./details";
 export function MeasureCard({
   m,
@@ -23,7 +24,23 @@ export function MeasureCard({
 }) {
   const { s } = useApp();
   const [open, setOpen] = useState(false);
-  const inPlan = selected ?? s.measureIds.includes(m.id);
+  const hash = useRouterState({ select: (r) => r.location.hash });
+  const committed = s.measureIds.includes(m.id);
+  const inPlan = selected ?? committed;
+  useEffect(() => {
+    const inspect = () => {
+      if (window.location.hash === `#measure-${m.id}`) {
+        setOpen(true);
+        setTimeout(
+          () => document.getElementById(`measure-${m.id}`)?.scrollIntoView({ block: "start" }),
+          80,
+        );
+      }
+    };
+    inspect();
+    window.addEventListener("hashchange", inspect);
+    return () => window.removeEventListener("hashchange", inspect);
+  }, [m.id, hash]);
   const blocked = !canSelectMeasure(m);
   const details = (
     <div className="space-y-5">
@@ -31,12 +48,12 @@ export function MeasureCard({
         <p>{m.change}</p>
       </DetailBlock>
       <DetailBlock title="Why & possible consequences">
-        <p>{m.risk.why}</p>
+        <p>{m.risk.why || "Reason not supplied"}</p>
         <p className="mt-2 text-muted-foreground">{m.risk.consequences}</p>
       </DetailBlock>
       <DetailBlock title="Dependencies & protection windows">
         <p>
-          {m.risk.protectionWindows.join(" · ") ||
+          {(m.risk.protectionWindows ?? []).join(" · ") ||
             "No windows supplied — confirm before implementation."}
         </p>
       </DetailBlock>
@@ -52,13 +69,13 @@ export function MeasureCard({
       </DetailBlock>
       <DetailBlock title="Assumptions & conflicting evidence">
         <ul className="space-y-2">
-          {[...m.assumptions, ...m.risk.conflicts].map((x) => (
+          {[...(m.assumptions ?? []), ...(m.risk.conflicts ?? [])].map((x) => (
             <li key={x}>{x}</li>
           ))}
         </ul>
       </DetailBlock>
       <DetailBlock title="Source evidence">
-        {m.evidence.length ? (
+        {(m.evidence ?? []).length ? (
           m.evidence.map((e) => (
             <div key={e.source + e.detail} className="mb-3">
               <p className="num break-words text-xs text-info">{e.source}</p>
@@ -80,13 +97,7 @@ export function MeasureCard({
         blocked && "border-destructive/40",
       )}
     >
-      <div className="relative flex flex-wrap items-center gap-3 p-4">
-        <ShieldCheck
-          className={cn(
-            "size-5 shrink-0",
-            m.risk.level === "low" ? "text-success" : blocked ? "text-destructive" : "text-warning",
-          )}
-        />
+      <div className="relative grid min-w-0 gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
         <Button
           variant="ghost"
           className="h-auto min-w-0 flex-1 justify-between whitespace-normal p-0 text-left hover:bg-transparent"
@@ -99,31 +110,49 @@ export function MeasureCard({
             </span>
             <span className="mt-1 block font-semibold">{m.title}</span>
             <span className="mt-1 block text-xs font-normal text-muted-foreground">
-              {chf(m.savingsChf)}/yr · {kg(m.savingsCo2KgLocation)} CO₂ less · {m.effortPersonDays}{" "}
-              PD
+              Annual savings: {chf(m.savingsChf)} · Annual CO₂ reduction:{" "}
+              {kg(m.savingsCo2KgLocation)} · Implementation effort: {m.effortPersonDays} person-days
             </span>
           </span>
           <ChevronDown className={cn("shrink-0 transition-transform", open && "rotate-180")} />
         </Button>
-        <RiskBadge level={m.risk.level} />
-        {onToggle ? (
-          <Button
-            size="sm"
-            variant={inPlan ? "default" : "outline"}
-            disabled={blocked}
-            onClick={onToggle}
-          >
-            {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
-            {blocked ? "Blocked" : inPlan ? "In Preview" : "Add to Preview"}
-          </Button>
-        ) : (
-          <Button size="sm" variant="outline" asChild>
-            <Link to="/studio" hash={`measure-${m.id}`}>
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+          <RiskBadge level={m.risk.level} />
+          <span className="text-xs text-muted-foreground">
+            {selected === undefined
+              ? committed
+                ? "In Current Plan"
+                : "Not selected"
+              : committed && selected
+                ? "In both"
+                : committed
+                  ? "In Current Plan"
+                  : selected
+                    ? "In Preview only"
+                    : "Not selected"}
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2 sm:col-span-2 sm:justify-end">
+          <PathMembership measureId={m.id} />
+          {onToggle ? (
+            <Button
+              size="sm"
+              variant={inPlan ? "default" : "outline"}
+              disabled={blocked}
+              onClick={onToggle}
+            >
               {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
-              {blocked ? "Blocked" : inPlan ? "In Current Plan" : "Preview measure"}
-            </Link>
-          </Button>
-        )}
+              {blocked ? "Blocked" : inPlan ? "Remove from Preview" : "Add to Preview"}
+            </Button>
+          ) : (
+            <Button size="sm" variant="outline" asChild>
+              <Link to="/studio" hash={`measure-${m.id}`}>
+                {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
+                {blocked ? "Blocked" : inPlan ? "In Current Plan" : "Preview measure"}
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
       {open && (
         <svg
@@ -153,13 +182,13 @@ export function MeasureCard({
                 <p className="text-sm">{m.change}</p>
               </DetailBlock>
               <DetailBlock title="Safety review">
-                <p className="text-sm">{m.risk.why}</p>
+                <p className="text-sm">{m.risk.why || "Reason not supplied"}</p>
               </DetailBlock>
             </div>
             {!compact && (
               <p className="text-xs text-muted-foreground">
                 Energy benefit: {kwh(m.savingsKwh)}/yr ·{" "}
-                {m.risk.protectionWindows.join(" · ") || "Protection windows not specified"}
+                {(m.risk.protectionWindows ?? []).join(" · ") || "Protection windows not specified"}
               </p>
             )}
             <DetailDrawer

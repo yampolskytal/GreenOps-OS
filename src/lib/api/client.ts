@@ -14,6 +14,7 @@ import {
 import { evaluatePackage, greedyPackage } from "../optimizer";
 import { BASELINE_HEADER, BASELINE_ROWS, MEASURES_HEADER, toCsv } from "./templates";
 import { demoChatReply } from "./demo-chat";
+import { validateApiResponse } from "./response-schemas";
 
 const delay = <T>(v: T, _ms?: number) => Promise.resolve(v);
 const base = { costChf: DEMO_BASELINE.costChf, co2Kg: DEMO_BASELINE.co2Kg };
@@ -28,7 +29,7 @@ export const demoApi: GreenOpsApi = {
       ...demoOverview,
       forecastSupport: (["cost", "co2Location", "energy", "co2Market"] as const).map((metric) => ({
         metric,
-        horizons: [1, 2, 3, 5],
+        horizons: [1, 2, 3],
       })),
     }),
   getBreakdowns: () => delay(demoBreakdowns),
@@ -172,7 +173,7 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
   const req = async <T>(path: string, init?: RequestInit): Promise<T> => {
     const res = await fetch(`${baseUrl}${path}`, init);
     if (!res.ok) throw new Error(`Request ${path} failed [${res.status}]: ${await res.text()}`);
-    return res.json() as Promise<T>;
+    return validateApiResponse(path, await res.json()) as T;
   };
   const post = <T>(path: string, body: unknown) =>
     req<T>(path, {

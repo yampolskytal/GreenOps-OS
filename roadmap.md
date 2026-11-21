@@ -1,5 +1,14 @@
 # Roadmap — GreenOps OS frontend
 
+- [x] V5 shared typography/layout, inspectors, navigation and Ask GreenOps
+- [x] V5 four Challenge Targets and dedicated Current Plan
+- [x] V5 explicit generation, confirmed reset, persistent three-Path comparisons
+- [x] V5 forecast timeline, fixed skyline encoding and runtime rows
+- [x] V5 all-route, both-theme, multi-viewport and planning regression QA
+- [ ] Six original TXT references / loader replacement — blocked: original attachments are absent from the remix; existing adaptations retained
+- [ ] Six-month actual-to-future monthly forecast in real mode — blocked: current provider supplies annual endpoints only; compatible monthly rendering implemented without invented points
+- [ ] Project-wide lint cleanup — blocked outside V5 scope: untouched files contain 564 pre-existing formatting errors; changed-file lint has no errors
+
 - [x] V4 shared monthly line charts and executive hierarchy
 - [x] V4 docked analytical inspectors and mobile dismissal
 - [x] V4 live preview separated from committed plan, commit/reset/discard

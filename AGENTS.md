@@ -45,5 +45,11 @@ use the editor.
 
 - Year and month footprints share the original skyline renderer with a tested calendar geometry model; legends derive their ranges from the exact visible metric values, so period and metric changes cannot display stale scales.
 - Shared historical charts and forecast fans consume supplied observation granularity; aggregation only averages actual monthly points, so annual endpoints cannot invent finer observations.
-- Analytical inspectors share a non-modal dock on wide screens and modal sheets on narrow screens, so evidence never covers its associated desktop chart.
+- Analytical inspectors and the assistant share a non-modal dock on wide screens and an Analysis/Details view on narrow screens, so evidence never overlays actionable content.
 - Optional market emissions and provenance remain unavailable at unsupported levels and are never derived from location reductions, so alternate accounting stays independent of mandatory targets.
+- Saved alternative scenarios use the shared persisted store independently of the temporary Studio preview and committed plan; each comparison calls GreenOpsApi.simulate, so alternatives never mutate the plan or invent aggregate savings.
+- Studio optimization runs only through explicit generation and loading; manual settings recalculate selected measures through simulation, so tuning a scenario cannot silently replace user choices.
+- HTTP provider responses pass runtime schemas before reaching views; invalid required calculations become errors while nullable observations remain unavailable, so real mode never substitutes demo results.
+- Charts measure their available container, keep legends in normal document flow and use source timestamps; annual model totals never share an axis with monthly observations, preventing unit mismatches and clipped labels.
+- Studio initializes committed settings after persisted state hydration; full-page reloads cannot replace saved selections with an empty preview.
+- CSV previews use Papa Parse for quoted fields and remain provisional header checks, so valid CSV quoting is not mistaken for a successful full import.

@@ -48,7 +48,7 @@ function It() {
               />
               <KpiCard
                 label="Always-on resources"
-                value={res.filter((r) => r.runtimeH30d >= 700).length}
+                value={res.filter((r) => r.runtimeH30d != null && r.runtimeH30d >= 700).length}
                 format={String}
                 sub="At least 700 h in the last 30 days"
                 icon={<Clock className="size-4" />}
@@ -76,7 +76,7 @@ function It() {
                 <div className="space-y-5">
                   {res.map((r) => {
                     const parts = runtimeSegments(r.runtimeH30d, r.activeH30d);
-                    const scale = Math.max(1, ...res.map((x) => x.runtimeH30d));
+                    const scale = Math.max(1, r.runtimeH30d ?? 0);
                     return (
                       <DetailDrawer
                         key={r.id}
@@ -85,16 +85,19 @@ function It() {
                           <Button
                             variant="ghost"
                             id={`res-${r.id}`}
-                            className="h-auto w-full justify-start whitespace-normal px-0 py-1 text-left"
+                            className="h-auto w-full justify-start whitespace-normal rounded-lg border p-4 text-left"
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="mb-2 flex flex-wrap justify-between gap-2">
+                              <span className="mb-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                                 <span className="font-medium">{r.name}</span>
                                 <span className="num text-xs text-muted-foreground">
                                   {parts.active == null
                                     ? "Active use unavailable"
                                     : `${parts.active} h active`}{" "}
-                                  / {r.runtimeH30d} h running
+                                  /{" "}
+                                  {r.runtimeH30d == null
+                                    ? "Runtime unavailable"
+                                    : `${r.runtimeH30d} h running`}
                                 </span>
                               </span>
                               <span className="flex h-3 overflow-hidden rounded bg-muted/40">
@@ -108,12 +111,18 @@ function It() {
                                 />
                                 <span
                                   className="bg-muted"
-                                  style={{ width: `${(parts.unknown / scale) * 100}%` }}
+                                  style={{ width: `${((parts.unknown ?? scale) / scale) * 100}%` }}
                                 />
                               </span>
                               <span className="mt-1 block text-xs font-normal text-muted-foreground">
                                 {r.provider} · {r.location} · {r.environment}
                                 {r.flag ? ` · ${r.flag}` : ""}
+                                <span className="mt-2 block">
+                                  {parts.unknown !== 0
+                                    ? "Unknown or insufficient active-use coverage."
+                                    : "Active workload and unrecorded runtime as a share of this resource’s running hours."}{" "}
+                                  Inactive runtime is not shutdown approval.
+                                </span>
                               </span>
                             </span>
                           </Button>

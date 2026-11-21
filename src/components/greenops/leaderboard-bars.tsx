@@ -30,7 +30,7 @@ export function LeaderboardBars({
     [items, search],
   );
   const rows = more ? sorted : sorted.slice(0, 6);
-  const max = Math.max(1, ...items.map((i) => i.value ?? 0));
+  const max = Math.max(1, ...items.map((i) => (Number.isFinite(i.value) ? (i.value ?? 0) : 0)));
   return (
     <div>
       <div className="mb-5 flex items-center justify-between gap-3">
@@ -46,24 +46,25 @@ export function LeaderboardBars({
           />
         </div>
       </div>
-      <div className="vlb-rows" style={{ height: rows.length * 72 }}>
+      <p className="mb-4 text-xs text-muted-foreground">
+        <span className="mr-2 inline-block h-2 w-5 rounded bg-primary" />
+        {label} · Shared zero-based scale: {format(0)}–{format(max)} · Unavailable values have no
+        fill
+      </p>
+      <div className="space-y-4">
         {rows.map((i, rank) => (
-          <div
-            key={i.id}
-            className="vlb-row"
-            style={{ transform: `translateY(${rank * 72}px)`, height: 72 }}
-          >
+          <div key={i.id} className="min-w-0">
             <DetailDrawer
               title={i.label}
               trigger={
                 <Button
                   variant="ghost"
-                  className="h-full w-full justify-start rounded-none px-0 text-left"
+                  className="h-auto w-full justify-start rounded-none px-0 py-2 text-left"
                 >
                   <Boxes className="size-5 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
-                    <span className="mb-2 flex justify-between gap-3">
-                      <span className="truncate font-medium">{i.label}</span>
+                    <span className="mb-2 flex flex-wrap justify-between gap-3">
+                      <span className="min-w-0 break-words font-medium">{i.label}</span>
                       <span className="num shrink-0 text-xs">
                         {i.value == null ? "—" : format(i.value)}
                       </span>

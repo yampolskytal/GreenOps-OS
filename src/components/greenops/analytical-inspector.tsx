@@ -8,16 +8,8 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { api } from "@/lib/api/client";
 
 const InspectorContext = createContext<{
@@ -39,12 +31,9 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
   }, []);
   return (
     <InspectorContext.Provider value={{ active, setActive, target, desktop }}>
-      <div
-        className="inspector-layout"
-        data-inspector={active != null && desktop ? "open" : "closed"}
-      >
+      <div className="inspector-layout" data-inspector={active != null ? "open" : "closed"}>
         <div className="inspector-main min-w-0">{children}</div>
-        <aside ref={setTarget} className="inspector-slot" aria-label="Analytical evidence" />
+        <aside ref={setTarget} className="inspector-slot" aria-label="Analysis details" />
       </div>
     </InspectorContext.Provider>
   );
@@ -54,108 +43,99 @@ export function AnalyticalInspector({
   description,
   trigger,
   children,
+  open: requestedOpen,
+  onOpenChange,
 }: {
   title: string;
   description?: ReactNode;
   trigger: ReactNode;
   children: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const ctx = useContext(InspectorContext);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
-  const panel = useRef<HTMLDivElement>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const wasOpen = useRef(false);
   const open = ctx?.active === id;
   const setActive = ctx?.setActive;
-  const currentContext = useRef(ctx);
-  currentContext.current = ctx;
+  const current = useRef(ctx);
+  current.current = ctx;
+  const callback = useRef(onOpenChange);
+  callback.current = onOpenChange;
   useEffect(() => {
-    if (!open || !ctx?.desktop) return;
-    const dismiss = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      const region =
-        anchor.current?.closest("[data-analysis-region]") ??
-        anchor.current?.closest("section, article");
-      if (
-        panel.current?.contains(target) ||
-        region?.contains(target) ||
-        target.closest('[role="dialog"], [role="listbox"], [data-radix-popper-content-wrapper]')
-      )
-        return;
-      setActive?.(null);
-    };
+    if (requestedOpen === true) setActive?.(id);
+    else if (requestedOpen === false && current.current?.active === id) setActive?.(null);
+  }, [requestedOpen, id, setActive]);
+  useEffect(() => {
+    if (wasOpen.current && !open) callback.current?.(false);
+    wasOpen.current = open;
+  }, [open]);
+  const close = () => {
+    setActive?.(null);
+    callback.current?.(false);
+    anchor.current?.querySelector<HTMLElement>("button")?.focus();
+  };
+  useEffect(() => {
+    if (!open) return;
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setActive?.(null);
+        callback.current?.(false);
         anchor.current?.querySelector<HTMLElement>("button")?.focus();
       }
     };
-    document.addEventListener("pointerdown", dismiss);
     document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", dismiss);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [open, ctx?.desktop, setActive]);
+    return () => document.removeEventListener("keydown", escape);
+  }, [open, setActive]);
   useEffect(
     () => () => {
-      if (currentContext.current?.active === id) currentContext.current.setActive(null);
+      if (wasOpen.current) setActive?.(null);
     },
-    [id],
+    [setActive],
   );
-  const desc = description ?? "Evidence, assumptions and planning limitations";
-  if (!ctx?.desktop)
-    return (
-      <Sheet
-        open={ctx ? open : mobileOpen}
-        onOpenChange={(value) => (ctx ? ctx.setActive(value ? id : null) : setMobileOpen(value))}
-      >
-        <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-          <SheetHeader>
-            <SheetTitle>{title}</SheetTitle>
-            <SheetDescription>
-              {desc}
-              {api.isDemo && " · DEMO"}
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-5 pb-8 text-sm">{children}</div>
-        </SheetContent>
-      </Sheet>
-    );
   return (
     <>
-      <span ref={anchor} className="inline-flex" onClick={() => ctx.setActive(open ? null : id)}>
+      <span
+        ref={anchor}
+        className="inline-flex max-w-full"
+        onClick={() => {
+          setActive?.(open ? null : id);
+          callback.current?.(!open);
+        }}
+      >
         {trigger}
       </span>
       {open &&
-        ctx.target &&
+        ctx?.target &&
         createPortal(
           <div
-            ref={panel}
             className="flex h-full min-h-0 flex-col"
             role="complementary"
             aria-labelledby={`${id}-title`}
           >
-            <header className="sticky top-0 flex items-start gap-3 border-b bg-background p-5">
+            <header className="flex items-start gap-3 border-b bg-background p-5">
               <div className="min-w-0 flex-1">
-                <h2 id={`${id}-title`} className="font-semibold">
+                {!ctx.desktop && (
+                  <Button variant="ghost" size="sm" className="mb-3" onClick={close}>
+                    <ArrowLeft />
+                    Back to Analysis
+                  </Button>
+                )}
+                <h2 id={`${id}-title`} className="break-words font-semibold">
                   {title}
                 </h2>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {desc}
+                  {description ?? "Evidence, assumptions and planning limitations"}
                   {api.isDemo && " · DEMO"}
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
+                title="Close details"
                 aria-label="Close evidence"
-                onClick={() => {
-                  ctx.setActive(null);
-                  anchor.current?.querySelector<HTMLElement>("button")?.focus();
-                }}
+                onClick={close}
               >
                 <X />
               </Button>

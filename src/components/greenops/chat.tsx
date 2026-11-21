@@ -1,19 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Send, Sparkles, Calculator } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { Send, Calculator } from "lucide-react";
+import { AnalyticalInspector } from "./analytical-inspector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api/client";
 import type { ChatAction, ChatMessage } from "@/lib/api/types";
 import { useApp, useGlobalQuery } from "@/lib/store";
-import { DemoTag, EvidencePopover } from "./ui";
+import { EvidencePopover } from "./ui";
 
 const SUGGESTED = [
   "How many AI seats were bought but not used in August 2026?",
@@ -62,89 +56,88 @@ export function ChatPanel() {
     else navigate({ to: "/it", hash: `res-${a.resourceId}` });
   };
   return (
-    <Sheet open={s.chatOpen} onOpenChange={(o) => set({ chatOpen: o })}>
-      <SheetContent className="flex w-full flex-col p-0 sm:max-w-md">
-        <SheetHeader className="border-b p-4">
-          <SheetTitle className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            GreenOps Assistant <DemoTag />
-          </SheetTitle>
-          <SheetDescription>
-            Every answer should come with a calculation or source.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          {msgs.length === 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Try asking:</p>
-              {SUGGESTED.map((t) => (
-                <Button
-                  variant="outline"
-                  key={t}
-                  onClick={() => ask(t)}
-                  className="h-auto w-full justify-start whitespace-normal p-3 text-left"
-                >
-                  {t}
-                </Button>
-              ))}
-            </div>
-          )}
-          {msgs.map((m, i) => (
-            <div
-              key={i}
-              className={
-                m.role === "user"
-                  ? "ml-8 rounded-xl bg-primary/15 p-3 text-sm"
-                  : "mr-4 space-y-2 rounded-xl border bg-card p-3 text-sm"
-              }
-            >
-              <p>{m.content}</p>
-              {m.calculation && (
-                <p className="num flex gap-1.5 rounded bg-muted p-2 text-[11px] text-muted-foreground">
-                  <Calculator className="h-3.5 w-3.5 shrink-0" />
-                  {m.calculation}
-                </p>
-              )}
-              {m.evidence && <EvidencePopover evidence={m.evidence} label="Sources" />}
-              {m.actions && (
-                <div className="flex flex-wrap gap-1.5">
-                  {m.actions.map((a) => (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      key={a.label}
-                      onClick={() => run(a)}
-                      className="h-auto whitespace-normal text-xs"
-                    >
-                      {a.label}
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-          {busy && <p className="text-xs text-muted-foreground animate-pulse">Thinking…</p>}
-          <div ref={end} />
-        </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void ask(input);
-          }}
-          className="flex gap-2 border-t p-3"
-        >
-          <Input
-            aria-label="Copilot question"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about costs, CO₂, risks…"
-            className="min-w-0 flex-1"
-          />
-          <Button type="submit" size="icon" aria-label="Send" disabled={busy || !input.trim()}>
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </SheetContent>
-    </Sheet>
+    <AnalyticalInspector
+      title="Ask GreenOps"
+      description={
+        api.isDemo
+          ? "DEMO replies — no connected LLM; illustrative evidence only"
+          : "Evidence-oriented sustainability analysis"
+      }
+      trigger={null}
+      open={s.chatOpen}
+      onOpenChange={(open) => set({ chatOpen: open })}
+    >
+      <div className="space-y-4">
+        {msgs.length === 0 && (
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">Try asking:</p>
+            {SUGGESTED.map((t) => (
+              <Button
+                variant="outline"
+                key={t}
+                onClick={() => ask(t)}
+                className="h-auto w-full justify-start whitespace-normal p-3 text-left"
+              >
+                {t}
+              </Button>
+            ))}
+          </div>
+        )}
+        {msgs.map((m, i) => (
+          <div
+            key={i}
+            className={
+              m.role === "user"
+                ? "ml-8 rounded-xl bg-primary/15 p-3 text-sm"
+                : "mr-4 space-y-2 rounded-xl border bg-card p-3 text-sm"
+            }
+          >
+            <p>{m.content}</p>
+            {m.calculation && (
+              <p className="num flex gap-1.5 rounded bg-muted p-2 text-[11px] text-muted-foreground">
+                <Calculator className="h-3.5 w-3.5 shrink-0" />
+                {m.calculation}
+              </p>
+            )}
+            {m.evidence && <EvidencePopover evidence={m.evidence} label="Sources" />}
+            {m.actions && (
+              <div className="flex flex-wrap gap-1.5">
+                {m.actions.map((a) => (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    key={a.label}
+                    onClick={() => run(a)}
+                    className="h-auto whitespace-normal text-xs"
+                  >
+                    {a.label}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+        {busy && <p className="text-xs text-muted-foreground animate-pulse">Thinking…</p>}
+        <div ref={end} />
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void ask(input);
+        }}
+        className="flex gap-2 border-t p-3"
+      >
+        <Input
+          aria-label="Ask GreenOps question"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask about costs, CO₂, risks…"
+          className="min-w-0 flex-1"
+        />
+        <Button type="submit" size="icon" aria-label="Send" disabled={busy || !input.trim()}>
+          <Send className="h-4 w-4" />
+        </Button>
+      </form>
+    </AnalyticalInspector>
   );
 }

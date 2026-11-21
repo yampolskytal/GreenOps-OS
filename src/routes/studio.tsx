@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, RotateCcw, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, RotateCcw, ShieldCheck, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
 import { ChartCard, Q } from "@/components/greenops/ui";
 import { BudgetSlider } from "@/components/greenops/portfolio";
+import { PathComparison } from "@/components/greenops/path-comparison";
+import { previewDifference } from "@/lib/paths";
 import { TargetPanel } from "@/components/greenops/targets";
 import { MeasureCard } from "@/components/greenops/measure-card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +45,7 @@ type Draft = {
   mode: "saved" | "suggested" | "manual";
 };
 function Studio() {
-  const { s, commitPlan } = useApp();
+  const { s, commitPlan, hydrated } = useApp();
   const q = useGlobalQuery(),
     ms = useMeasures(),
     ov = useOverview();
@@ -54,8 +56,20 @@ function Studio() {
     mode: "saved",
   });
   const [draft, setDraft] = useState<Draft>(saved);
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (!hydrated || initialized.current) return;
+    initialized.current = true;
+    setDraft({
+      budgetChf: s.budgetChf,
+      priority: s.priority,
+      measureIds: [...s.measureIds],
+      mode: "saved",
+    });
+  }, [hydrated, s.budgetChf, s.priority, s.measureIds]);
   const [debounced, setDebounced] = useState(draft);
   const [confirm, setConfirm] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,12 +80,6 @@ function Studio() {
   const scenario = useQuery({
     queryKey: ["live-preview", q, debounced],
     queryFn: async () => {
-      if (debounced.mode === "suggested")
-        return api.optimize(q, {
-          budgetChf: debounced.budgetChf,
-          priority: debounced.priority,
-          chfPerPersonDay: 1100,
-        });
       return {
         measureIds: debounced.measureIds,
         result: await api.simulate(q, {
@@ -83,7 +91,18 @@ function Studio() {
     },
   });
   const updating = JSON.stringify(draft) !== JSON.stringify(debounced) || scenario.isFetching;
-  const ids = scenario.data?.measureIds ?? draft.measureIds;
+  const ids = draft.measureIds;
+  const difference = previewDifference(ids, s.measureIds);
+  const recommended = useQuery({
+    queryKey: ["recommended-package", q, draft.budgetChf, draft.priority],
+    queryFn: () =>
+      api.optimize(q, {
+        budgetChf: draft.budgetChf,
+        priority: draft.priority,
+        chfPerPersonDay: 1100,
+      }),
+    enabled: false,
+  });
   const snapshot = JSON.stringify([q, draft, ids, s.measureIds, s.budgetChf, s.priority]);
   const latest = useRef(snapshot);
   latest.current = snapshot;
@@ -138,10 +157,7 @@ function Studio() {
     >
       <div data-analysis-region className="grid gap-10 xl:grid-cols-[.8fr_1.2fr]">
         <ChartCard title="Scenario settings">
-          <BudgetSlider
-            value={draft.budgetChf}
-            onChange={(budgetChf) => change({ budgetChf, mode: "suggested" })}
-          />
+          <BudgetSlider value={draft.budgetChf} onChange={(budgetChf) => change({ budgetChf })} />
           <p className="mb-3 mt-6 text-sm font-medium">Optimization priority</p>
           <div className="flex flex-wrap gap-1">
             {PRIOS.map((p) => (
@@ -150,7 +166,7 @@ function Studio() {
                 size="sm"
                 aria-pressed={draft.priority === p.id}
                 variant={draft.priority === p.id ? "secondary" : "ghost"}
-                onClick={() => change({ priority: p.id, mode: "suggested" })}
+                onClick={() => change({ priority: p.id })}
               >
                 {p.label}
               </Button>
@@ -171,23 +187,11 @@ function Studio() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
-                setDraft({
-                  budgetChf: 16500,
-                  priority: "balanced",
-                  measureIds: [],
-                  mode: "suggested",
-                });
-                setMessage(null);
-                setError(null);
-              }}
+              disabled={!dirty}
+              onClick={() => setResetConfirm(true)}
             >
               <RotateCcw />
               Reset Preview
-            </Button>
-            <Button size="sm" variant="ghost" onClick={restore}>
-              <X />
-              Discard Changes
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
@@ -198,12 +202,19 @@ function Studio() {
           title="Live preview"
           subtitle="Adjust your settings to explore outcomes before saving your plan."
         >
+          <p className="mb-2 text-xs text-muted-foreground">
+            Preview mode — changes are not saved to Current Plan.
+          </p>
           <p className="mb-4 text-xs font-semibold text-warning">
             {updating
               ? "Recalculating preview…"
               : dirty
                 ? "Unsaved preview changes"
                 : "Matches saved Current Plan"}
+          </p>
+          <p className="mb-4 text-xs text-muted-foreground">
+            {ids.length} preview · {s.measureIds.length} committed · {difference.added} added ·{" "}
+            {difference.removed} removed
           </p>
           {updating ? (
             <p role="status" className="py-10 text-muted-foreground">
@@ -240,6 +251,63 @@ function Studio() {
           )}
         </ChartCard>
       </div>
+      <section className="mt-6 border-y py-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Recommended optimization package</h2>
+          <Button
+            variant="outline"
+            disabled={recommended.isFetching}
+            onClick={() => void recommended.refetch()}
+          >
+            <Sparkles />
+            {recommended.isFetching ? "Generating…" : "Generate recommended package"}
+          </Button>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Priority: {PRIOS.find((p) => p.id === draft.priority)?.label}. A best-found package using
+          the provider’s optimizer and your budget; not guaranteed optimal. Manual preview
+          selections stay unchanged until you load it.
+        </p>
+        {recommended.isError && (
+          <p className="mt-3 text-sm text-destructive">{recommended.error.message}</p>
+        )}
+        {recommended.data && (
+          <div className="mt-4">
+            <p className="num text-sm">
+              {recommended.data.measureIds.length} measures ·{" "}
+              {chf(recommended.data.result.savingsChf)} annual savings ·{" "}
+              {kg(recommended.data.result.savingsCo2Kg)} annual location-based CO₂ savings
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {recommended.data.result.feasible
+                ? "Meets numerical constraints; approvals still required."
+                : recommended.data.result.reasons.join(" ")}
+            </p>
+            <Button
+              className="mt-3"
+              size="sm"
+              onClick={() => {
+                if (recommended.data)
+                  change({ measureIds: [...recommended.data.measureIds], mode: "manual" });
+              }}
+            >
+              Load into Preview
+              <ArrowRight />
+            </Button>
+          </div>
+        )}
+      </section>
+      <PathComparison
+        preview={{ measureIds: ids, budgetChf: draft.budgetChf, priority: draft.priority }}
+        onLoad={(path) =>
+          change({
+            measureIds: [...path.measureIds],
+            budgetChf: path.budgetChf,
+            priority: path.priority,
+            mode: "manual",
+          })
+        }
+      />
       <section className="mt-6 border-t pt-6">
         <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold">
           <ShieldCheck className="size-5 text-primary" />
@@ -265,7 +333,7 @@ function Studio() {
                       ))}
                     {!a.measureIds.length && (
                       <p className="text-muted-foreground">
-                        No preview measures. Change your settings or select recommendations below.
+                        No preview measures. Select recommendations or generate a package.
                       </p>
                     )}
                   </div>
@@ -306,7 +374,7 @@ function Studio() {
           </Q>
         )}
       </section>
-      <div className="sticky bottom-0 z-20 mt-8 flex flex-wrap items-center justify-between gap-3 border-t bg-background py-4">
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t bg-background py-4">
         <p className="text-xs text-muted-foreground">
           {ids.length} preview measures · saved plan unchanged until commit
         </p>
@@ -330,6 +398,35 @@ function Studio() {
           {error}
         </p>
       )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        Over-budget, excessive-effort or blocked combinations can be saved as Paths for further
+        editing, not committed as implementations. Missing reduction targets remain visible after
+        committing a proposal.
+      </p>
+      <Dialog open={resetConfirm} onOpenChange={setResetConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Discard preview changes?</DialogTitle>
+            <DialogDescription>
+              This will remove your unsaved preview changes and restore the saved Current Plan. Your
+              Current Plan and saved Paths will not be deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" onClick={() => setResetConfirm(false)}>
+              Keep editing
+            </Button>
+            <Button
+              onClick={() => {
+                restore();
+                setResetConfirm(false);
+              }}
+            >
+              Discard changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Dialog
         open={confirm}
         onOpenChange={(value) => {
@@ -350,7 +447,13 @@ function Studio() {
               {error}
             </p>
           )}
-          <div className="flex justify-end gap-2">
+          {!scenario.data?.result.feasible && (
+            <p className="text-sm text-warning">
+              Not submission-ready: this proposal misses numerical targets. Confirm only to save it
+              for further editing.
+            </p>
+          )}
+          <div className="flex flex-wrap justify-end gap-2">
             <Button variant="outline" disabled={committing} onClick={() => setConfirm(false)}>
               Keep previewing
             </Button>
@@ -392,6 +495,10 @@ function PreviewComparison({
   ];
   return (
     <div className="space-y-6">
+      <p className="text-xs text-muted-foreground">
+        <span className="mr-2 inline-block h-2 w-5 bg-chart-1" />
+        Fill: projected remaining consumption · full track: baseline (100%) · zero-based scale
+      </p>
       {rows.map((row) => {
         const percentage = percentDifference(row.before, row.before - row.saving);
         return (

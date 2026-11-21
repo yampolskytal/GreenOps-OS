@@ -37,22 +37,10 @@ import {
 import { api } from "@/lib/api/client";
 import type { Role } from "@/lib/api/types";
 import { useApp } from "@/lib/store";
-import {
-  useFindings,
-  useMeasures,
-  useResources,
-  useSimulation,
-  useBreakdowns,
-  useQuality,
-} from "@/lib/queries";
+import { useFindings, useMeasures, useResources, useBreakdowns, useQuality } from "@/lib/queries";
 import { cn } from "@/lib/utils";
-import { chf, kg, kwh } from "@/lib/format";
 import { DataHealth } from "./data-health";
 import { ChatPanel } from "./chat";
-import { DetailDrawer } from "./details";
-import { MeasureCard } from "./measure-card";
-import { TargetPanel } from "./targets";
-import { Q } from "./ui";
 import { InspectorProvider } from "./analytical-inspector";
 export const ROLES: {
   id: Role;
@@ -287,74 +275,6 @@ function GlobalSearch() {
     </Dialog>
   );
 }
-function CurrentPlan({ collapsed }: { collapsed: boolean }) {
-  const { s } = useApp();
-  const ms = useMeasures(),
-    sim = useSimulation();
-  return (
-    <DetailDrawer
-      title="Current optimization plan"
-      description="Selected proposals, not executed changes"
-      trigger={
-        <Button
-          variant="outline"
-          className={cn(
-            "w-full",
-            collapsed ? "px-0" : "justify-start max-sm:justify-center max-sm:px-0",
-          )}
-          title="Current Plan"
-        >
-          <ClipboardList />
-          {!collapsed && (
-            <span className="flex min-w-0 flex-1 items-center max-sm:hidden">
-              Current Plan <span className="num ml-auto">{s.measureIds.length}</span>
-            </span>
-          )}
-        </Button>
-      }
-    >
-      <Q q={sim}>
-        {(r) => (
-          <>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-muted-foreground">Annual savings</p>
-                <p className="num">{chf(r.savingsChf)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Implementation</p>
-                <p className="num">
-                  {chf(r.effortChf)} · {r.effortDays} PD
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">CO₂ benefit</p>
-                <p className="num">{kg(r.savingsCo2Kg)}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Energy benefit</p>
-                <p className="num">{kwh(r.savingsKwh)}</p>
-              </div>
-            </div>
-            <TargetPanel r={r} />
-          </>
-        )}
-      </Q>
-      <Q q={ms}>
-        {(all) => (
-          <div className="space-y-3">
-            {all
-              .filter((m) => s.measureIds.includes(m.id))
-              .map((m) => (
-                <MeasureCard key={m.id} m={m} compact />
-              ))}
-            {!s.measureIds.length && <p className="text-muted-foreground">No measures selected.</p>}
-          </div>
-        )}
-      </Q>
-    </DetailDrawer>
-  );
-}
 export function DemoBanner() {
   return api.isDemo ? (
     <div className="flex items-center gap-2 border-b border-warning/30 bg-warning/10 px-4 py-1.5 text-xs text-warning">
@@ -390,6 +310,7 @@ export function AppShell({
     },
     { to: "/explore" as const, label: "Explore & Findings", Icon: Search },
     { to: "/studio" as const, label: "Optimization Studio", Icon: SlidersHorizontal },
+    { to: "/current-plan" as const, label: "Current Plan", Icon: ClipboardList },
     { to: "/forecast" as const, label: "Forecasts", Icon: TrendingUp },
     { to: "/data" as const, label: "Data & Reports", Icon: Files },
   ];
@@ -397,6 +318,7 @@ export function AppShell({
     <InspectorProvider>
       <div className="greenops-shell flex min-h-screen">
         <aside
+          aria-label="Main navigation"
           className={cn(
             "app-navigation",
             "sticky top-0 flex h-screen shrink-0 flex-col border-r bg-sidebar p-3 transition-[width]",
@@ -408,7 +330,7 @@ export function AppShell({
               <Leaf className="size-4 text-primary-foreground" />
             </span>
             {!collapsed && (
-              <span className="font-display font-semibold max-sm:hidden">
+              <span className="font-display font-semibold max-lg:hidden">
                 GreenOps <span className="text-primary">OS</span>
               </span>
             )}
@@ -426,6 +348,7 @@ export function AppShell({
             >
               <SelectTrigger
                 aria-label="Presentation role"
+                title={`Role: ${ROLES.find((r) => r.id === current)?.label}`}
                 className={cn("bg-card", collapsed ? "w-10 px-1" : "max-sm:w-10 max-sm:px-1")}
               >
                 <SelectValue>
@@ -433,10 +356,12 @@ export function AppShell({
                     current.toUpperCase()
                   ) : (
                     <>
-                      <span className="max-sm:hidden">
+                      <span className="max-lg:hidden">
                         {ROLES.find((r) => r.id === current)?.label}
                       </span>
-                      <span className="hidden max-sm:inline">{current.toUpperCase()}</span>
+                      <span className="hidden max-lg:inline text-[10px]">
+                        {current.toUpperCase()}
+                      </span>
                     </>
                   )}
                 </SelectValue>
@@ -464,13 +389,22 @@ export function AppShell({
               >
                 <Link to={n.to} title={n.label}>
                   <n.Icon className="size-4 shrink-0" />
-                  {!collapsed && <span className="max-sm:hidden">{n.label}</span>}
+                  {!collapsed && <span className="max-lg:hidden">{n.label}</span>}
                 </Link>
               </Button>
             ))}
           </nav>
           <div className="mt-auto space-y-4">
-            <CurrentPlan collapsed={collapsed} />
+            <Button
+              variant="outline"
+              className="w-full justify-start max-lg:justify-center max-lg:px-0"
+              title="Ask GreenOps"
+              aria-label="Ask GreenOps"
+              onClick={() => set({ chatOpen: true })}
+            >
+              <Sparkles />
+              <span className={cn("max-lg:hidden", collapsed && "hidden")}>Ask GreenOps</span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -485,7 +419,7 @@ export function AppShell({
         </aside>
         <div className="min-w-0 flex-1">
           <DemoBanner />
-          <header className="sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b bg-background/95 px-5 py-3 backdrop-blur lg:px-8">
+          <header className="flex flex-wrap items-center gap-3 border-b bg-background px-5 py-3 lg:px-8">
             <span className="mr-auto text-xs text-muted-foreground">
               {s.from} — {s.to}
             </span>
@@ -504,7 +438,7 @@ export function AppShell({
           </header>
           <main className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 lg:px-8">
             <div className="mb-8 flex flex-wrap items-end gap-4">
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-primary">{kicker}</p>
                 <h1 className="mt-2 text-3xl font-semibold">{title}</h1>
                 {subtitle && (
@@ -516,16 +450,6 @@ export function AppShell({
             {children}
           </main>
         </div>
-        <Button
-          className={cn(
-            "fixed right-6 z-40 h-12 rounded-full shadow-lg",
-            path === "/studio" ? "bottom-24" : "bottom-6",
-          )}
-          onClick={() => set({ chatOpen: true })}
-        >
-          <Sparkles />
-          AI Copilot
-        </Button>
         <ChatPanel />
       </div>
     </InspectorProvider>

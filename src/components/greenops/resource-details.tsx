@@ -19,14 +19,17 @@ export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) 
       </DetailBlock>
       <DetailBlock title="Last 30 days">
         <p>
-          Running: {r.runtimeH30d} h · recorded active use:{" "}
-          {r.activeH30d == null ? "Unavailable" : `${r.activeH30d} h`}
+          Running: {r.runtimeH30d == null ? "Unavailable" : `${r.runtimeH30d} h`} · recorded active
+          use: {r.activeH30d == null ? "Unavailable" : `${r.activeH30d} h`}
         </p>
         <p>
           CPU: {r.cpuAvgPct == null ? "—" : `${r.cpuAvgPct}%`} · GPU:{" "}
           {r.gpuAvgPct == null ? "—" : `${r.gpuAvgPct}%`}
         </p>
-        <p>Estimated idle cost: {chf(r.idleCostChfYear)}/year</p>
+        <p>
+          Estimated idle cost: {r.idleCostChfYear == null ? "Unavailable" : chf(r.idleCostChfYear)}
+          /year
+        </p>
       </DetailBlock>
       {(r.co2Location || r.co2Market) && (
         <>

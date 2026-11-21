@@ -199,20 +199,26 @@ export function EvidencePopover({
   label?: string;
 }) {
   return (
-    <AnalyticalInspector title={label} description="Available source references" trigger={<Button variant="ghost" size="sm">
+    <AnalyticalInspector
+      title={label}
+      description="Available source references"
+      trigger={
+        <Button variant="ghost" size="sm">
           <FileSearch />
           {label} ({evidence.length})
-        </Button>}>
-        <div className="mt-5">
-          <ul className="space-y-2">
-            {evidence.map((e) => (
-              <li key={e.source + e.detail}>
-                <p className="num text-[11px] text-info">{e.source}</p>
-                <p className="text-muted-foreground">{e.detail}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+        </Button>
+      }
+    >
+      <div className="mt-5">
+        <ul className="space-y-2">
+          {evidence.map((e) => (
+            <li key={e.source + e.detail}>
+              <p className="num text-[11px] text-info">{e.source}</p>
+              <p className="text-muted-foreground">{e.detail}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </AnalyticalInspector>
   );
 }
@@ -236,7 +242,7 @@ export function ChartCard({
     <section className={cn("rise-in min-w-0 py-5", className)}>
       <header className="mb-4 flex flex-wrap items-start gap-2">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <h3 className="text-base font-semibold">{title}</h3>
             {info && <CalcInfo calc={info} />}
           </div>
@@ -312,7 +318,11 @@ export function KpiCard({
           tone === "bad" && "text-destructive",
         )}
       >
-        {value == null ? "—" : <AnimatedNumber value={value} format={format} />}
+        {value == null || !Number.isFinite(value) ? (
+          "Unavailable"
+        ) : (
+          <AnimatedNumber value={value} format={format} />
+        )}
       </p>
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
     </div>
@@ -359,7 +369,7 @@ export function TargetProgress({
         <div
           className={cn(
             "h-full rounded-full transition-[width] duration-700 ease-out",
-            met ? "bg-gradient-primary" : direction === "atMost" ? "bg-destructive" : "bg-warning",
+            met ? "bg-success" : direction === "atMost" ? "bg-destructive" : "bg-warning",
           )}
           style={{ width: `${w}%` }}
         />
@@ -421,7 +431,7 @@ export function BarList({
     <ul className="space-y-3">
       {items.map((i) => (
         <li key={i.label}>
-          <div className="mb-1 flex justify-between text-sm">
+          <div className="mb-1 flex flex-wrap justify-between gap-2 text-sm">
             <span>
               {i.label}
               {i.hint && <span className="ml-2 text-xs text-muted-foreground">{i.hint}</span>}

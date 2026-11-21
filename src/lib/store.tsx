@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { GlobalQuery, Priority, Role } from "./api/types";
 import { initialMeasureIds } from "./planning";
 import { TARGETS } from "./optimizer";
+import type { SavedPath } from "./paths";
 
 export interface AppState {
   role: Role | null;
@@ -17,6 +18,7 @@ export interface AppState {
   chatOpen: boolean;
   theme: "dark" | "light";
   sidebarCollapsed: boolean;
+  paths: SavedPath[];
 }
 const initial: AppState = {
   role: null,
@@ -31,10 +33,12 @@ const initial: AppState = {
   chatOpen: false,
   theme: "dark",
   sidebarCollapsed: false,
+  paths: [],
 };
 const KEY = "greenops-state-v1";
 
 type CtxValue = {
+  hydrated: boolean;
   s: AppState;
   set: (p: Partial<AppState>) => void;
   commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => void;
@@ -43,6 +47,7 @@ type CtxValue = {
 const g = globalThis as unknown as { __greenopsCtx?: React.Context<CtxValue | null> };
 const Ctx = (g.__greenopsCtx ??= createContext<CtxValue | null>(null));
 const fallback: CtxValue = {
+  hydrated: false,
   s: initial,
   set: () => {},
   commitPlan: () => {
@@ -78,6 +83,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, [s.theme]);
   const value = useMemo(
     () => ({
+      hydrated: ready,
       s,
       set: (p: Partial<AppState>) => setS((x) => ({ ...x, ...p })),
       commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => {
@@ -86,7 +92,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setS(next);
       },
     }),
-    [s],
+    [s, ready],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -83,6 +83,13 @@ function Ceo() {
               <Q q={ms}>
                 {(all) => (
                   <div className="space-y-3">
+                    {!o.topOpportunities.some((id) => all.some((m) => m.id === id)) && (
+                      <p className="py-4 text-sm text-muted-foreground">
+                        {o.topOpportunities.length
+                          ? "Opportunity details are unavailable from this provider."
+                          : "No opportunities supplied for this view."}
+                      </p>
+                    )}
                     {o.topOpportunities
                       .map((id) => all.find((m) => m.id === id))
                       .filter((m) => m != null)
@@ -95,7 +102,7 @@ function Ceo() {
               </Q>
             </section>
             <section className="mt-8 border-t pt-6">
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-lg font-semibold">
                   Management attention{" "}
                   <span className="text-sm font-normal text-muted-foreground">

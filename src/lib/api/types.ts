@@ -79,9 +79,9 @@ export interface Overview {
 
 export interface Breakdown {
   label: string;
-  costChf: number;
-  co2Kg: number;
-  energyKwh: number;
+  costChf: number | null;
+  co2Kg: number | null;
+  energyKwh: number | null;
   co2KgMarket?: number | null;
 }
 export interface Breakdowns {
@@ -103,9 +103,9 @@ export interface ResourceSummary {
   vcpu?: number;
   cpuAvgPct?: number;
   gpuAvgPct?: number;
-  runtimeH30d: number;
-  activeH30d?: number;
-  idleCostChfYear: number;
+  runtimeH30d: number | null;
+  activeH30d?: number | null;
+  idleCostChfYear: number | null;
   flag?: string;
   co2Location?: Kpi | null;
   co2Market?: Kpi | null;
@@ -173,9 +173,9 @@ export interface Finding {
     | "reports"
     | "redundancy"
     | "conflict";
-  impactChfYear: number;
-  impactKwhYear: number;
-  impactCo2KgYear: number;
+  impactChfYear: number | null;
+  impactKwhYear: number | null;
+  impactCo2KgYear: number | null;
   evidence: Evidence[];
   assumptions: string[];
   risk: RiskLevel;
@@ -229,7 +229,7 @@ export interface ForecastPoint {
   coverage?: string;
   baseline: Range;
   optimized: Range;
-  observed?: number;
+  observed?: number | null;
 }
 export interface Forecast {
   metric: "cost" | "energy" | "co2Location" | "co2Market";
@@ -243,9 +243,9 @@ export interface Forecast {
 
 export interface DailyFootprint {
   date: string;
-  costChf: number;
-  energyKwh: number;
-  co2Kg: number;
+  costChf: number | null;
+  energyKwh: number | null;
+  co2Kg: number | null;
   co2KgMarket?: number | null;
   workday: boolean;
   holiday?: string;

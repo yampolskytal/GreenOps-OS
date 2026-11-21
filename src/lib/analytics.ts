@@ -67,6 +67,33 @@ export function accountingComparison(location?: Kpi | null, market?: Kpi | null)
 export const forecastLabel = (point: ForecastPoint) =>
   point.periodLabel ?? (point.date ? monthLabel(point.date) : String(point.year));
 
+export const SUPPORTED_FORECAST_HORIZONS = [1, 2, 3] as const;
+export const SKYLINE_ENCODING = { height: "costChf", color: "co2Kg" } as const;
+export function recentForecastHistory(rows: MonthlyObservation[], metric: Forecast["metric"]) {
+  const key = {
+    cost: "costChf",
+    energy: "energyKwh",
+    co2Location: "co2Kg",
+    co2Market: "co2KgMarket",
+  }[metric] as HistoricalMetric;
+  const sorted = [...rows].sort((a, b) => a.month.localeCompare(b.month));
+  const last = sorted.at(-1);
+  if (!last) return [];
+  const end = new Date(`${last.month.slice(0, 7)}-01T00:00:00Z`);
+  if (!Number.isFinite(end.getTime())) return [];
+  return Array.from({ length: 6 }, (_, i) => {
+    const date = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 5 + i, 1));
+    const month = date.toISOString().slice(0, 7);
+    const row = sorted.find((r) => r.month === month);
+    return {
+      date: date.toISOString().slice(0, 10),
+      label: monthLabel(month),
+      value: row && isAvailable(row[key]) ? row[key] : null,
+      coverage: row?.status ?? "unavailable",
+    };
+  });
+}
+
 /** Aggregate supplied monthly predictions only; annual endpoints stay annual. Never interpolate. */
 export function aggregateForecast(f: Forecast, interval: 1 | 3 | 6): Forecast {
   if (f.granularity !== "monthly" || interval === 1 || f.points.some((p) => !p.date)) return f;

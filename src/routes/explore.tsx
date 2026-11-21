@@ -47,7 +47,7 @@ function Explore() {
         <TabsContent value="footprint" id="footprint">
           <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
             Explore how your company’s digital footprint changes over time. Switch between monthly
-            and yearly views, or use 3D mode to compare two metrics.
+            and yearly views. In 3D, height represents spending and color represents CO₂.
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Footprint calendar</h2>

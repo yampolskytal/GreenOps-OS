@@ -219,12 +219,24 @@ export function HistoricalPerformance({
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-3 flex flex-wrap gap-1" aria-label="Inspect a monthly observation">
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <span className="w-6 border-t-2 border-chart-2" />
+            {current.label} · {current.unit} · solid line and points: supplied historical totals ·
+            gaps: unavailable
+          </p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Select a month to inspect its results
+          </p>
+          <div
+            className="mt-3 flex gap-2 overflow-x-auto pb-2"
+            aria-label="Inspect a monthly observation"
+          >
             {rows.map((r) => (
               <Button
                 key={r.month}
                 size="sm"
-                variant={selectedMonth === r.month ? "secondary" : "ghost"}
+                variant={selectedMonth === r.month ? "secondary" : "outline"}
+                className="shrink-0"
                 aria-label={`${monthLabel(r.month)} ${current.label}: ${isAvailable(r[metric]) ? current.format(r[metric]) : "Unavailable"}`}
                 onClick={() => setSelectedMonth(r.month)}
               >

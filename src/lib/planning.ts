@@ -8,7 +8,9 @@ export const officialQuery = (q: GlobalQuery): GlobalQuery => ({
 });
 export const canSelectMeasure = (m: Measure) => m.includable && m.risk.level !== "blocked";
 export const initialMeasureIds: string[] = [];
-export function runtimeSegments(runtime: number, active?: number) {
+export function runtimeSegments(runtime: number | null, active?: number | null) {
+  if (runtime == null || !Number.isFinite(runtime) || runtime < 0)
+    return { active: null, inactive: null, unknown: null };
   if (active == null || !Number.isFinite(active) || active < 0 || active > runtime)
     return { active: null, inactive: null, unknown: runtime };
   return { active, inactive: runtime - active, unknown: 0 };
@@ -28,6 +30,16 @@ export function validatePreview(
   if (ids.some((id) => !measures.some((m) => m.id === id && canSelectMeasure(m))))
     return "Unknown or blocked measures cannot be committed.";
   if (result.excluded.length) return "Excluded measures must be removed before committing.";
+  if (
+    ![
+      result.savingsChf,
+      result.savingsKwh,
+      result.savingsCo2Kg,
+      result.costReductionPct,
+      result.co2ReductionPct,
+    ].every(Number.isFinite)
+  )
+    return "Unknown calculations cannot be committed. Keep this selection as a Path while source data is reviewed.";
   if (
     !Number.isFinite(result.effortChf) ||
     !Number.isFinite(result.effortDays) ||

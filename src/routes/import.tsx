@@ -18,6 +18,7 @@ import { useApp } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { seo } from "@/lib/seo";
+import Papa from "papaparse";
 
 export const Route = createFileRoute("/import")({
   head: () =>
@@ -39,8 +40,8 @@ async function check(file: File): Promise<Checked> {
   if (!file.name.toLowerCase().endsWith(".csv"))
     return { file, source: null, missing: [], preview: [], error: "Not a CSV file" };
   const text = await file.slice(0, 20000).text();
-  const lines = text.split(/\r?\n/).filter(Boolean).slice(0, 4);
-  const rows = lines.map((l) => l.split(","));
+  const parsed = Papa.parse<string[]>(text, { preview: 4, skipEmptyLines: true });
+  const rows = parsed.data;
   const r = recognize(rows[0] ?? []);
   return {
     file,
@@ -178,7 +179,7 @@ export function DataManagement() {
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <Button disabled={busy || valid.length === 0} onClick={send}>
               Send {valid.length} file(s) for processing
             </Button>

@@ -99,11 +99,11 @@ export function WasteFindings() {
                   )
                   .sort((a, b) =>
                     sort === "cost"
-                      ? b.impactChfYear - a.impactChfYear
+                      ? (b.impactChfYear ?? -Infinity) - (a.impactChfYear ?? -Infinity)
                       : sort === "co2"
-                        ? b.impactCo2KgYear - a.impactCo2KgYear
+                        ? (b.impactCo2KgYear ?? -Infinity) - (a.impactCo2KgYear ?? -Infinity)
                         : sort === "energy"
-                          ? b.impactKwhYear - a.impactKwhYear
+                          ? (b.impactKwhYear ?? -Infinity) - (a.impactKwhYear ?? -Infinity)
                           : sort === "effort"
                             ? (measures.find((m) => m.id === a.measureId)?.effortPersonDays ??
                                 Infinity) -

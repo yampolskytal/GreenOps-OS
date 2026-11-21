@@ -116,11 +116,13 @@ export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
                 id: d.label,
                 label: d.label,
                 value:
-                  effective === "co2Kg"
-                    ? d.co2Kg
-                    : effective === "energyKwh"
-                      ? d.energyKwh
-                      : d.costChf,
+                  effective === "co2KgMarket"
+                    ? (d.co2KgMarket ?? null)
+                    : effective === "co2Kg"
+                      ? d.co2Kg
+                      : effective === "energyKwh"
+                        ? d.energyKwh
+                        : d.costChf,
                 detail: `Annual cost: ${chf(d.costChf)} · CO₂: ${kg(d.co2Kg)} · energy: ${kwh(d.energyKwh)}. ${data.allocationRule}`,
               }))}
             />

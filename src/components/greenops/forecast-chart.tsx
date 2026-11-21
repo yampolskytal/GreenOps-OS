@@ -1,283 +1,342 @@
-// Adapted from the uploaded PriceTargetFan: animated history, projection paths, endpoint focus and scrub tooltip.
-import { useState } from "react";
+// PriceTargetFan adaptation: source-backed history, scenario paths, ranges and keyboard inspection.
+import { useState, useRef, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { forecastLabel, percentDifference } from "@/lib/analytics";
-import type { Forecast } from "@/lib/api/types";
+import {
+  forecastLabel,
+  isAvailable,
+  percentDifference,
+  recentForecastHistory,
+} from "@/lib/analytics";
+import type { Forecast, MonthlyObservation, Range } from "@/lib/api/types";
+import { api } from "@/lib/api/client";
+
+type PlotPoint = {
+  time: number;
+  label: string;
+  observed: number | null;
+  baseline?: Range;
+  optimized?: Range;
+  coverage: string;
+  projected: boolean;
+};
+const validRange = (r: Range | undefined): r is Range =>
+  !!r && [r.low, r.mid, r.high].every(isAvailable) && r.low <= r.mid && r.mid <= r.high;
 export function ForecastChart({
   f,
   format,
   height = 320,
+  history = [],
 }: {
   f: Forecast;
   format: (n: number) => string;
   height?: number;
+  history?: MonthlyObservation[];
 }) {
   const reduced = useReducedMotion();
   const [active, setActive] = useState<number | null>(null);
-  const points = f.points;
-  const first = points[0];
-  const last = points.at(-1);
-  if (!first || !last)
-    return (
-      <p className="py-12 text-center text-muted-foreground">Forecast points are unavailable.</p>
+  const chart = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(700);
+  useEffect(() => {
+    const node = chart.current;
+    if (!node) return;
+    const observer = new ResizeObserver(() => setWidth(Math.max(240, node.clientWidth)));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [f.metric, f.points.length]);
+  const actual = f.granularity === "monthly" ? recentForecastHistory(history, f.metric) : [];
+  const source: PlotPoint[] = f.points
+    .map((p) => ({
+      time: p.date ? new Date(p.date).getTime() : Date.UTC(p.year, 0, 1),
+      label: forecastLabel(p),
+      observed: isAvailable(p.observed) ? p.observed : null,
+      ...(validRange(p.baseline) ? { baseline: p.baseline } : {}),
+      ...(validRange(p.optimized) ? { optimized: p.optimized } : {}),
+      coverage:
+        p.coverage ??
+        (f.granularity === "monthly" ? "Supplied monthly model point" : "Supplied annual endpoint"),
+      projected: !isAvailable(p.observed),
+    }))
+    .filter((p) => Number.isFinite(p.time));
+  const combined = new Map<number, PlotPoint>();
+  for (const row of actual)
+    combined.set(new Date(row.date).getTime(), {
+      time: new Date(row.date).getTime(),
+      label: row.label,
+      observed: row.value,
+      coverage: row.coverage,
+      projected: false,
+    });
+  for (const p of source) {
+    const old = combined.get(p.time);
+    combined.set(
+      p.time,
+      old
+        ? {
+            ...p,
+            observed: old.observed,
+            projected: false,
+            coverage: `${old.coverage} · ${p.coverage}`,
+          }
+        : p,
     );
-  const W = 900,
-    H = 360,
-    left = 85,
-    right = 170,
-    top = 25,
-    bottom = 50;
-  const nums = points
+  }
+  const points = [...combined.values()].sort((a, b) => a.time - b.time);
+  const values = points
     .flatMap((p) => [
-      p.baseline.low,
-      p.baseline.high,
-      p.baseline.mid,
-      p.optimized.low,
-      p.optimized.high,
-      p.optimized.mid,
-      ...(p.observed == null ? [] : [p.observed]),
+      p.observed,
+      p.baseline?.low,
+      p.baseline?.high,
+      p.optimized?.low,
+      p.optimized?.high,
     ])
-    .filter(Number.isFinite);
-  const min = Math.min(...nums) * 0.9,
-    max = Math.max(...nums) * 1.08;
-  const y = (v: number) => top + (1 - (v - min) / (max - min || 1)) * (H - top - bottom);
-  const x = (i: number) => left + (i / Math.max(1, points.length - 1)) * (W - left - right);
-  const observed = points.map((p, i) => ({ p, i })).filter((v) => v.p.observed != null);
-  const lastObserved = observed.at(-1);
-  const boundary = lastObserved?.i ?? 0;
-  const path = (series: "baseline" | "optimized", bound: "low" | "mid" | "high") =>
-    points
-      .map((p, i) =>
-        i < boundary ? "" : `${i === boundary ? "M" : "L"}${x(i)},${y(p[series][bound])}`,
+    .filter(isAvailable);
+  const first = points[0],
+    last = points.at(-1);
+  if (!first || !last || !values.length)
+    return (
+      <p className="py-12 text-muted-foreground">
+        Cannot calculate: forecast observations or model values are unavailable.
+      </p>
+    );
+  const W = width,
+    H = height,
+    left = width < 480 ? 72 : 95,
+    right = 16,
+    top = 34,
+    bottom = 52;
+  const min = Math.min(0, ...values),
+    max = Math.max(1, ...values) * 1.08;
+  const x = (p: PlotPoint) =>
+    left + ((p.time - first.time) / Math.max(1, last.time - first.time)) * (W - left - right);
+  const y = (v: number) => top + (1 - (v - min) / (max - min)) * (H - top - bottom);
+  const lastActual = points.filter((p) => p.observed != null).at(-1);
+  const boundary = lastActual?.time ?? points.find((p) => p.projected)?.time ?? first.time;
+  const scenario = points.filter((p) => p.time >= boundary);
+  const line = (key: "baseline" | "optimized", bound: "low" | "mid" | "high") => {
+    let connected = false;
+    return scenario
+      .map((p) => {
+        const r = p[key];
+        if (!r) {
+          connected = false;
+          return "";
+        }
+        const segment = `${connected ? "L" : "M"}${x(p)},${y(r[bound])}`;
+        connected = true;
+        return segment;
+      })
+      .join(" ");
+  };
+  const band = (key: "baseline" | "optimized") => {
+    const segments: PlotPoint[][] = [];
+    let group: PlotPoint[] = [];
+    for (const p of scenario) {
+      if (p[key]) group.push(p);
+      else if (group.length) {
+        segments.push(group);
+        group = [];
+      }
+    }
+    if (group.length) segments.push(group);
+    return segments
+      .map(
+        (segment) =>
+          segment.map((p, i) => `${i ? "L" : "M"}${x(p)},${y(p[key]?.high ?? 0)}`).join(" ") +
+          " " +
+          [...segment]
+            .reverse()
+            .map((p) => `L${x(p)},${y(p[key]?.low ?? 0)}`)
+            .join(" ") +
+          " Z",
       )
       .join(" ");
-  const band = (series: "baseline" | "optimized") =>
-    `${path(series, "high")} ${points
-      .slice(boundary)
-      .reverse()
-      .map((p, i) => `L${x(points.length - 1 - i)},${y(p[series].low)}`)
-      .join(" ")} Z`;
-  const history = observed
-    .map(
-      ({ p, i }, j) =>
-        `${j && observed[j - 1]?.i === i - 1 ? "L" : "M"}${x(i)},${y(p.observed ?? 0)}`,
-    )
+  };
+  let prior: PlotPoint | null = null;
+  const actualPath = points
+    .map((p) => {
+      if (p.observed == null) {
+        prior = null;
+        return "";
+      }
+      const consecutive =
+        prior && (f.granularity !== "monthly" || p.time - prior.time <= 32 * 86400000);
+      const d = `${consecutive ? "L" : "M"}${x(p)},${y(p.observed)}`;
+      prior = p;
+      return d;
+    })
     .join(" ");
   const selected = active == null ? null : points[active];
-  const labelBase = Math.min(
-    H - bottom - 65,
-    Math.max(top + 18, (y(last.baseline.mid) + y(last.optimized.mid)) / 2 - 28),
+  const hasBands = scenario.some(
+    (p) =>
+      (p.baseline && p.baseline.low !== p.baseline.high) ||
+      (p.optimized && p.optimized.low !== p.optimized.high),
   );
   return (
-    <div className="relative w-full" style={{ minHeight: height }}>
-      <div className="w-full overflow-x-auto">
+    <div ref={chart} className="min-w-0">
+      <div className="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-xs" aria-label="Forecast legend">
+        <span className="flex items-center gap-2">
+          <span className="w-6 border-t-2 border-forecast-actual" />
+          Actual history
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-6 border-t-2 border-dashed border-forecast-without" />
+          Without changes
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="w-6 border-t-2 border-dashed border-forecast-plan" />
+          With Current Plan
+        </span>
+        {hasBands && <span>Shaded bands: supplied low–high uncertainty</span>}
+        <span className="text-muted-foreground">
+          {f.unit} · {api.isDemo ? "DEMO projection" : "Active provider"}
+        </span>
+      </div>
+      <div className="w-full">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="block min-w-[540px] w-full"
+          className="block w-full"
           role="img"
-          aria-label={`${f.unit} forecast with and without the selected plan`}
-          onPointerLeave={() => setActive(null)}
-          onPointerMove={(e) => {
-            const box = e.currentTarget.getBoundingClientRect();
-            const px = ((e.clientX - box.left) / box.width) * W;
-            setActive(
-              Math.max(
-                0,
-                Math.min(
-                  points.length - 1,
-                  Math.round(((px - left) / (W - left - right)) * (points.length - 1)),
-                ),
-              ),
-            );
-          }}
+          aria-label={`${f.unit}: actual history, without changes and Current Plan projections`}
         >
-          {Array.from({ length: 4 }, (_, i) => min + ((max - min) * i) / 3).map((v) => (
-            <g key={v}>
-              <line x1={left} x2={W - right} y1={y(v)} y2={y(v)} stroke="var(--border)" />
-              <text
-                x={left - 8}
-                y={y(v) + 4}
-                textAnchor="end"
-                fontSize="12"
-                fill="var(--muted-foreground)"
-              >
-                {format(v)}
-              </text>
-            </g>
-          ))}
-          {(["baseline", "optimized"] as const).map((series, i) => (
-            <g key={series}>
-              <motion.path
-                d={band(series)}
-                fill={i ? "var(--chart-1)" : "var(--forecast)"}
-                fillOpacity={0.12}
-                initial={{ opacity: reduced ? 1 : 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: reduced ? 0 : 0.5 }}
-              />
-              <motion.path
-                key={`${f.metric}-${points.length}-${last[series].mid}`}
-                d={path(series, "mid")}
-                fill="none"
-                stroke={i ? "var(--chart-1)" : "var(--forecast)"}
-                strokeWidth="2.5"
-                strokeDasharray="5 5"
-                initial={{ opacity: reduced ? 1 : 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: reduced ? 0 : 0.8 }}
-              />
-              <circle
-                cx={x(points.length - 1)}
-                cy={y(last[series].mid)}
-                r="4"
-                fill="var(--card)"
-                stroke={i ? "var(--chart-1)" : "var(--forecast)"}
-              />
-              <line
-                x1={x(points.length - 1) + 5}
-                y1={y(last[series].mid)}
-                x2={W - right + 10}
-                y2={labelBase + i * 48}
-                stroke={i ? "var(--chart-1)" : "var(--forecast)"}
-                strokeOpacity=".5"
-              />
-              <text
-                x={W - right + 16}
-                y={labelBase + i * 48}
-                fill={i ? "var(--chart-1)" : "var(--forecast)"}
-                fontSize="11"
-              >
-                {i ? "With selected plan" : "Without optimization"}
-              </text>
-              <text
-                x={W - right + 16}
-                y={labelBase + i * 48 + 18}
-                fill="var(--foreground)"
-                fontSize="13"
-              >
-                {format(last[series].mid)}
-              </text>
-            </g>
-          ))}
+          {[0, 1, 2, 3, 4].map((i) => {
+            const value = min + ((max - min) * i) / 4;
+            return (
+              <g key={i}>
+                <line x1={left} x2={W - right} y1={y(value)} y2={y(value)} stroke="var(--border)" />
+                <text
+                  x={left - 10}
+                  y={y(value) + 4}
+                  textAnchor="end"
+                  fontSize="12"
+                  fill="var(--muted-foreground)"
+                >
+                  {format(value)}
+                </text>
+              </g>
+            );
+          })}
+          <text x={left} y={17} fontSize="11" fill="var(--muted-foreground)">
+            {lastActual
+              ? width < 480
+                ? "Actual → Forecast"
+                : "Actual period → Forecast starts → Projected period"
+              : width < 480
+                ? "Projected period"
+                : "Historical observations unavailable · Projected period"}
+          </text>
           <line
-            x1={x(boundary)}
-            x2={x(boundary)}
+            x1={x({ ...first, time: boundary })}
+            x2={x({ ...first, time: boundary })}
             y1={top}
             y2={H - bottom}
             stroke="var(--muted-foreground)"
             strokeDasharray="3 5"
           />
-          <motion.path
-            d={history}
-            fill="none"
-            stroke="var(--foreground)"
-            strokeWidth="3"
-            initial={{ pathLength: reduced ? 1 : 0, opacity: reduced ? 1 : 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-            transition={{ duration: reduced ? 0 : 0.8 }}
-          />
-          {observed.map(({ p, i }) => (
-            <circle
-              key={`${p.date ?? p.year}-${i}`}
-              cx={x(i)}
-              cy={y(p.observed ?? 0)}
-              r="4"
-              fill="var(--foreground)"
-            />
-          ))}
-          {points.map((p, i) => (
-            <g key={`${p.date ?? p.year}-${i}`}>
-              <text
-                x={x(i)}
-                y={H - 18}
-                fill="var(--muted-foreground)"
-                textAnchor="middle"
-                fontSize="12"
-              >
-                {i === 0 ||
-                i === points.length - 1 ||
-                i % Math.max(1, Math.ceil(points.length / 6)) === 0
-                  ? forecastLabel(p)
-                  : ""}
-              </text>
-              <circle
-                tabIndex={0}
-                role="button"
-                aria-label={`${forecastLabel(p)}: without plan ${format(p.baseline.mid)}, with plan ${format(p.optimized.mid)}`}
-                cx={x(i)}
-                cy={y(p.optimized.mid)}
-                r="8"
-                fill="transparent"
-                onFocus={() => setActive(i)}
-                onBlur={() => setActive(null)}
-                onClick={() => setActive(i)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setActive(i);
-                  }
-                }}
+          {(["baseline", "optimized"] as const).map((key) => (
+            <g key={key}>
+              {hasBands && (
+                <motion.path
+                  d={band(key)}
+                  fill={key === "baseline" ? "var(--forecast-without)" : "var(--forecast-plan)"}
+                  fillOpacity={0.1}
+                  initial={{ opacity: reduced ? 1 : 0 }}
+                  animate={{ opacity: 1 }}
+                />
+              )}
+              <motion.path
+                d={line(key, "mid")}
+                fill="none"
+                stroke={key === "baseline" ? "var(--forecast-without)" : "var(--forecast-plan)"}
+                strokeWidth={2.5}
+                strokeDasharray="6 5"
+                initial={{ opacity: reduced ? 1 : 0 }}
+                animate={{ opacity: 1 }}
               />
             </g>
           ))}
-          {active != null && (
-            <line
-              x1={x(active)}
-              x2={x(active)}
-              y1={top}
-              y2={H - bottom}
-              stroke="var(--foreground)"
-              strokeOpacity=".3"
-            />
-          )}
+          <path d={actualPath} fill="none" stroke="var(--forecast-actual)" strokeWidth={2.5} />
+          {points.map((p, i) => (
+            <g key={`${p.time}-${i}`}>
+              {p.observed != null && (
+                <circle cx={x(p)} cy={y(p.observed)} r={4} fill="var(--forecast-actual)" />
+              )}
+              {(i === 0 ||
+                i === points.length - 1 ||
+                i % Math.max(1, Math.ceil(points.length / (width < 480 ? 2 : 5))) === 0) && (
+                <text
+                  x={x(p)}
+                  y={H - 15}
+                  textAnchor={i === points.length - 1 ? "end" : i === 0 ? "start" : "middle"}
+                  fontSize="11"
+                  fill="var(--muted-foreground)"
+                >
+                  {p.label}
+                </text>
+              )}
+              {(p.optimized || p.observed != null) && (
+                <circle
+                  cx={x(p)}
+                  cy={y(p.optimized?.mid ?? p.observed ?? 0)}
+                  r={9}
+                  fill="transparent"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${p.label}: ${p.projected ? "Projected" : "Actual"}, ${p.optimized ? format(p.optimized.mid) : p.observed != null ? format(p.observed) : "Unavailable"}`}
+                  onMouseEnter={() => setActive(i)}
+                  onFocus={() => setActive(i)}
+                  onClick={() => setActive(i)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setActive(i);
+                    }
+                  }}
+                />
+              )}
+            </g>
+          ))}
         </svg>
       </div>
-      <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span>● Historical observations</span>
-        <span className="text-forecast">┄ Without optimization</span>
-        <span className="text-accent-ink">┄ With selected plan</span>
-        <span>Shading: supported low–high estimates</span>
+      <div role="status" className="mt-3 min-h-24 border-t pt-3 text-xs">
+        {selected ? (
+          <>
+            <b>
+              {selected.label} · {selected.projected ? "Projected" : "Actual observation"}
+            </b>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+              <span>
+                Actual: {selected.observed == null ? "Unavailable" : format(selected.observed)}
+              </span>
+              <span>
+                Without changes: {selected.baseline ? format(selected.baseline.mid) : "Unavailable"}
+              </span>
+              <span>
+                Current Plan: {selected.optimized ? format(selected.optimized.mid) : "Unavailable"}
+              </span>
+              {selected.baseline && selected.optimized && (
+                <span>
+                  Difference: {format(selected.baseline.mid - selected.optimized.mid)}
+                  {percentDifference(selected.baseline.mid, selected.optimized.mid) != null
+                    ? ` · ${percentDifference(selected.baseline.mid, selected.optimized.mid)?.toFixed(1)}%`
+                    : ""}
+                </span>
+              )}
+              <span className="text-muted-foreground">{selected.coverage}</span>
+            </div>
+          </>
+        ) : (
+          <p className="text-muted-foreground">
+            {f.granularity === "monthly"
+              ? `${actual.filter((p) => p.value != null).length}/6 recent historical months available. Missing observations remain gaps.`
+              : "Annual model endpoints only. Monthly history cannot be mixed with annual totals; no monthly or quarterly variation is inferred."}
+          </p>
+        )}
+        <p className="mt-2 text-muted-foreground">
+          Zero-based axis: {format(min)}–{format(max)} {f.unit}. Forecast starts:{" "}
+          {lastActual?.label ?? "No actual boundary supplied"}. Lines connect supplied model
+          endpoints, not additional observations.
+        </p>
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        {f.granularity === "monthly"
-          ? "Supplied monthly points or labeled period averages."
-          : "Annual endpoints only; no monthly or quarterly variations are inferred."}{" "}
-        Axis range: {format(min)}–{format(max)} {f.unit}.{" "}
-        {lastObserved
-          ? `Forecast boundary: ${forecastLabel(lastObserved.p)}.`
-          : "Historical observations unavailable."}
-      </p>
-      {selected && (
-        <div
-          role="status"
-          className="pointer-events-none absolute left-4 top-4 z-10 max-w-[min(360px,90%)] rounded-lg border bg-popover p-3 text-xs shadow-sm"
-        >
-          <b>
-            {forecastLabel(selected)}
-            {selected.observed != null ? " · Observed baseline" : " · Projected"}
-          </b>
-          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
-            <span>
-              Without: {format(selected.baseline.mid)} ({format(selected.baseline.low)}–
-              {format(selected.baseline.high)})
-            </span>
-            <span>
-              With plan: {format(selected.optimized.mid)} ({format(selected.optimized.low)}–
-              {format(selected.optimized.high)})
-            </span>
-            <span>
-              Difference: {format(selected.baseline.mid - selected.optimized.mid)}
-              {percentDifference(selected.baseline.mid, selected.optimized.mid) != null
-                ? ` · ${percentDifference(selected.baseline.mid, selected.optimized.mid)?.toFixed(1)}%`
-                : ""}
-            </span>
-            <span>
-              {f.unit} ·{" "}
-              {selected.coverage ?? (f.granularity === "monthly" ? "Monthly" : "Annual endpoint")}
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

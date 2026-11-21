@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/button";
 import type { Forecast } from "@/lib/api/types";
 import { useForecast, useOverview } from "@/lib/queries";
 import { useApp } from "@/lib/store";
-import { aggregateForecast, forecastLabel, percentDifference } from "@/lib/analytics";
+import {
+  aggregateForecast,
+  forecastLabel,
+  percentDifference,
+  SUPPORTED_FORECAST_HORIZONS,
+} from "@/lib/analytics";
 import { kchf, kg, kwh } from "@/lib/format";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/forecast")({
@@ -34,12 +39,14 @@ function ForecastPage() {
   const support = ov.data?.forecastSupport ?? [];
   const first = METRICS.find((m) => support.some((x) => x.metric === m.id && x.horizons.length));
   const metric = chosen ?? first?.id ?? "cost";
-  const horizons = support.find((x) => x.metric === metric)?.horizons ?? [];
+  const horizons = (support.find((x) => x.metric === metric)?.horizons ?? []).filter((n) =>
+    SUPPORTED_FORECAST_HORIZONS.some((h) => h === n),
+  );
   const h = chosenHorizon ?? horizons[0] ?? 1;
   const enabled = horizons.includes(h);
   const fc = useForecast(metric, h, enabled);
   const m = METRICS.find((x) => x.id === metric) ?? METRICS[0];
-  const interval = aggregation ?? (h === 1 ? 1 : h === 5 ? 6 : 3);
+  const interval = aggregation ?? (h === 1 ? 1 : 3);
   const f = fc.data ? aggregateForecast(fc.data, interval) : null;
   const last = f?.points.at(-1);
   return (
@@ -101,15 +108,19 @@ function ForecastPage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">With Current Plan · {h} yr</p>
-                <p className="num mt-2 text-xl text-accent-ink">{m.fmt(last.optimized.mid)}</p>
+                <p className="num mt-2 text-xl text-forecast-plan">{m.fmt(last.optimized.mid)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Scenario difference · {f.unit}</p>
                 <p className="num mt-2 text-xl">{m.fmt(last.baseline.mid - last.optimized.mid)}</p>
                 {percentDifference(last.baseline.mid, last.optimized.mid) != null && (
-                  <p className="mt-1 text-xs text-success">
+                  <p
+                    className={`mt-1 text-xs ${last.baseline.mid >= last.optimized.mid ? "text-success" : "text-destructive"}`}
+                  >
                     {percentDifference(last.baseline.mid, last.optimized.mid)?.toFixed(1)}%
-                    projected improvement
+                    {last.baseline.mid >= last.optimized.mid
+                      ? "projected improvement"
+                      : "projected increase — model result, not an improvement"}
                   </p>
                 )}
               </div>
@@ -134,7 +145,7 @@ function ForecastPage() {
               {() =>
                 f && (
                   <>
-                    <ForecastChart f={f} format={m.fmt} />
+                    <ForecastChart f={f} format={m.fmt} history={ov.data?.monthly ?? []} />
                     <DetailDrawer
                       title="Forecast assumptions & calculation"
                       description={`${m.label} · ${h} years · Current Plan`}

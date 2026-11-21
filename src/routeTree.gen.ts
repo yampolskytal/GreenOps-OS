@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CeoRouteImport } from './routes/ceo'
 import { Route as CfoRouteImport } from './routes/cfo'
+import { Route as CurrentPlanRouteImport } from './routes/current-plan'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FindingsRouteImport } from './routes/findings'
@@ -35,6 +36,11 @@ const CeoRoute = CeoRouteImport.update({
 const CfoRoute = CfoRouteImport.update({
   id: '/cfo',
   path: '/cfo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CurrentPlanRoute = CurrentPlanRouteImport.update({
+  id: '/current-plan',
+  path: '/current-plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataRoute = DataRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/current-plan': typeof CurrentPlanRoute
   '/data': typeof DataRoute
   '/explore': typeof ExploreRoute
   '/findings': typeof FindingsRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/current-plan': typeof CurrentPlanRoute
   '/data': typeof DataRoute
   '/explore': typeof ExploreRoute
   '/findings': typeof FindingsRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/current-plan': typeof CurrentPlanRoute
   '/data': typeof DataRoute
   '/explore': typeof ExploreRoute
   '/findings': typeof FindingsRoute
@@ -132,6 +141,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ceo'
     | '/cfo'
+    | '/current-plan'
     | '/data'
     | '/explore'
     | '/findings'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ceo'
     | '/cfo'
+    | '/current-plan'
     | '/data'
     | '/explore'
     | '/findings'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ceo'
     | '/cfo'
+    | '/current-plan'
     | '/data'
     | '/explore'
     | '/findings'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CeoRoute: typeof CeoRoute
   CfoRoute: typeof CfoRoute
+  CurrentPlanRoute: typeof CurrentPlanRoute
   DataRoute: typeof DataRoute
   ExploreRoute: typeof ExploreRoute
   FindingsRoute: typeof FindingsRoute
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/cfo'
       fullPath: '/cfo'
       preLoaderRoute: typeof CfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/current-plan': {
+      id: '/current-plan'
+      path: '/current-plan'
+      fullPath: '/current-plan'
+      preLoaderRoute: typeof CurrentPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data': {
@@ -279,6 +299,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CeoRoute: CeoRoute,
   CfoRoute: CfoRoute,
+  CurrentPlanRoute: CurrentPlanRoute,
   DataRoute: DataRoute,
   ExploreRoute: ExploreRoute,
   FindingsRoute: FindingsRoute,
