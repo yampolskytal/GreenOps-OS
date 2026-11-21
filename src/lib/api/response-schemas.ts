@@ -214,7 +214,7 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
         co2Kg: number.nullable(),
         co2KgMarket: number.nullable().optional(),
         workday: z.boolean(),
-        coverage: z.enum(["measured", "allocated", "estimated"]),
+        coverage: z.enum(["measured", "allocated", "estimated", "unavailable"]),
         contributors: z.array(z.object({ label: z.string(), co2Kg: number })).default([]),
       })
       .passthrough(),

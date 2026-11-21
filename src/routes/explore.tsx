@@ -25,6 +25,7 @@ function Explore() {
   const hash = useRouterState({ select: (r) => r.location.hash });
   const [tab, setTab] = useState("footprint");
   const [metric, setMetric] = useState<CalMetric>("co2Kg");
+  const [compareFootprint, setCompareFootprint] = useState(false);
   const effective = hash.startsWith("finding-") ? "findings" : hash === "compare" ? "compare" : tab;
   return (
     <AppShell
@@ -46,8 +47,8 @@ function Explore() {
         </TabsList>
         <TabsContent value="footprint" id="footprint">
           <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
-            Explore how your company’s digital footprint changes over time. Switch between monthly
-            and yearly views. In 3D, height represents spending and color represents CO₂.
+            Explore daily changes by month or year. In 3D, height and color show the selected
+            metric. You can also compare cost and CO₂.
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Footprint calendar</h2>
@@ -65,7 +66,10 @@ function Explore() {
                   size="sm"
                   variant={metric === v ? "secondary" : "ghost"}
                   disabled={v === "co2KgMarket" && !daily.data?.some((d) => d.co2KgMarket != null)}
-                  onClick={() => setMetric(v)}
+                  onClick={() => {
+                    setMetric(v);
+                    setCompareFootprint(false);
+                  }}
                 >
                   {l}
                 </Button>
@@ -78,7 +82,16 @@ function Explore() {
               daily values.
             </p>
           )}
-          <Q q={daily}>{(d) => <FootprintCalendar days={d} metric={metric} />}</Q>
+          <Q q={daily}>
+            {(d) => (
+              <FootprintCalendar
+                days={d}
+                metric={metric}
+                compare={compareFootprint}
+                onCompareChange={setCompareFootprint}
+              />
+            )}
+          </Q>
         </TabsContent>
         <TabsContent value="compare" id="compare">
           <p className="mb-5 max-w-2xl text-sm text-muted-foreground">

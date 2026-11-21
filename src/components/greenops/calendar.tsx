@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { DailyFootprint } from "@/lib/api/types";
-import { chf, kg } from "@/lib/format";
+import { kg } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -14,7 +14,7 @@ import { AnalyticalInspector } from "./analytical-inspector";
 import { DetailDrawer } from "./details";
 import { Info } from "lucide-react";
 import { SKYLINE_ENCODING } from "@/lib/analytics";
-import { availableRange } from "@/lib/calendar-model";
+import { buildFootprintGrid, type buildCalendarScale } from "@/lib/calendar-model";
 import ContributionSkyline from "./contribution-skyline";
 export type CalMetric = "co2Kg" | "costChf" | "energyKwh" | "co2KgMarket";
 const LABELS = {
@@ -23,38 +23,106 @@ const LABELS = {
   costChf: "Cost",
   energyKwh: "Energy",
 };
-const UNITS = { co2Kg: "kg CO₂", co2KgMarket: "kg CO₂", costChf: "CHF", energyKwh: "kWh" };
+const decimal = new Intl.NumberFormat("en-CH", { maximumFractionDigits: 3 });
+const francs = new Intl.NumberFormat("en-CH", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const fmt = {
-  co2KgMarket: (v: number) => `${v.toFixed(1)} kg CO₂`,
-  co2Kg: (v: number) => `${v.toFixed(1)} kg CO₂`,
-  costChf: chf,
-  energyKwh: (v: number) => `${v.toFixed(1)} kWh`,
+  co2KgMarket: (v: number) => `${decimal.format(v)} kg CO₂`,
+  co2Kg: (v: number) => `${decimal.format(v)} kg CO₂`,
+  costChf: (v: number) => `CHF ${francs.format(v)}`,
+  energyKwh: (v: number) => `${decimal.format(v)} kWh`,
 };
-const valid = (v: unknown): number | null =>
-  typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
-export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; metric: CalMetric }) {
+function metricValue(day: DailyFootprint, metric: CalMetric) {
+  const value = day[metric];
+  return typeof value === "number" && Number.isFinite(value) && (metric === "costChf" || value >= 0)
+    ? value
+    : null;
+}
+
+function display(day: DailyFootprint, metric: CalMetric) {
+  const value = metricValue(day, metric);
+  return value === null ? "Unavailable" : fmt[metric](value);
+}
+
+function ColorLegend({
+  metric,
+  scale,
+}: {
+  metric: CalMetric;
+  scale: ReturnType<typeof buildCalendarScale>;
+}) {
+  return (
+    <div className="text-xs text-muted-foreground">
+      <p>Color · {LABELS[metric]}</p>
+      {scale && scale.min < scale.max ? (
+        <>
+          <div className="mt-2 flex h-2 overflow-hidden rounded">
+            {[1, 2, 3, 4].map((level) => (
+              <span key={level} className="flex-1" style={{ background: `var(--heat-${level})` }} />
+            ))}
+          </div>
+          <div className="num mt-2 flex flex-wrap justify-between gap-2 text-[10px]">
+            {scale.ticks.map((value) => (
+              <span key={value}>{fmt[metric](value)}</span>
+            ))}
+          </div>
+          <p className="mt-1">
+            Darker means higher.
+            {scale.compressed && " Extreme values are compressed."}
+          </p>
+        </>
+      ) : (
+        <p className="mt-2">
+          {scale ? `All available days · ${fmt[metric](scale.min)}` : "Unavailable"}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function FootprintCalendar({
+  days,
+  metric,
+  compare,
+  onCompareChange,
+}: {
+  days: DailyFootprint[];
+  metric: CalMetric;
+  compare: boolean;
+  onCompareChange: (compare: boolean) => void;
+}) {
   const [view, setView] = useState<"2d" | "3d">("2d");
   const [period, setPeriod] = useState<"year" | "month">("year");
   const months = [...new Set(days.map((d) => d.date.slice(0, 7)))].sort();
   const [selectedMonth, setMonth] = useState("");
   const month = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? "");
-  const heightMetric: CalMetric = SKYLINE_ENCODING.height;
-  const colorMetric: CalMetric = SKYLINE_ENCODING.color;
   const frame = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState<DailyFootprint | null>(null);
   const [dayOpen, setDayOpen] = useState(false);
-  const shown = period === "month" ? days.filter((d) => d.date.startsWith(month)) : days;
-  const color = view === "2d" ? metric : colorMetric;
-  const heightRange = availableRange(shown.map((d) => d[heightMetric]));
-  const colorRange = availableRange(shown.map((d) => d[color]));
-  const display = (d: DailyFootprint, m: CalMetric) =>
-    valid(d[m]) === null ? "Unavailable" : fmt[m](valid(d[m]) ?? 0);
-  const data = shown.map((d) => ({
-    date: d.date,
-    count: valid(d[heightMetric]),
-    colorCount: valid(d[color]),
-    detail: `${d.date} · ${view === "3d" ? `Height: ${display(d, heightMetric)} · Color: ${display(d, color)}` : display(d, color)} · ${d.coverage}`,
-  }));
+  const comparing = view === "3d" && compare;
+  const heightMetric = comparing ? SKYLINE_ENCODING.height : metric;
+  const color = comparing ? SKYLINE_ENCODING.color : metric;
+  const activeMonth = period === "month" ? month : undefined;
+  const shown = useMemo(
+    () => (activeMonth ? days.filter((d) => d.date.startsWith(activeMonth)) : days),
+    [days, activeMonth],
+  );
+  const data = useMemo(
+    () =>
+      shown.map((d) => ({
+        date: d.date,
+        count: metricValue(d, heightMetric),
+        colorCount: metricValue(d, color),
+        detail: `${d.date} · ${comparing ? `Cost ${display(d, heightMetric)} · CO₂ ${display(d, color)}` : display(d, color)} · ${d.coverage}`,
+      })),
+    [shown, heightMetric, color, comparing],
+  );
+  const grid = useMemo(() => {
+    const end = Math.max(...data.map((d) => Date.parse(d.date)));
+    return buildFootprintGrid(data, end, 1, activeMonth);
+  }, [data, activeMonth]);
   if (!days.length)
     return (
       <p className="py-12 text-center text-muted-foreground">
@@ -127,6 +195,14 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
         <div className="mb-3 flex flex-wrap gap-2">
           <Button
             size="sm"
+            variant={compare ? "secondary" : "outline"}
+            aria-pressed={compare}
+            onClick={() => onCompareChange(!compare)}
+          >
+            Compare cost and CO₂
+          </Button>
+          <Button
+            size="sm"
             variant="ghost"
             onClick={() =>
               frame.current
@@ -168,65 +244,31 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
       <div ref={frame} className="calendar-chart-frame" data-view={view}>
         {view === "3d" && (
           <div className="calendar-floating-legend">
-            <p className="text-xs font-medium">
-              Height: Cost (CHF) · Color: Location-based CO₂ (kg CO₂)
-            </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div>
-                <div className="flex items-end gap-3">
-                  <span className="flex h-6 gap-1 items-end" aria-hidden="true">
-                    <span className="h-2 w-2 bg-chart-2" />
-                    <span className="h-4 w-2 bg-chart-2" />
-                    <span className="h-6 w-2 bg-chart-2" />
-                  </span>
-                  <p className="text-xs">{UNITS[heightMetric]} · zero-based linear height</p>
-                </div>
+                <p className="text-xs">Height · {LABELS[heightMetric]}</p>
                 <p className="num mt-2 text-[11px] text-muted-foreground">
-                  {heightRange
-                    ? `Range ${fmt[heightMetric](heightRange.min)}–${fmt[heightMetric](heightRange.max)}`
+                  {grid.heightDomain
+                    ? `${fmt[heightMetric](grid.heightDomain.min)} to ${fmt[heightMetric](grid.heightDomain.max)}`
                     : "Unavailable"}
                 </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Scaled to this period.
+                  {grid.heightDomain?.compressed && " Extreme values are compressed."}
+                </p>
               </div>
-              <div>
-                <p className="text-xs">{UNITS[color]} · lightest = lowest, darkest = highest</p>
-                <div className="mt-2 flex h-2 overflow-hidden rounded">
-                  {[1, 2, 3, 4].map((i) => (
-                    <span key={i} className="flex-1" style={{ background: `var(--heat-${i})` }} />
-                  ))}
-                </div>
-                <div className="num mt-2 flex flex-wrap justify-between gap-2 text-[10px] text-muted-foreground">
-                  {colorRange
-                    ? [0, 0.25, 0.5, 0.75, 1].map((p) => (
-                        <span key={p}>
-                          {fmt[color](colorRange.min + (colorRange.max - colorRange.min) * p)}
-                        </span>
-                      ))
-                    : "Unavailable"}
-                </div>
-              </div>
+              <ColorLegend metric={color} scale={grid.colorDomain} />
             </div>
           </div>
         )}
         {view === "2d" && (
-          <div className="mb-3 text-xs text-muted-foreground">
-            <p>
-              Color: {LABELS[color]} · {UNITS[color]}
-            </p>
-            <div className="mt-2 flex h-2 overflow-hidden rounded">
-              {[1, 2, 3, 4].map((i) => (
-                <span key={i} className="flex-1" style={{ background: `var(--heat-${i})` }} />
-              ))}
-            </div>
-            <p className="num mt-2">
-              {colorRange
-                ? `${fmt[color](colorRange.min)} → ${fmt[color](colorRange.max)} · lightest to darkest`
-                : "Unavailable"}
-            </p>
+          <div className="mb-3">
+            <ColorLegend metric={color} scale={grid.colorDomain} />
           </div>
         )}
         <p className="mb-3 text-xs text-muted-foreground">
-          Each bar is one day. Taller bars mean higher spending. Darker bars mean higher CO₂
-          emissions. Select a bar for details.
+          {comparing && "Height shows cost and color shows CO₂. "}
+          Select a day for its exact values.
         </p>
         <p className="mb-3 text-xs">
           Selected day:{" "}
@@ -235,6 +277,7 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
         <div className="calendar-renderer">
           <ContributionSkyline
             data={data}
+            footprintGrid={grid}
             heightScale={period === "month" ? 0.28 : 1}
             {...(period === "month" ? { month } : {})}
             view={view}
@@ -256,8 +299,8 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
       <p className="mt-4 text-xs text-muted-foreground">
         Daily coverage: {shown.filter((d) => d.coverage === "measured").length} measured ·{" "}
         {shown.filter((d) => d.coverage === "allocated").length} allocated ·{" "}
-        {shown.filter((d) => d.coverage === "estimated").length} estimated. Missing dates are
-        unavailable, not zero.
+        {shown.filter((d) => d.coverage === "estimated").length} estimated ·{" "}
+        {shown.filter((d) => d.coverage === "unavailable").length} unavailable.
       </p>
       <DetailDrawer
         title="Daily data-quality details"
@@ -270,13 +313,17 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
       >
         <p>
           {shown.length} supplied daily records in this view.{" "}
-          {shown.filter((d) => d.coverage !== "measured").length} allocated or estimated, not direct
-          daily observations.
+          {shown.filter((d) => d.coverage === "allocated" || d.coverage === "estimated").length}{" "}
+          allocated or estimated.
         </p>
         <p className="mt-3">
-          {shown.filter((d) => valid(d.costChf) == null || valid(d.co2Kg) == null).length} records
-          lack cost or location-based CO₂. Absent days and missing metrics stay unavailable, never
-          zero.
+          {
+            shown.filter(
+              (d) => metricValue(d, "costChf") === null || metricValue(d, "co2Kg") === null,
+            ).length
+          }{" "}
+          records lack cost or location-based CO₂. Absent days and missing metrics stay unavailable,
+          never zero.
         </p>
         <p className="mt-3">
           Day-level factors, source references and allocation methodology are not supplied in this

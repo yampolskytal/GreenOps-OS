@@ -41,20 +41,7 @@ export const rng = (seed) => {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 };
-/**
- * A believable year for demos: quiet weekends, a few busy seasons, a mood that
- * drifts week to week, and the odd enormous day.
- */
-/**
- * The grid: columns are weeks, rows are weekdays (row 0 = `weekStart`). It
- * ends on `endMs` and starts on the week containing the day one year earlier.
- * Levels 1–4 split the non-zero days by their share of a busy day — the 95th
- * percentile, so one freak day can't wash every other day out to level 1.
- */
 export const buildGrid = buildFootprintGrid;
-/** 0 for an empty day, else 1–4 by quarters of `busy`. Anything at or past `busy` is 4. */
-export const levelOf = (count, busy) =>
-  count <= 0 ? 0 : busy <= 0 ? 4 : 1 + Math.min(3, Math.floor((count / busy) * 4));
 /** Total, busiest day, longest run, and the run that reaches today (or yesterday — today isn't over). */
 export const computeStats = (cells) => {
   let total = 0;
@@ -108,9 +95,8 @@ export const monthLabels = (cells, weeks, locale = "en-US") => {
   if (out.length > 1 && out[1].week - out[0].week < 3) out.shift();
   return out;
 };
-/** Box height in grid units. Empty days are thin slabs; the busiest day is ~7.6 cells tall. */
-export const barHeight = (count, max, scale = 1) =>
-  count > 0 && max > 0 ? 0.2 + (count / max) * 7.2 * scale : 0.2;
+/** Convert the normalized height to grid units. */
+const barHeight = (position, scale) => 0.2 + position * 7.2 * scale;
 /** Share of the morph each bar spends waiting — the wave sweeps oldest week → newest. */
 export const WAVE = 0.42;
 /** 0 → 1 as a bar rises during the morph. Every bar is flat at t=0 and fully up at t=1. */
@@ -321,6 +307,7 @@ function Stat({ label, value, unit, sub, accent, size, align }) {
 }
 export default function ContributionSkyline({
   data,
+  footprintGrid,
   month,
   endDate,
   view: viewProp,
@@ -348,7 +335,7 @@ export default function ContributionSkyline({
     const dates = (data ?? []).map((d) => dayMs(d.date)).filter(Number.isFinite);
     const end = endKey ?? (dates.length ? Math.max(...dates) : dayMs(new Date()));
     const days = data ?? [];
-    const grid = buildGrid(days, end, weekStart, month);
+    const grid = footprintGrid ?? buildGrid(days, end, weekStart, month);
     return {
       ...grid,
       stats: computeStats(grid.cells),
@@ -356,7 +343,7 @@ export default function ContributionSkyline({
         ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label, week) => ({ label, week }))
         : monthLabels(grid.cells, grid.weeks, locale),
     };
-  }, [data, month, endKey, seed, weekStart, locale]);
+  }, [data, footprintGrid, month, endKey, seed, weekStart, locale]);
   const [innerView, setInnerView] = React.useState(defaultView);
   const view = viewProp ?? innerView;
   const setView = (v) => {
@@ -533,7 +520,7 @@ export default function ContributionSkyline({
         wk[i] = c.week;
         dy[i] = c.day;
         lv[i] = c.level;
-        hgt[i] = barHeight(c.count, m.max, cfg.current.heightScale);
+        hgt[i] = barHeight(c.height, cfg.current.heightScale);
       }
       months = m.months;
       const wf = new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" });
@@ -597,7 +584,7 @@ export default function ContributionSkyline({
       for (let i = 0; i < n; i++) {
         const x0 = wk[i] + off;
         const y0 = dy[i] + off;
-        const z = (full ? hgt[i] * e : zs[i]) + 0.7 * e;
+        const z = full ? hgt[i] * e : zs[i];
         add(x0, y0, z);
         add(x0 + w, y0, z);
         add(x0, y0 + w, z);
@@ -665,7 +652,6 @@ export default function ContributionSkyline({
       const off = (1 - w) / 2;
       const radius = lerp(0.17, 0.03, e) * s;
       const outline = (1 - e) * 0.07;
-      const lift = 0.7 * e;
       const ex = col[0];
       const ey = col[1];
       const ez = col[2];
@@ -675,7 +661,7 @@ export default function ContributionSkyline({
         const y0 = dy[i] + off;
         const x1 = x0 + w;
         const y1 = y0 + w;
-        const z = zs[i] + hover[i] * lift;
+        const z = zs[i];
         const o = i * 24;
         // top
         polys[o] = px(x0, y0);
@@ -720,22 +706,16 @@ export default function ContributionSkyline({
           bl += (ez - bl) * 0.72 * d;
         }
         const hv = hover[i];
-        if (hv > 0.002) {
-          const m = 0.16 * hv;
-          r += (fg[0] - r) * m;
-          g += (fg[1] - g) * m;
-          bl += (fg[2] - bl) * m;
-        }
         if (f & 1) {
           ctx.beginPath();
           quadPath(ctx, polys, o + 8, 0);
-          ctx.fillStyle = rgbString(r * 0.84, g * 0.84, bl * 0.84);
+          ctx.fillStyle = rgbString(r * 0.94, g * 0.94, bl * 0.94);
           ctx.fill();
         }
         if (f & 2) {
           ctx.beginPath();
           quadPath(ctx, polys, o + 16, 0);
-          ctx.fillStyle = rgbString(r * 0.68, g * 0.68, bl * 0.68);
+          ctx.fillStyle = rgbString(r * 0.88, g * 0.88, bl * 0.88);
           ctx.fill();
         }
         ctx.beginPath();
@@ -833,7 +813,7 @@ export default function ContributionSkyline({
       // Tooltip rides the active cell through morphs and orbits.
       if (activeIdx >= 0 && activeIdx < n) {
         const i = activeIdx;
-        const z = zs[i] + hover[i] * lift;
+        const z = zs[i];
         const tx = px(wk[i] + 0.5, dy[i] + 0.5);
         const ty = Math.min(
           py(wk[i] + off, dy[i] + off, z),

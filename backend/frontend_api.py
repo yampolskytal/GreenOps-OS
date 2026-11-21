@@ -9,6 +9,7 @@ from collections import Counter, defaultdict
 from datetime import date, timedelta
 
 from assistant_router import route_question
+from greenops import END
 from templates import BASE_NAME, MEASURE_NAME, tables
 
 PERIOD = "Sep 2025 – Aug 2026"
@@ -23,7 +24,8 @@ LOCATIONS = {
 }
 SERVICE = {"Cloud": "Cloud", "Servers": "Servers", "SaaS": "SaaS", "AI gateway": "AI", "AI subscriptions": "AI"}
 MONTHLY_FILES = {"ai_subscriptions.csv", "saas_contracts.csv"}
-WEEKLY_FILES = {"server_metrics_weekly.csv"}
+DAILY_SERVER_FALLBACK = "server_metrics_weekly.csv"
+WEEKLY_M365 = "extra/m365_usage.csv"
 
 
 def mid(v):
@@ -342,38 +344,48 @@ class FrontendApi:
         start = date.fromisoformat(q["from"] + "-01")
         y, m = map(int, q["to"].split("-"))
         end = date(y, m, calendar.monthrange(y, m)[1])
-        days = defaultdict(lambda: {"chf": 0.0, "kwh": 0.0, "kg": 0.0, "allocated": 0.0, "tools": defaultdict(float)})
-        for l in self.lines(q):
+        days = defaultdict(lambda: {"costChf": None, "energyKwh": None, "co2Kg": None,
+                                    "allocated": 0.0, "tools": defaultdict(float)})
+        # A weekly M365 row can contribute to the first days of the selected month.
+        ledger_query = q | {"from": (start - timedelta(days=6)).strftime("%Y-%m")}
+        for l in self.lines(ledger_query):
             if not l["day"]:
                 continue
             d0 = date.fromisoformat(l["day"])
             f = l["ref"].split(":")[0]
             span = (calendar.monthrange(d0.year, d0.month)[1] if f in MONTHLY_FILES and d0.day == 1
-                    else 7 if f in WEEKLY_FILES else 1)
+                    else min(7, (END - d0).days) if f == WEEKLY_M365 else 1)
             share = 1 / span
-            kg = (mid(l["kg"]) or 0) * share
+            values = {"costChf": l["chf"], "energyKwh": mid(l["kwh"]), "co2Kg": mid(l["kg"])}
+            # Server fallback already has one ledger row per day with weekly hours allocated.
+            allocated = span > 1 or f == DAILY_SERVER_FALLBACK
             for k in range(span):
                 d = d0 + timedelta(days=k)
                 if not start <= d <= end:
                     continue
                 row = days[d]
-                row["chf"] += (l["chf"] or 0) * share
-                row["kwh"] += (mid(l["kwh"]) or 0) * share
-                row["kg"] += kg
-                if span > 1:
-                    row["allocated"] += kg
-                row["tools"][l["tool"] or l["resource"]] += kg
+                for metric, value in values.items():
+                    if value is not None:
+                        row[metric] = (row[metric] or 0) + value * share
+                if values["co2Kg"] is not None:
+                    kg = values["co2Kg"] * share
+                    if allocated:
+                        row["allocated"] += kg
+                    row["tools"][l["tool"] or l["resource"]] += kg
         cal = {r["date"]: r for r in self.a.data.get("business_calendar", [])}
         out = []
         d = start
         while d <= end:
-            row = days.get(d)
+            row = days.get(d, {})
             c = cal.get(d.isoformat(), {})
             holiday = c.get("public_holiday") or c.get("company_holidays")
-            item = {"date": d.isoformat(), "costChf": round(row["chf"], 2) if row else 0,
-                    "energyKwh": round(row["kwh"], 3) if row else 0, "co2Kg": round(row["kg"], 3) if row else 0,
+            figures = {metric: round(row[metric], precision) if row.get(metric) is not None else None
+                       for metric, precision in (("costChf", 2), ("energyKwh", 3), ("co2Kg", 3))}
+            coverage = ("unavailable" if all(v is None for v in figures.values())
+                        else "allocated" if row["allocated"] > (row["co2Kg"] or 0) / 2 else "measured")
+            item = {"date": d.isoformat(), **figures,
                     "workday": c.get("workday") == "1" if c else d.weekday() < 5,
-                    "coverage": "allocated" if row and row["allocated"] > row["kg"] / 2 else "measured",
+                    "coverage": coverage,
                     "contributors": [{"label": t, "co2Kg": round(v, 3)} for t, v in
                                      sorted(row["tools"].items(), key=lambda kv: -kv[1])[:4]] if row else []}
             if holiday:

@@ -8,6 +8,7 @@ import sys
 import unittest
 from unittest.mock import patch
 from datetime import date, datetime
+from types import SimpleNamespace
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
@@ -16,6 +17,7 @@ from accounting import allocate
 from assistant_router import route_question
 from app import BASE_NAME, MEASURE_NAME, Workspace, load_factors
 from demo import generate
+from frontend_api import FrontendApi, query as frontend_query
 from greenops import Analysis, ROOT
 from insights import query
 from insights import projections
@@ -138,7 +140,6 @@ class ProductTest(unittest.TestCase):
         self.assertEqual(b["context"]["metric"], "kwh")
 
     def test_dated_forecast_and_cash_cost(self):
-        from types import SimpleNamespace
         old = self.work.a
         case = SimpleNamespace(lines=old.lines, factors=old.factors, policy={"forecast": {"dated_changes": [
             {"effective_date": "2027-03-01", "annual_delta_chf": 12000, "source": "Test renewal"}
@@ -147,6 +148,30 @@ class ProductTest(unittest.TestCase):
         self.assertTrue(0 < first["known_changes"][0]["year_fraction"] < 1)
         self.assertAlmostEqual(first["chf_first_year_cash_including_implementation"][1] -
                                first["after_planned_measures"]["chf"][1], self.work.plan["spent_chf"], places=2)
+
+    def test_daily_calendar_preserves_allocations_credits_and_missing_data(self):
+        def line(day, ref, chf, kwh, kg):
+            return {"day": day, "month": day[:7], "ref": ref, "chf": chf, "kwh": kwh, "kg": kg,
+                    "resource": ref, "category": "Test", "department": "", "provider": "", "tool": ""}
+
+        analysis = SimpleNamespace(data={}, lines=[
+            line("2025-09-30", "server_metrics_weekly.csv:2", 0, [5, 6, 7], [1, 2, 3]),
+            line("2025-09-30", "azure_costs.csv:2", -12, None, None),
+            line("2025-09-28", "extra/m365_usage.csv:2", 0, [3, 7, 10], [1.4, 2.1, 2.8]),
+            line("2026-08-31", "extra/m365_usage.csv:3", 0, [3, 7, 10], [1.4, 2.1, 2.8]),
+        ])
+        api = FrontendApi(SimpleNamespace(a=analysis, reports=SimpleNamespace(measures=[])))
+        year = {row["date"]: row for row in api.daily(frontend_query({}))}
+        self.assertEqual(year["2025-09-30"]["costChf"], -12)
+        self.assertEqual(year["2025-09-30"]["energyKwh"], 7)
+        self.assertEqual(year["2025-09-30"]["co2Kg"], 2.3)
+        october = api.daily(frontend_query({"from": "2025-10", "to": "2025-10"}))
+        self.assertEqual(october[0], year["2025-10-01"])
+        self.assertEqual(october[0]["energyKwh"], 1)
+        self.assertEqual(october[0]["coverage"], "allocated")
+        self.assertIsNone(october[4]["energyKwh"])
+        self.assertEqual(october[4]["coverage"], "unavailable")
+        self.assertAlmostEqual(sum(row["energyKwh"] or 0 for row in year.values()), 20)
 
     def test_optional_llm_routes_only_and_logs_usage(self):
         reply = {"choices": [{"message": {"tool_calls": [{"function": {

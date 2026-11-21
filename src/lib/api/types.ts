@@ -249,7 +249,7 @@ export interface DailyFootprint {
   co2KgMarket?: number | null;
   workday: boolean;
   holiday?: string;
-  coverage: "measured" | "allocated" | "estimated";
+  coverage: "measured" | "allocated" | "estimated" | "unavailable";
   contributors: { label: string; co2Kg: number }[];
 }
 
