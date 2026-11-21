@@ -6,10 +6,13 @@ import { Q, KpiCard } from "@/components/greenops/ui";
 import { TargetPanel } from "@/components/greenops/targets";
 import { MeasureCard } from "@/components/greenops/measure-card";
 import { useApp } from "@/lib/store";
-import { useMeasures, useSimulation } from "@/lib/queries";
+import { useMeasures, useSimulation, useOverview } from "@/lib/queries";
 import { api } from "@/lib/api/client";
 import { chf, kg, kwh } from "@/lib/format";
 import { seo } from "@/lib/seo";
+import { PlanOutcomes } from "@/components/greenops/plan-outcomes";
+import { DemoExceptions } from "@/components/greenops/demo-exceptions";
+import { numericalWarnings } from "@/lib/proposals";
 
 export const Route = createFileRoute("/current-plan")({
   head: () =>
@@ -22,6 +25,7 @@ export const Route = createFileRoute("/current-plan")({
 function CurrentPlanPage() {
   const { s } = useApp();
   const sim = useSimulation();
+  const overview = useOverview(true);
   const measures = useMeasures();
   const selected = measures.data?.filter((m) => s.measureIds.includes(m.id)) ?? [];
   const blocked = selected.filter((m) => !m.includable || m.risk.level === "blocked").length;
@@ -34,14 +38,17 @@ function CurrentPlanPage() {
       subtitle="Your saved proposal. Projected benefits are not evidence of executed or approved operational changes."
       actions={
         <Button asChild variant="outline">
-          <Link to="/studio" hash="paths">
-            Edit alternatives in Studio
+          <Link to="/studio" hash="recommendations">
+            Edit strategy in Optimization Studio
             <ArrowRight />
           </Link>
         </Button>
       }
     >
-      <div id="plan-summary" className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y py-4">
+      <div
+        id="plan-summary"
+        className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y py-4"
+      >
         <span className="flex items-center gap-2 font-medium">
           <ClipboardCheck className="size-5 text-primary" />
           {s.measureIds.length} committed measures
@@ -53,7 +60,13 @@ function CurrentPlanPage() {
       <Q q={sim}>
         {(r) => (
           <>
-            <div className="grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
+            {(numericalWarnings(r).length > 0 || blocked > 0 || review > 0 || api.isDemo) && (
+              <p className="mb-5 border-l-2 border-warning pl-3 text-sm text-warning">
+                Saved proposal — not submission-ready
+              </p>
+            )}
+            <Q q={overview}>{(o) => <PlanOutcomes overview={o} result={r} />}</Q>
+            <div className="mt-6 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
               <KpiCard label="Projected annual cost savings" value={r.savingsChf} format={chf} />
               <KpiCard
                 label="Projected annual location-based CO₂ savings"
@@ -125,11 +138,11 @@ function CurrentPlanPage() {
           {() => (
             <div className="space-y-3">
               {selected.map((m) => (
-                <MeasureCard key={m.id} m={m} />
+                <MeasureCard key={m.id} m={m} readOnly compact />
               ))}
               {!s.measureIds.length && (
                 <p className="py-6 text-muted-foreground">
-                  No committed measures. Build a preview in Optimization Studio.
+                  No committed measures. Build a strategy in Optimization Studio.
                 </p>
               )}
               {selected.length < s.measureIds.length && (
@@ -142,6 +155,9 @@ function CurrentPlanPage() {
           )}
         </Q>
       </section>
+      <Q q={measures}>
+        {(all) => <DemoExceptions measures={all.filter((m) => s.measureIds.includes(m.id))} />}
+      </Q>
       <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
         <Button asChild variant="outline">
           <Link to="/studio" hash="paths">

@@ -1,6 +1,6 @@
 // Adapted from the supplied 21st.dev LeaderboardBars: rank translation, grow-in and hover focus retained.
 import { useMemo, useState } from "react";
-import { Search, ChevronDown, Boxes } from "lucide-react";
+import { Search, Boxes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DetailDrawer } from "./details";
@@ -21,7 +21,6 @@ export function LeaderboardBars({
   label: string;
 }) {
   const [search, setSearch] = useState("");
-  const [more, setMore] = useState(false);
   const sorted = useMemo(
     () =>
       [...items]
@@ -29,12 +28,21 @@ export function LeaderboardBars({
         .sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity)),
     [items, search],
   );
-  const rows = more ? sorted : sorted.slice(0, 6);
+  const rows = sorted;
   const max = Math.max(1, ...items.map((i) => (Number.isFinite(i.value) ? (i.value ?? 0) : 0)));
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="mb-5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <DetailDrawer
+          title="Attribution methodology"
+          trigger={
+            <Button variant="ghost" size="sm">
+              Methodology
+            </Button>
+          }
+        >
+          <p>{label}</p>
+        </DetailDrawer>
         <div className="relative max-w-56">
           <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
           <Input
@@ -48,36 +56,37 @@ export function LeaderboardBars({
       </div>
       <p className="mb-4 text-xs text-muted-foreground">
         <span className="mr-2 inline-block h-2 w-5 rounded bg-primary" />
-        {label} · Shared zero-based scale: {format(0)}–{format(max)} · Unavailable values have no
-        fill
+        Shared zero-based scale: {format(0)}–{format(max)} · Unavailable values have no fill
       </p>
       <div className="space-y-4">
         {rows.map((i, rank) => (
           <div key={i.id} className="min-w-0">
             <DetailDrawer
+              fullWidth
               title={i.label}
               trigger={
                 <Button
                   variant="ghost"
-                  className="h-auto w-full justify-start rounded-none px-0 py-2 text-left"
+                  className="comparison-row grid h-auto w-full grid-cols-[20px_minmax(0,1fr)_auto] gap-x-3 gap-y-2 whitespace-normal rounded-none px-0 py-2 text-left"
                 >
                   <Boxes className="size-5 text-muted-foreground" />
-                  <span className="min-w-0 flex-1">
-                    <span className="mb-2 flex flex-wrap justify-between gap-3">
-                      <span className="min-w-0 break-words font-medium">{i.label}</span>
-                      <span className="num shrink-0 text-xs">
-                        {i.value == null ? "—" : format(i.value)}
-                      </span>
-                    </span>
-                    <span className="block h-2.5 overflow-hidden rounded bg-muted">
-                      <span
-                        className="vlb-bar block h-full rounded bg-primary"
-                        style={{
-                          width: i.value == null ? "0%" : `${(Math.max(0, i.value) / max) * 100}%`,
-                          animationDelay: `${rank * 55}ms`,
-                        }}
-                      />
-                    </span>
+                  <span className="min-w-0 break-words font-medium">{i.label}</span>
+                  <span className="num shrink-0 text-right text-xs">
+                    {i.value == null ? "—" : format(i.value)}
+                  </span>
+                  <span
+                    data-comparison-track
+                    data-value={i.value ?? "unavailable"}
+                    data-maximum={max}
+                    className="col-span-3 block h-2.5 w-full overflow-hidden rounded bg-muted"
+                  >
+                    <span
+                      className="vlb-bar block h-full rounded bg-primary"
+                      style={{
+                        width: i.value == null ? "0%" : `${(Math.max(0, i.value) / max) * 100}%`,
+                        animationDelay: `${rank * 55}ms`,
+                      }}
+                    />
                   </span>
                 </Button>
               }
@@ -91,12 +100,6 @@ export function LeaderboardBars({
       </div>
       {!rows.length && (
         <p className="py-8 text-center text-sm text-muted-foreground">No matching entities</p>
-      )}
-      {sorted.length > 6 && (
-        <Button variant="ghost" size="sm" className="mt-3" onClick={() => setMore(!more)}>
-          <ChevronDown className={more ? "rotate-180" : ""} />
-          {more ? "Show less" : `Show ${sorted.length - 6} more`}
-        </Button>
       )}
     </div>
   );

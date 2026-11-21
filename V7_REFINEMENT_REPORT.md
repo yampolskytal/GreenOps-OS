@@ -1,0 +1,66 @@
+# V7 refinement report
+
+## Delivered
+- Shared comparison tracks now occupy identical full-width rows; all department entities are shown, using one numeric maximum per group.
+- IT resource cards use independent name, hours, runtime-track and evidence rows. Risk badges remain single-line.
+- CEO overview prioritizes official targets, cost/CO₂ before-versus-after and management attention. CEO-only DEMO approvals preserve original restrictions, persist across role switches and can be revoked.
+- Numerical non-compliance no longer prevents saving a Current Plan proposal: warnings retain the 40% location-CO₂, 25% cost, 15-person-day and CHF16,500 official limits. Unknown calculations and unapproved blocked measures still prevent commits.
+- Recommendations update automatically with budget/priority changes. Settings-keyed queries and a budget debounce prevent stale packages. Exactly three package actions remain: View Measures, Save as Path, Commit as Current Plan.
+- Atomic bulk saves preserve every selected ID across new and multiple Paths, reloads and independent removal. Three-Path limit retained. Success links open the saved Path.
+- Current Plan and Explore recommendations are read-only; duplicate Path-assignment controls and the global reporting-filter popup were removed. Browsing filters live in Studio, exploration scope in Explore and dataset selection in Data & Reports.
+- Historical charts use supplied values, focused/zero-based domains and same-month summaries of all supported metrics. Footprint custom dates filter supplied rows inclusively without changing the official baseline or filling missing days.
+- Inspectors support inside clicks, outside dismissal, X and Escape. Existing scenario/history forecasting and fixed skyline encoding are preserved.
+- Incoming team proxy changes were preserved; only environment access and optional request-body TypeScript compatibility were corrected.
+
+## Verification
+- 81 automated tests passed across 12 files, including planning, persistence, exceptions, complete bulk selection, official limits and date-boundary regressions.
+- 168 rendered page checks passed in Obsidian and Porcelain at 1440, 1180, 1024, 768, 390 and 1109 pixels (608px editor height for the latter).
+- Comparison track left/right/width matched within one pixel and fill percentages matched the common maximum. All eight departments shown. Nine IT cards stayed within their bounds; risk badges and checkboxes passed geometry checks.
+- End-to-end browser flow passed: CEO approval/revocation and role guards; automatic priority/budget changes; inspector inside/outside/X/Escape; four-item bulk creation and two-Path saves; independent removal/reload; over-limit proposal confirmation/readback; replacement and direct commit; all-metric month selection; custom date range and visible 3D skyline; filter isolation and saved-Path result links. No runtime errors captured.
+- Latest harness validation: build OK. Changed/new-file lint: zero errors, five existing React refresh export warnings. No manual production build was run; the platform performs builds/typechecks.
+- Content routes have unique GreenOps titles/descriptions and Open Graph/Twitter metadata.
+
+## DEMO and unresolved dependencies
+These checks exercised the explicitly labeled DEMO provider, not an authenticated real-company session. Exception decisions are local presentation-role decisions, not real authorization or approval records. No backend calculations or raw datasets were changed. Real monthly forecasts, market results, persistent approval/provenance/import records and live endpoint verification still require the team's supported API contract. Missing original TXT/chart/loader references remain unavailable; existing adaptations are retained. Project-wide pre-existing lint cleanup remains outside this refinement. No V7 frontend checklist item remains open.
+
+## Changed source and documentation
+- `AGENTS.md`
+- `roadmap.md`
+- `src/components/greenops/analytical-inspector.tsx`
+- `src/components/greenops/calendar.tsx`
+- `src/components/greenops/demo-exceptions.tsx`
+- `src/components/greenops/details.tsx`
+- `src/components/greenops/exploration-scope.tsx`
+- `src/components/greenops/historical-performance.tsx`
+- `src/components/greenops/leaderboard-bars.tsx`
+- `src/components/greenops/measure-card.tsx`
+- `src/components/greenops/path-comparison.tsx`
+- `src/components/greenops/path-membership.tsx`
+- `src/components/greenops/plan-outcomes.tsx`
+- `src/components/greenops/shell.tsx`
+- `src/components/greenops/ui.tsx`
+- `src/lib/api/client.ts`
+- `src/lib/footprint-range.ts`
+- `src/lib/historical-domain.ts`
+- `src/lib/path-queries.ts`
+- `src/lib/paths.ts`
+- `src/lib/planning.ts`
+- `src/lib/proposals.ts`
+- `src/lib/queries.ts`
+- `src/lib/store.tsx`
+- `src/lib/use-commit.ts`
+- `src/routes/api/v2/$.ts`
+- `src/routes/ceo.tsx`
+- `src/routes/cfo.tsx`
+- `src/routes/current-plan.tsx`
+- `src/routes/data.tsx`
+- `src/routes/explore.tsx`
+- `src/routes/findings.tsx`
+- `src/routes/it.tsx`
+- `src/routes/studio.tsx`
+- `src/styles.css`
+- `src/test/footprint-range.test.ts`
+- `src/test/planning.test.ts`
+- `src/test/v7-layout-check.js`
+- `src/test/v7-rules.test.ts`
+- `src/test/v7-state.test.tsx`

@@ -6,14 +6,21 @@ export function DetailDrawer({
   description,
   trigger,
   children,
+  fullWidth = false,
 }: {
   title: string;
   description?: string;
   trigger: ReactNode;
   children: ReactNode;
+  fullWidth?: boolean;
 }) {
   return (
-    <AnalyticalInspector title={title} {...(description ? { description } : {})} trigger={trigger}>
+    <AnalyticalInspector
+      fullWidth={fullWidth}
+      title={title}
+      {...(description ? { description } : {})}
+      trigger={trigger}
+    >
       {children}
     </AnalyticalInspector>
   );

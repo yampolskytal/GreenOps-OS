@@ -10,6 +10,7 @@ import { useMeasures, useResources, useOverview } from "@/lib/queries";
 import { runtimeSegments } from "@/lib/planning";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
 import { seo } from "@/lib/seo";
+import { DemoExceptions } from "@/components/greenops/demo-exceptions";
 export const Route = createFileRoute("/it")({
   head: () =>
     seo(
@@ -79,18 +80,25 @@ function It() {
                     const scale = Math.max(1, r.runtimeH30d ?? 0);
                     return (
                       <DetailDrawer
+                        fullWidth
                         key={r.id}
                         title={r.name}
                         trigger={
                           <Button
                             variant="ghost"
                             id={`res-${r.id}`}
-                            className="h-auto w-full justify-start whitespace-normal rounded-lg border p-4 text-left"
+                            data-runtime-resource={r.id}
+                            className="runtime-resource grid h-auto w-full grid-cols-1 justify-stretch whitespace-normal rounded-lg border p-4 text-left"
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="mb-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-                                <span className="font-medium">{r.name}</span>
-                                <span className="num text-xs text-muted-foreground">
+                              <span className="mb-3 grid min-w-0 gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+                                <span data-runtime-name className="min-w-0 break-words font-medium">
+                                  {r.name}
+                                </span>
+                                <span
+                                  data-runtime-hours
+                                  className="num text-xs text-muted-foreground md:text-right"
+                                >
                                   {parts.active == null
                                     ? "Active use unavailable"
                                     : `${parts.active} h active`}{" "}
@@ -100,7 +108,10 @@ function It() {
                                     : `${r.runtimeH30d} h running`}
                                 </span>
                               </span>
-                              <span className="flex h-3 overflow-hidden rounded bg-muted/40">
+                              <span
+                                data-runtime-track
+                                className="flex h-3 w-full overflow-hidden rounded bg-muted/40"
+                              >
                                 <span
                                   className="bg-success"
                                   style={{ width: `${((parts.active ?? 0) / scale) * 100}%` }}
@@ -171,12 +182,13 @@ function It() {
                 )
                 .slice(0, 4)
                 .map((m) => (
-                  <MeasureCard key={m.id} m={m} />
+                  <MeasureCard key={m.id} m={m} readOnly />
                 ))}
             </div>
           )}
         </Q>
       </section>
+      <Q q={ms}>{(all) => <DemoExceptions measures={all} />}</Q>
     </AppShell>
   );
 }

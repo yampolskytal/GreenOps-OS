@@ -15,12 +15,7 @@ const allowedGet = new Set([
   "exports/baseline",
 ]);
 
-const allowedPost = new Set([
-  "simulation",
-  "optimize",
-  "chat",
-  "exports/measures",
-]);
+const allowedPost = new Set(["simulation", "optimize", "chat", "exports/measures"]);
 
 async function proxy(request: Request): Promise<Response> {
   const incoming = new URL(request.url);
@@ -37,33 +32,25 @@ async function proxy(request: Request): Promise<Response> {
     return Response.json({ error: "Route not allowed" }, { status: 404 });
   }
 
-  const backend = process.env.GREENOPS_BACKEND_URL;
-  const user = process.env.GREENOPS_PROXY_USER;
-  const password = process.env.GREENOPS_PROXY_PASSWORD;
+  const backend = process.env["GREENOPS_BACKEND_URL"];
+  const user = process.env["GREENOPS_PROXY_USER"];
+  const password = process.env["GREENOPS_PROXY_PASSWORD"];
 
   if (!backend || !user || !password) {
-    return Response.json(
-      { error: "Backend proxy not configured" },
-      { status: 503 }
-    );
+    return Response.json({ error: "Backend proxy not configured" }, { status: 503 });
   }
 
   try {
     const target = new URL(backend);
 
     if (target.protocol !== "https:") {
-      return Response.json(
-        { error: "HTTPS backend required" },
-        { status: 503 }
-      );
+      return Response.json({ error: "HTTPS backend required" }, { status: 503 });
     }
 
     target.pathname = incoming.pathname;
     target.search = incoming.search;
     const headers = new Headers({
-      Authorization:
-        "Basic " +
-        Buffer.from(`${user}:${password}`, "utf8").toString("base64"),
+      Authorization: "Basic " + Buffer.from(`${user}:${password}`, "utf8").toString("base64"),
       Accept: "application/json",
     });
 
@@ -71,19 +58,13 @@ async function proxy(request: Request): Promise<Response> {
 
     if (request.method === "POST") {
       if (!request.headers.get("content-type")?.startsWith("application/json")) {
-        return Response.json(
-          { error: "JSON required" },
-          { status: 415 }
-        );
+        return Response.json({ error: "JSON required" }, { status: 415 });
       }
 
       body = await request.text();
 
       if (Buffer.byteLength(body, "utf8") > 512000) {
-        return Response.json(
-          { error: "Request too large" },
-          { status: 413 }
-        );
+        return Response.json({ error: "Request too large" }, { status: 413 });
       }
 
       headers.set("Content-Type", "application/json");
@@ -94,7 +75,7 @@ async function proxy(request: Request): Promise<Response> {
     const response = await fetch(target, {
       method: request.method,
       headers,
-      body,
+      ...(body !== undefined ? { body } : {}),
       cache: "no-store",
       redirect: "manual",
     });
@@ -102,18 +83,14 @@ async function proxy(request: Request): Promise<Response> {
     return new Response(response.body, {
       status: response.status,
       headers: {
-        "Content-Type":
-          response.headers.get("content-type") ?? "application/json",
+        "Content-Type": response.headers.get("content-type") ?? "application/json",
         "Cache-Control": "no-store",
       },
     });
   } catch (error) {
     console.error("GreenOps proxy failed:", error);
 
-    return Response.json(
-      { error: "Backend unavailable" },
-      { status: 502 }
-    );
+    return Response.json({ error: "Backend unavailable" }, { status: 502 });
   }
 }
 

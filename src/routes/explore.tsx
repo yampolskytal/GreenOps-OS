@@ -10,6 +10,7 @@ import { WasteFindings } from "./findings";
 import { useDaily, useBonus } from "@/lib/queries";
 import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
 import { seo } from "@/lib/seo";
+import { ExplorationScope } from "@/components/greenops/exploration-scope";
 export const Route = createFileRoute("/explore")({
   head: () =>
     seo(
@@ -32,6 +33,7 @@ function Explore() {
       title="Explore & Findings"
       subtitle="Investigate drivers, compare entities and review potential improvements."
     >
+      <ExplorationScope />
       <Tabs
         value={effective}
         onValueChange={(v) => {
@@ -46,8 +48,7 @@ function Explore() {
         </TabsList>
         <TabsContent value="footprint" id="footprint">
           <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
-            Explore how your company’s digital footprint changes over time. Switch between monthly
-            and yearly views. In 3D, height represents spending and color represents CO₂.
+            Daily cost, energy and emissions · supplied observations only.
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Footprint calendar</h2>
@@ -86,11 +87,14 @@ function Explore() {
             metric to compare resources.
           </p>
           <ComparisonBoard />
+        </TabsContent>
+        <TabsContent value="findings">
+          <WasteFindings />
           <DetailDrawer
-            title="Additional operational analysis"
+            title="Operational source evidence"
             trigger={
               <Button variant="outline" className="mt-8">
-                AI, scheduling & pipelines
+                Operational source evidence
               </Button>
             }
           >
@@ -136,9 +140,6 @@ function Explore() {
               )}
             </Q>
           </DetailDrawer>
-        </TabsContent>
-        <TabsContent value="findings">
-          <WasteFindings />
         </TabsContent>
       </Tabs>
     </AppShell>

@@ -48,8 +48,14 @@ use the editor.
 - Analytical inspectors and the assistant share a non-modal dock on wide screens and an Analysis/Details view on narrow screens, so evidence never overlays actionable content.
 - Optional market emissions and provenance remain unavailable at unsupported levels and are never derived from location reductions, so alternate accounting stays independent of mandatory targets.
 - Saved alternative scenarios use the shared persisted store independently of the temporary Studio preview and committed plan; each comparison calls GreenOpsApi.simulate, so alternatives never mutate the plan or invent aggregate savings.
-- Studio optimization runs only through explicit generation and loading; manual settings recalculate selected measures through simulation, so tuning a scenario cannot silently replace user choices.
+- Studio recommendations recompute automatically using a budget debounce and settings-keyed queries; saved Paths and Current Plan never follow generator updates.
 - HTTP provider responses pass runtime schemas before reaching views; invalid required calculations become errors while nullable observations remain unavailable, so real mode never substitutes demo results.
 - Charts measure their available container, keep legends in normal document flow and use source timestamps; annual model totals never share an axis with monthly observations, preventing unit mismatches and clipped labels.
 - Compare Paths and Forecasts share one scenario chart fed by `scenario-series.ts`: monthly history from Overview.monthly, per-selection provider forecasts, annual forecasts as yearly monthly averages only, so no quarterly or historical values are invented.
 - CSV previews use Papa Parse for quoted fields and remain provisional header checks, so valid CSV quoting is not mistaken for a successful full import.
+
+- Demo exception decisions persist in the shared store, preserve original restrictions and only affect a demo planning adapter; real provider authorization and errors are never bypassed.
+- Current Plan saving validates calculation integrity and operational eligibility separately from numerical compliance; over-limit strategies remain explicit local proposals, not submissions.
+- Comparison tracks occupy a shared full-width grid row independently of labels and icons; rendered bounds must match within one pixel.
+- Path-result links use stable Path hashes and an origin-local open event; opening an existing Path never changes membership or Current Plan.
+- Footprint ranges use the tested inclusive `footprint-range.ts` filter on supplied daily rows while planning uses the fixed official query; historical domains and selected-month summaries consume supplied values only.

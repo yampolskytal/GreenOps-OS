@@ -17,11 +17,13 @@ export function MeasureCard({
   compact = false,
   bulkSelected,
   onBulkToggle,
+  readOnly = false,
 }: {
   m: Measure;
   compact?: boolean;
   bulkSelected?: boolean;
   onBulkToggle?: (value: boolean) => void;
+  readOnly?: boolean;
 }) {
   const { s } = useApp();
   const [open, setOpen] = useState(false);
@@ -44,6 +46,7 @@ export function MeasureCard({
     return () => window.removeEventListener("hashchange", inspect);
   }, [m.id, hash]);
   const blocked = !canSelectMeasure(m);
+  const exception = s.demoExceptions[m.id]?.approved;
   const details = (
     <div className="space-y-5">
       <DetailBlock title="Recommended change">
@@ -99,14 +102,14 @@ export function MeasureCard({
         blocked && "border-destructive/40",
       )}
     >
-      <div className="relative grid min-w-0 gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="relative grid min-w-0 gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_auto]">
         <Button
           variant="ghost"
           className="h-auto min-w-0 flex-1 justify-between whitespace-normal p-0 text-left hover:bg-transparent"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
-          <span>
+          <span className="min-w-0 break-words">
             <span className="block text-xs text-muted-foreground">
               {m.resource} · {m.service}
             </span>
@@ -118,32 +121,44 @@ export function MeasureCard({
           </span>
           <ChevronDown className={cn("shrink-0 transition-transform", open && "rotate-180")} />
         </Button>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <RiskBadge level={m.risk.level} />
+          {exception && (
+            <span className="text-xs text-warning">Demo exception approved · conditional</span>
+          )}
           <span className="text-xs text-muted-foreground">
-            {[committed ? "In Current Plan" : null, pathNames.length ? `Paths: ${pathNames.join(", ")}` : null]
+            {[
+              committed ? "In Current Plan" : null,
+              pathNames.length ? `Paths: ${pathNames.join(", ")}` : null,
+            ]
               .filter(Boolean)
               .join(" · ") || "Not in any Path"}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2 sm:col-span-2 sm:justify-end">
+        <div className="flex flex-wrap gap-2 lg:col-span-2 lg:justify-end">
           {onBulkToggle && (
             <label className="mr-auto inline-flex items-center gap-2 text-xs text-muted-foreground">
-              <Checkbox checked={!!bulkSelected} onCheckedChange={(v) => onBulkToggle(v === true)} />
-              Select for bulk
+              <Checkbox
+                checked={!!bulkSelected}
+                onCheckedChange={(v) => onBulkToggle(v === true)}
+              />
+              Select
             </label>
           )}
           {blocked && (
             <span className="inline-flex items-center gap-1 text-xs text-destructive">
-              <Lock className="size-3" /> Blocked — can be kept in a Path, not committed
+              <Lock className="size-3" />{" "}
+              {exception
+                ? "Conditional DEMO exception — not real authorization"
+                : "Blocked — hypothetical Path opportunity only"}
             </span>
           )}
-          <PathMembership measureIds={[m.id]} />
-          {!onBulkToggle && (
+          {!readOnly && <PathMembership measureIds={[m.id]} />}
+          {!onBulkToggle && !readOnly && (
             <Button size="sm" variant="ghost" asChild>
               <Link to="/studio" hash={`measure-${m.id}`}>
                 {inPlan ? <Check /> : <Plus />}
-                Open in Studio
+                Review optimization
               </Link>
             </Button>
           )}

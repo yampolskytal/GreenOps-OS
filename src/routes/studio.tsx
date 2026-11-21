@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookmarkPlus, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BookmarkPlus, ShieldCheck, List } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/greenops/shell";
 import { ChartCard, Q } from "@/components/greenops/ui";
@@ -9,8 +9,18 @@ import { BudgetSlider } from "@/components/greenops/portfolio";
 import { PathComparison, CommitPathDialog } from "@/components/greenops/path-comparison";
 import { PathMembership } from "@/components/greenops/path-membership";
 import { MeasureCard } from "@/components/greenops/measure-card";
+import { PlanOutcomes } from "@/components/greenops/plan-outcomes";
+import { TargetPanel } from "@/components/greenops/targets";
+import { AnalyticalInspector } from "@/components/greenops/analytical-inspector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,19 +30,19 @@ import {
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api/client";
 import type { Priority } from "@/lib/api/types";
-import { useMeasures } from "@/lib/queries";
+import { useMeasures, useOverview } from "@/lib/queries";
 import { useApp, useGlobalQuery } from "@/lib/store";
 import { createPath, MAX_PATHS, replacePath } from "@/lib/paths";
 import { useCommitPlan } from "@/lib/use-commit";
+import { officialQuery } from "@/lib/planning";
 import { reveal } from "@/lib/reveal";
-import { chf, kg, pct } from "@/lib/format";
+import { chf } from "@/lib/format";
 import { seo } from "@/lib/seo";
-
 export const Route = createFileRoute("/studio")({
   head: () =>
     seo(
       "Optimization Studio — GreenOps OS",
-      "Build up to three alternative Paths, compare their projected outcomes on one chart and commit the best one to your Current Plan.",
+      "Automatically updated recommendations, three alternative Paths and explicit Current Plan proposal saving.",
     ),
   component: Studio,
 });
@@ -41,38 +51,48 @@ const PRIOS = [
   { id: "cost" as const, label: "Cost savings" },
   { id: "co2" as const, label: "CO₂ reduction" },
 ];
-
 function Studio() {
-  const { s, set } = useApp();
-  const q = useGlobalQuery();
-  const ms = useMeasures();
+  const { s, set, hydrated } = useApp();
+  const q = officialQuery(useGlobalQuery());
+  const ms = useMeasures(),
+    overview = useOverview(true);
   const [budgetChf, setBudget] = useState<number | null>(null);
   const [priority, setPriority] = useState<Priority | null>(null);
-  const budget = budgetChf ?? s.budgetChf;
-  const prio = priority ?? s.priority;
+  const budget = budgetChf ?? s.budgetChf,
+    prio = priority ?? s.priority;
+  const [debouncedBudget, setDebouncedBudget] = useState(budget);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedBudget(budget), 250);
+    return () => clearTimeout(timer);
+  }, [budget]);
   const [bulk, setBulk] = useState<string[]>([]);
-  const [saveOpen, setSaveOpen] = useState(false);
-  const [commitOpen, setCommitOpen] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false),
+    [commitOpen, setCommitOpen] = useState(false),
+    [viewOpen, setViewOpen] = useState(false);
+  const [search, setSearch] = useState(""),
+    [risk, setRisk] = useState("all"),
+    [category, setCategory] = useState("all"),
+    [resource, setResource] = useState("all"),
+    [sort, setSort] = useState("cost");
+  const [minCost, setMinCost] = useState(""),
+    [minCo2, setMinCo2] = useState(""),
+    [maxEffort, setMaxEffort] = useState("");
   const commit = useCommitPlan(ms.data);
   const recommended = useQuery({
-    queryKey: ["recommended-package", q, budget, prio],
-    queryFn: () => api.optimize(q, { budgetChf: budget, priority: prio, chfPerPersonDay: 1100 }),
-    enabled: false,
+    queryKey: ["recommended-package", q, debouncedBudget, prio],
+    queryFn: () =>
+      api.optimize(q, { budgetChf: debouncedBudget, priority: prio, chfPerPersonDay: 1100 }),
+    enabled: hydrated && budget === debouncedBudget,
   });
-  const generate = async () => {
-    const r = await recommended.refetch();
-    reveal("recommended");
-    if (r.data) toast.success(`Recommended package: ${r.data.measureIds.length} measures`);
-    else if (r.error) toast.error("Recommendation could not be generated");
-  };
-  const pkg = recommended.data;
+  const recalculating = budget !== debouncedBudget || recommended.isFetching;
+  const pkg = budget === debouncedBudget ? recommended.data : undefined;
   return (
     <AppShell
       kicker="Decide · Optimization Studio"
       title="Build and compare strategies"
-      subtitle="Create up to three Paths, compare their projected outcomes, then commit one to your Current Plan."
+      subtitle="Up to three Paths, one Current Plan. Saved proposals remain unchanged while recommendations update."
     >
-      <div className="grid gap-6 xl:grid-cols-[.8fr_1.2fr]">
+      <div className="grid gap-6 xl:grid-cols-[.7fr_1.3fr]">
         <ChartCard title="Recommendation settings">
           <BudgetSlider value={budget} onChange={setBudget} />
           <p className="mb-2 mt-6 text-sm font-medium">Optimization priority</p>
@@ -90,49 +110,54 @@ function Studio() {
             ))}
           </div>
           <p className="mt-5 text-xs text-muted-foreground">
-            Official limits: CHF 16,500 · 15 person-days. Critical operations stay protected.{" "}
+            Official limits: CHF 16,500 · 15 person-days.{" "}
             {api.isDemo ? "DEMO optimizer — illustrative only." : "Calculated by the team backend."}
           </p>
-          <Button className="mt-5" disabled={recommended.isFetching} onClick={() => void generate()}>
-            <Sparkles />
-            {recommended.isFetching ? "Generating…" : "Generate recommendation"}
-          </Button>
         </ChartCard>
-        <section id="recommended" className="rounded-lg border bg-card p-5">
-          <h2 className="font-semibold">Recommended package</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Best-found package for {PRIOS.find((p) => p.id === prio)?.label.toLowerCase()} within{" "}
-            {chf(budget)} — not guaranteed optimal.
+        <section id="recommended" className="min-w-0 border-b py-5">
+          <header className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
+            <h2 className="font-semibold">Recommended package</h2>
+            <span role="status" className="text-xs text-muted-foreground">
+              {recalculating ? "Recalculating…" : "Updated"}
+            </span>
+          </header>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {PRIOS.find((p) => p.id === prio)?.label} · budget {chf(budget)} · best found, not
+            guaranteed optimal.
           </p>
           {recommended.isError && (
             <p role="alert" className="mt-4 text-sm text-destructive">
-              {recommended.error.message}
+              Recommendation unavailable: {recommended.error.message}
             </p>
           )}
-          {!pkg && !recommended.isFetching && (
-            <p className="mt-6 text-sm text-muted-foreground">
-              Choose a budget and priority, then generate a recommendation.
-            </p>
-          )}
-          {pkg && (
+          {pkg && !recalculating && (
             <>
-              <dl className="num mt-5 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
-                <Stat label="Measures" value={String(pkg.measureIds.length)} />
-                <Stat label="Annual savings" value={`${chf(pkg.result.savingsChf)} · ${pct(pkg.result.costReductionPct)}`} />
-                <Stat label="CO₂ (location)" value={`${kg(pkg.result.savingsCo2Kg)} · ${pct(pkg.result.co2ReductionPct)}`} />
-                <Stat label="Effort" value={`${pkg.result.effortDays.toFixed(1)} PD`} />
-                <Stat label="Budget" value={chf(pkg.result.effortChf)} />
-                <Stat
-                  label="Review"
-                  value={`${ms.data?.filter((m) => pkg.measureIds.includes(m.id) && m.risk.level === "review").length ?? 0} need review`}
-                />
-              </dl>
-              <p className="mt-4 text-xs text-muted-foreground">
-                {pkg.result.feasible
-                  ? "Meets numerical constraints; human approvals still required."
-                  : pkg.result.reasons.join(" ") || "Does not meet every numerical target."}
+              <p className="mt-4 text-sm">
+                {pkg.measureIds.length} recommendations · {pkg.result.effortDays.toFixed(1)}{" "}
+                person-days · {chf(pkg.result.effortChf)} implementation cost ·{" "}
+                {ms.data?.filter((m) => pkg.measureIds.includes(m.id) && m.risk.level === "review")
+                  .length ?? 0}{" "}
+                require review
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-5">
+                <Q q={overview}>
+                  {(o) => (
+                    <PlanOutcomes
+                      overview={o}
+                      result={pkg.result}
+                      afterLabel="After recommendation"
+                    />
+                  )}
+                </Q>
+              </div>
+              <div className="mt-6">
+                <TargetPanel r={pkg.result} compact />
+              </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setViewOpen(true)}>
+                  <List />
+                  View Measures
+                </Button>
                 <Button variant="outline" onClick={() => setSaveOpen(true)}>
                   <BookmarkPlus />
                   Save as Path
@@ -149,51 +174,209 @@ function Studio() {
               </div>
             </>
           )}
+          {!pkg && !recalculating && !recommended.isError && (
+            <p className="mt-6 text-sm text-muted-foreground">
+              Recommendation unavailable for these settings.
+            </p>
+          )}
         </section>
       </div>
-
       <PathComparison />
-
       <section id="recommendations" className="mt-8 border-t pt-6">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <ShieldCheck className="size-5 text-primary" />
+          Recommendations & Safety Shield
+        </h2>
+        <div className="my-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <label className="text-xs text-muted-foreground">
+            Search
+            <Input
+              aria-label="Search recommendations"
+              className="mt-1"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Title or resource"
+            />
+          </label>
+          {[
+            {
+              label: "Risk",
+              value: risk,
+              change: setRisk,
+              options: [
+                ["all", "All"],
+                ["low", "Low risk"],
+                ["review", "Review required"],
+                ["blocked", "Blocked"],
+              ],
+            },
+            {
+              label: "Category",
+              value: category,
+              change: setCategory,
+              options: [
+                ["all", "All categories"],
+                ...[...new Set(ms.data?.map((m) => m.service))].map((v) => [v, v]),
+              ],
+            },
+            {
+              label: "Resource",
+              value: resource,
+              change: setResource,
+              options: [
+                ["all", "All resources"],
+                ...[...new Set(ms.data?.map((m) => m.resource))].map((v) => [v, v]),
+              ],
+            },
+            {
+              label: "Sort",
+              value: sort,
+              change: setSort,
+              options: [
+                ["cost", "Highest cost savings"],
+                ["co2", "Highest CO₂ impact"],
+                ["effort", "Lowest effort"],
+                ["risk", "Lowest risk"],
+              ],
+            },
+          ].map((f) => (
+            <label key={f.label} className="min-w-0 text-xs text-muted-foreground">
+              {f.label}
+              <Select value={f.value} onValueChange={f.change}>
+                <SelectTrigger
+                  aria-label={`Recommendation ${f.label.toLowerCase()}`}
+                  className="mt-1 w-full"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {f.options.map(([v, l]) => (
+                    <SelectItem key={v} value={v ?? "all"}>
+                      {l}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+          ))}
+          {[
+            { label: "Minimum annual savings (CHF)", value: minCost, change: setMinCost },
+            { label: "Minimum CO₂ reduction (kg)", value: minCo2, change: setMinCo2 },
+            { label: "Maximum effort (person-days)", value: maxEffort, change: setMaxEffort },
+          ].map((f) => (
+            <label key={f.label} className="text-xs text-muted-foreground">
+              {f.label}
+              <Input
+                className="mt-1"
+                type="number"
+                min="0"
+                aria-label={f.label}
+                value={f.value}
+                onChange={(e) => f.change(e.target.value)}
+              />
+            </label>
+          ))}
+        </div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <ShieldCheck className="size-5 text-primary" />
-            Recommendations & Safety Shield
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground" role="status">
+          <p className="text-xs text-muted-foreground">
+            Filters affect browsing only; saved Paths and official calculations stay unchanged.
+          </p>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setSearch("");
+              setRisk("all");
+              setCategory("all");
+              setResource("all");
+              setMinCost("");
+              setMinCo2("");
+              setMaxEffort("");
+            }}
+          >
+            Clear filters
+          </Button>
+        </div>
+        {bulk.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 border-y py-3">
+            <span role="status" className="text-xs">
               {bulk.length} selected
             </span>
-            {bulk.length > 0 && (
-              <Button size="sm" variant="ghost" onClick={() => setBulk([])}>
-                Clear
-              </Button>
-            )}
             <PathMembership
               measureIds={bulk}
-              label={bulk.length ? `Add ${bulk.length} to Paths` : "Select measures to add"}
+              label={`Add ${bulk.length} to Paths`}
               onDone={() => setBulk([])}
             />
+            <Button size="sm" variant="ghost" onClick={() => setBulk([])}>
+              Clear selection
+            </Button>
           </div>
-        </div>
+        )}
         <Q q={ms}>
-          {(all) => (
-            <div className="space-y-3">
-              {all.map((m) => (
-                <MeasureCard
-                  key={m.id}
-                  m={m}
-                  bulkSelected={bulk.includes(m.id)}
-                  onBulkToggle={(v) =>
-                    setBulk((ids) => (v ? [...new Set([...ids, m.id])] : ids.filter((x) => x !== m.id)))
-                  }
-                />
-              ))}
-            </div>
-          )}
+          {(all) => {
+            const visible = all
+              .filter(
+                (m) =>
+                  (!search ||
+                    `${m.title} ${m.resource}`.toLowerCase().includes(search.toLowerCase())) &&
+                  (risk === "all" || m.risk.level === risk) &&
+                  (category === "all" || m.service === category) &&
+                  (resource === "all" || m.resource === resource) &&
+                  (!minCost || m.savingsChf >= Number(minCost)) &&
+                  (!minCo2 || m.savingsCo2KgLocation >= Number(minCo2)) &&
+                  (!maxEffort || m.effortPersonDays <= Number(maxEffort)),
+              )
+              .sort((a, b) =>
+                sort === "co2"
+                  ? b.savingsCo2KgLocation - a.savingsCo2KgLocation
+                  : sort === "effort"
+                    ? a.effortPersonDays - b.effortPersonDays
+                    : sort === "risk"
+                      ? ["low", "review", "blocked"].indexOf(a.risk.level) -
+                        ["low", "review", "blocked"].indexOf(b.risk.level)
+                      : b.savingsChf - a.savingsChf,
+              );
+            return (
+              <div className="space-y-3">
+                {visible.map((m) => (
+                  <MeasureCard
+                    key={m.id}
+                    m={m}
+                    bulkSelected={bulk.includes(m.id)}
+                    onBulkToggle={(v) =>
+                      setBulk((ids) =>
+                        v ? [...new Set([...ids, m.id])] : ids.filter((x) => x !== m.id),
+                      )
+                    }
+                  />
+                ))}
+                {!visible.length && (
+                  <p className="py-6 text-sm text-muted-foreground">
+                    No recommendations match these filters.
+                  </p>
+                )}
+              </div>
+            );
+          }}
         </Q>
       </section>
-
+      {pkg && (
+        <AnalyticalInspector
+          title="Recommended package · exact measures"
+          trigger={null}
+          open={viewOpen}
+          onOpenChange={setViewOpen}
+        >
+          <p className="text-xs text-muted-foreground">
+            {pkg.measureIds.length} generated recommendations · {chf(budget)} · {prio}
+          </p>
+          {ms.data
+            ?.filter((m) => pkg.measureIds.includes(m.id))
+            .map((m) => (
+              <MeasureCard key={m.id} m={m} readOnly compact />
+            ))}
+        </AnalyticalInspector>
+      )}
       {pkg && (
         <SavePackageDialog
           open={saveOpen}
@@ -201,12 +384,13 @@ function Studio() {
           onSave={(name, replaceId) => {
             const base = { measureIds: [...pkg.measureIds], budgetChf: budget, priority: prio };
             try {
-              let id = replaceId;
-              if (replaceId) set({ paths: replacePath(s.paths, replaceId, { ...base, name }) });
-              else {
-                id = crypto.randomUUID();
-                set({ paths: createPath(s.paths, { ...base, id, name }) });
-              }
+              const id = replaceId ?? crypto.randomUUID();
+              if (!replaceId) createPath(s.paths, { ...base, id, name });
+              set((state) => ({
+                paths: replaceId
+                  ? replacePath(state.paths, replaceId, { ...base, name })
+                  : createPath(state.paths, { ...base, id, name }),
+              }));
               setSaveOpen(false);
               toast.success(`Saved recommendation as “${name}”`);
               reveal(`path-${id}`);
@@ -236,15 +420,6 @@ function Studio() {
         />
       )}
     </AppShell>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 break-words">{value}</dd>
-    </div>
   );
 }
 
@@ -282,7 +457,12 @@ function SavePackageDialog({
             setError(onSave(name.trim(), replaceId ?? undefined));
           }}
         >
-          <Input aria-label="Path name" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} />
+          <Input
+            aria-label="Path name"
+            value={name}
+            maxLength={60}
+            onChange={(e) => setName(e.target.value)}
+          />
           {s.paths.length > 0 && (
             <fieldset className="space-y-2 text-sm">
               <legend className="mb-1 text-xs text-muted-foreground">
@@ -309,6 +489,12 @@ function SavePackageDialog({
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}
+            </p>
+          )}
+          {replaceId && (
+            <p className="text-sm text-warning">
+              Confirm replacement: all recommendations in the selected Path will be replaced. Other
+              Paths and Current Plan stay unchanged.
             </p>
           )}
           <div className="flex flex-wrap justify-end gap-2">

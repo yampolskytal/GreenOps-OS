@@ -2,19 +2,14 @@ import { useRef, useState } from "react";
 import type { DailyFootprint } from "@/lib/api/types";
 import { chf, kg } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { RotateCcw } from "lucide-react";
 import { AnalyticalInspector } from "./analytical-inspector";
 import { DetailDrawer } from "./details";
 import { Info } from "lucide-react";
 import { SKYLINE_ENCODING } from "@/lib/analytics";
 import { availableRange } from "@/lib/calendar-model";
+import { footprintRange } from "@/lib/footprint-range";
 import ContributionSkyline from "./contribution-skyline";
 export type CalMetric = "co2Kg" | "costChf" | "energyKwh" | "co2KgMarket";
 const LABELS = {
@@ -34,16 +29,42 @@ const valid = (v: unknown): number | null =>
   typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
 export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; metric: CalMetric }) {
   const [view, setView] = useState<"2d" | "3d">("2d");
-  const [period, setPeriod] = useState<"year" | "month">("year");
-  const months = [...new Set(days.map((d) => d.date.slice(0, 7)))].sort();
-  const [selectedMonth, setMonth] = useState("");
-  const month = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? "");
+  const sortedDays = [...days].sort((a, b) => a.date.localeCompare(b.date));
+  const availableFrom = sortedDays[0]?.date ?? "",
+    availableTo = sortedDays.at(-1)?.date ?? "";
+  const [range, setRange] = useState<{ from: string; to: string } | null>(null);
+  const from = range?.from ?? availableFrom,
+    to = range?.to ?? availableTo;
+  const month = from.slice(0, 7);
+  const period = month === to.slice(0, 7) ? "month" : "year";
+  const validRange = Boolean(
+    from && to && from <= to && from >= availableFrom && to <= availableTo,
+  );
+  const preset = (months: number | null) => {
+    if (months == null) {
+      setRange({ from: "2025-09-01", to: "2026-08-31" });
+      return;
+    }
+    const end = new Date(`${availableTo}T00:00:00Z`);
+    if (months === 0) end.setUTCDate(end.getUTCDate() - 29);
+    else {
+      end.setUTCMonth(end.getUTCMonth() - months);
+      end.setUTCDate(end.getUTCDate() + 1);
+    }
+    setRange({
+      from:
+        end.toISOString().slice(0, 10) < availableFrom
+          ? availableFrom
+          : end.toISOString().slice(0, 10),
+      to: availableTo,
+    });
+  };
   const heightMetric: CalMetric = SKYLINE_ENCODING.height;
   const colorMetric: CalMetric = SKYLINE_ENCODING.color;
   const frame = useRef<HTMLDivElement>(null);
   const [sel, setSel] = useState<DailyFootprint | null>(null);
   const [dayOpen, setDayOpen] = useState(false);
-  const shown = period === "month" ? days.filter((d) => d.date.startsWith(month)) : days;
+  const shown = validRange ? footprintRange(sortedDays, from, to) : [];
   const color = view === "2d" ? metric : colorMetric;
   const heightRange = availableRange(shown.map((d) => d[heightMetric]));
   const colorRange = availableRange(shown.map((d) => d[color]));
@@ -63,66 +84,80 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
     );
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        {(["year", "month"] as const).map((p) => (
-          <Button
-            key={p}
-            size="sm"
-            variant={period === p ? "secondary" : "ghost"}
-            onClick={() => setPeriod(p)}
-          >
-            {p === "year" ? "Year" : "Month"}
-          </Button>
-        ))}
-        {period === "month" && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Previous month"
-              disabled={months.indexOf(month) <= 0}
-              onClick={() => setMonth(months[months.indexOf(month) - 1] ?? month)}
-            >
-              <ArrowLeft />
-            </Button>
-            <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="w-36" aria-label="Calendar month">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((m) => (
-                  <SelectItem key={m} value={m}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label="Next month"
-              disabled={months.indexOf(month) >= months.length - 1}
-              onClick={() => setMonth(months[months.indexOf(month) + 1] ?? month)}
-            >
-              <ArrowRight />
-            </Button>
-          </>
-        )}
-        <div className="ml-auto flex gap-1" role="group" aria-label="Chart view">
-          {(["2d", "3d"] as const).map((v) => (
-            <Button
-              key={v}
-              size="sm"
-              aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
-              aria-pressed={view === v}
-              variant={view === v ? "secondary" : "ghost"}
-              onClick={() => setView(v)}
-            >
-              {v.toUpperCase()}
-            </Button>
-          ))}
+      <section className="mb-5 border-b pb-4">
+        <h3 className="mb-3 text-sm font-medium">Exploration date range</h3>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="min-w-0 text-xs text-muted-foreground">
+            From date
+            <Input
+              aria-label="Footprint from date"
+              type="date"
+              min={availableFrom}
+              max={availableTo}
+              className="mt-1 w-full"
+              value={from}
+              onChange={(e) => {
+                setRange({ from: e.target.value, to });
+                setSel(null);
+              }}
+            />
+          </label>
+          <label className="min-w-0 text-xs text-muted-foreground">
+            To date
+            <Input
+              aria-label="Footprint to date"
+              type="date"
+              min={availableFrom}
+              max={availableTo}
+              className="mt-1 w-full"
+              value={to}
+              onChange={(e) => {
+                setRange({ from, to: e.target.value });
+                setSel(null);
+              }}
+            />
+          </label>
         </div>
-      </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => preset(0)}>
+            Last 30 days
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => preset(6)}>
+            Last 6 months
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => preset(null)}>
+            Official baseline year
+          </Button>
+          <div className="ml-auto flex gap-1" role="group" aria-label="Chart view">
+            {(["2d", "3d"] as const).map((v) => (
+              <Button
+                key={v}
+                size="sm"
+                aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
+                aria-pressed={view === v}
+                variant={view === v ? "secondary" : "ghost"}
+                onClick={() => setView(v)}
+              >
+                {v.toUpperCase()}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          {from} — {to} · {shown.length} supplied days · exploration only; official plan and exports
+          retain the baseline year.
+        </p>
+        {!validRange && (
+          <p role="alert" className="mt-2 text-sm text-warning">
+            Choose a valid range within supplied coverage: {availableFrom} — {availableTo}.
+          </p>
+        )}
+        {validRange && !shown.length && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            No daily observations supplied in this range.
+          </p>
+        )}
+      </section>
       {view === "3d" && (
         <div className="mb-3 flex flex-wrap gap-2">
           <Button
@@ -146,25 +181,6 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
           ))}
         </div>
       )}
-      <p className="mb-3 text-xs text-muted-foreground">Select a month to inspect</p>
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-2" aria-label="Select footprint month">
-        {months.map((m) => (
-          <Button
-            key={m}
-            size="sm"
-            variant={period === "month" && month === m ? "secondary" : "outline"}
-            aria-pressed={period === "month" && month === m}
-            className="shrink-0"
-            onClick={() => {
-              setMonth(m);
-              setPeriod("month");
-              setSel(null);
-            }}
-          >
-            {m}
-          </Button>
-        ))}
-      </div>
       <div ref={frame} className="calendar-chart-frame" data-view={view}>
         {view === "3d" && (
           <div className="calendar-floating-legend">
@@ -225,8 +241,7 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
           </div>
         )}
         <p className="mb-3 text-xs text-muted-foreground">
-          Each bar is one day. Taller bars mean higher spending. Darker bars mean higher CO₂
-          emissions. Select a bar for details.
+          {view === "3d" ? "Daily spending and location-based CO₂" : `Daily ${LABELS[color]}`}
         </p>
         <p className="mb-3 text-xs">
           Selected day:{" "}
@@ -244,7 +259,7 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
             palette={["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"]}
             showStats={false}
             showLegend={false}
-            title={period === "month" ? month : `${days[0]?.date} — ${days.at(-1)?.date}`}
+            title={`${from} — ${to}`}
             footer="Dashed cells: unavailable metric coverage"
             onCellClick={(d) => {
               setSel(shown.find((x) => x.date === d.date) ?? null);

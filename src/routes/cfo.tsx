@@ -12,6 +12,8 @@ import { HistoricalPerformance } from "@/components/greenops/historical-performa
 import { TargetPanel } from "@/components/greenops/targets";
 import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
+import { DemoExceptions } from "@/components/greenops/demo-exceptions";
+import { useMeasures } from "@/lib/queries";
 export const Route = createFileRoute("/cfo")({
   head: () =>
     seo(
@@ -21,7 +23,7 @@ export const Route = createFileRoute("/cfo")({
   component: Cfo,
 });
 function Cfo() {
-  const ov = useOverview(),
+  const ov = useOverview(true),
     sim = useSimulation(),
     fc = useForecast(
       "cost",
@@ -29,6 +31,7 @@ function Cfo() {
       !!ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)),
     );
   const { s } = useApp();
+  const measures = useMeasures();
   return (
     <AppShell
       kicker="CFO · Dashboard"
@@ -144,6 +147,7 @@ function Cfo() {
           )}
         </ChartCard>
       </section>
+      <Q q={measures}>{(all) => <DemoExceptions measures={all} />}</Q>
     </AppShell>
   );
 }
