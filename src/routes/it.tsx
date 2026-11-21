@@ -30,7 +30,7 @@ function It() {
     ov = useOverview();
   return (
     <AppShell
-      kicker="IT Manager · Dashboard"
+      kicker="IT · Dashboard"
       title="Operational efficiency, safely"
       subtitle="Separate recorded workload from runtime—and review dependencies before making a change."
     >

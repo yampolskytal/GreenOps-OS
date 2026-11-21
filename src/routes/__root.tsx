@@ -4,11 +4,12 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -139,10 +140,31 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <AppStateProvider>
-        <StartingPlanInitializer />
-        <Outlet />
+        <WorkspaceEntry />
         <Toaster />
       </AppStateProvider>
     </QueryClientProvider>
+  );
+}
+
+function WorkspaceEntry() {
+  const router = useRouter();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (entered) return;
+    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (pathname !== "/" && navigation?.type === "reload") {
+      void router.navigate({ to: "/", replace: true });
+      return;
+    }
+    setEntered(true);
+  }, [entered, pathname, router]);
+
+  return (
+    <>
+      {entered && pathname !== "/" && <StartingPlanInitializer />}
+      {(entered || pathname === "/") && <Outlet />}
+    </>
   );
 }

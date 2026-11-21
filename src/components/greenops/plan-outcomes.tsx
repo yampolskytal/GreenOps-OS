@@ -5,10 +5,12 @@ export function PlanOutcomes({
   overview,
   result,
   afterLabel = "After Current Plan",
+  compact = false,
 }: {
   overview: Overview;
   result: SimulationResult;
   afterLabel?: string;
+  compact?: boolean;
 }) {
   const metrics = [
     {
@@ -53,9 +55,11 @@ export function PlanOutcomes({
                 </div>
               </div>
             ))}
-            <p className="num mt-3 text-sm text-success">
-              {m.format(m.savings)} saved · {pct(m.percentage)} reduction
-            </p>
+            {!compact && (
+              <p className="num mt-3 text-sm text-success">
+                {m.format(m.savings)} saved · {pct(m.percentage)} reduction
+              </p>
+            )}
           </section>
         );
       })}

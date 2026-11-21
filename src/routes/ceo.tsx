@@ -1,101 +1,210 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
-import { ChartCard, Q, RiskBadge } from "@/components/greenops/ui";
-import { TargetPanel } from "@/components/greenops/targets";
-import { PlanOutcomes } from "@/components/greenops/plan-outcomes";
-import { DemoExceptions } from "@/components/greenops/demo-exceptions";
-import { ComparisonBoard } from "@/components/greenops/compare";
-import { Button } from "@/components/ui/button";
+import { Q, RiskBadge } from "@/components/greenops/ui";
+import { ApprovalWorkspace, type ReviewFilter } from "@/components/greenops/demo-exceptions";
+import {
+  AdministrationScorecard,
+  ReviewSummary,
+} from "@/components/greenops/administration-overview";
+import { SpendingDonut } from "@/components/greenops/spending-donut";
 import { useMeasures, useOverview, useSimulation } from "@/lib/queries";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
-import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
+import { AdministrationEmissions } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
+import { PlanningProjection, StartingPlanNotice } from "@/components/greenops/starting-plan-notice";
+import { useDisplayedPlan } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+import { DetailBlock, DetailDrawer } from "@/components/greenops/details";
 import { api } from "@/lib/api/client";
 import { managementRecommendation } from "@/lib/management-recommendations";
-import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
-import { useDisplayedPlan } from "@/lib/store";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 export const Route = createFileRoute("/ceo")({
   head: () =>
     seo(
-      "Executive Dashboard — GreenOps OS",
-      "Executive target progress, before-and-after savings, management decisions and demo exceptions.",
+      "Administration Dashboard — GreenOps OS",
+      "Sustainability targets, company performance and management decisions.",
     ),
-  component: Ceo,
+  component: Administration,
 });
-function Ceo() {
-  const plan = useDisplayedPlan();
-  const ov = useOverview(true),
-    sim = useSimulation(),
-    ms = useMeasures();
+
+const tabs = [
+  ["overview", "Overview"],
+  ["approvals", "Approvals & Exceptions"],
+  ["spending", "Spending Drivers"],
+  ["performance", "Performance"],
+  ["emissions", "Emissions"],
+] as const;
+
+function tabForHash(hash: string) {
+  switch (hash.replace(/^#/, "")) {
+    case "monthly":
+      return "performance";
+    case "approvals":
+    case "decisions":
+      return "approvals";
+    default:
+      return "overview";
+  }
+}
+
+function Administration() {
+  const hash = useRouterState({ select: (state) => state.location.hash });
+  const [tab, setTab] = useState<string>(() => tabForHash(hash));
+  const approvalTab = useRef<HTMLButtonElement>(null);
+  const [filter, setFilter] = useState<ReviewFilter>("all");
+  useEffect(() => setTab(tabForHash(hash)), [hash]);
+  function selectTab(value: string) {
+    setTab(value);
+    if (typeof window.scrollTo === "function") window.scrollTo({ top: 0 });
+  }
   return (
     <AppShell
-      kicker="CEO · Executive briefing"
-      title="Results. Targets. Decisions."
-      subtitle={`${plan.label} · official September 2025–August 2026 baseline · projected outcomes, not executed changes.`}
+      title="Administration Dashboard"
+      subtitle="Projected outcomes for the official September 2025–August 2026 baseline."
+      showStartingPlan={false}
     >
-      <PlanningProjection>
-      <section id="targets" className="border-b pb-6">
-        <h2 className="mb-5 text-lg font-semibold">Are we meeting our targets?</h2>
-        <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
-      </section>
-      <section className="border-b py-6">
-        <h2 className="mb-5 text-lg font-semibold">What are we saving?</h2>
-        <Q q={ov}>{(o) => <Q q={sim}>{(r) => <PlanOutcomes overview={o} result={r} afterLabel={plan.suggested ? "After suggested strategy" : "After Current Plan"} />}</Q>}</Q>
-      </section>
-      </PlanningProjection>
-      <section id="decisions" className="py-6">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Management attention</h2>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/studio">
-              Review strategy <ArrowRight />
-            </Link>
-          </Button>
-        </header>
-        <Q q={ov}>
-          {(o) => (
-            <div className="grid gap-4 lg:grid-cols-3">
-              {o.managementRisks.slice(0, 3).map((r) => {
-                const recommendation = managementRecommendation(r, ms.data ?? [], api.isDemo);
-                return (
-                  <article key={r.title} className="rounded-lg border bg-card p-4">
-                    <RiskBadge level={r.level} />
-                    <h3 className="mt-3 font-medium">{r.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">{r.detail}</p>
-                    {recommendation && (
-                      <Button asChild size="sm" variant="link" className="mt-3 px-0">
-                        <Link to="/studio" hash={`measure-${recommendation.id}`}>
-                          Review recommendations <ArrowRight />
-                        </Link>
-                      </Button>
-                    )}
-                  </article>
-                );
-              })}
-              {!o.managementRisks.length && (
-                <p className="text-sm text-muted-foreground">No management risks supplied.</p>
-              )}
+      <Tabs value={tab} onValueChange={selectTab} activationMode="manual">
+        <TabsList aria-label="Administration dashboard" className="mb-4 justify-start">
+          {tabs.map(([value, label]) => (
+            <TabsTrigger
+              className="max-sm:px-2 max-sm:text-xs"
+              key={value}
+              value={value}
+              ref={value === "approvals" ? approvalTab : undefined}
+            >
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="overview">
+          {tab === "overview" && (
+            <ExecutiveOverview
+              onReviews={() => {
+                setFilter("review");
+                selectTab("approvals");
+                approvalTab.current?.focus({ preventScroll: true });
+              }}
+            />
+          )}
+        </TabsContent>
+        <TabsContent value="approvals">
+          {tab === "approvals" && (
+            <div id="decisions">
+              <Approvals filter={filter} onFilter={setFilter} />
             </div>
           )}
-        </Q>
-      </section>
-      <Q q={ms}>{(measures) => <DemoExceptions measures={measures} />}</Q>
-      <section className="mt-8 border-t pt-6">
-        <ChartCard title="Spending drivers">
-          <ComparisonBoard finance />
-        </ChartCard>
-      </section>
-      <div id="monthly">
-        <Q q={ov}>
-          {(o) => (
-            <>
-              <HistoricalPerformance overview={o} />
-              <EmissionsEvidence overview={o} />
-            </>
+        </TabsContent>
+        <TabsContent value="spending">{tab === "spending" && <SpendingDonut />}</TabsContent>
+        <TabsContent value="performance">{tab === "performance" && <Performance />}</TabsContent>
+        <TabsContent value="emissions">{tab === "emissions" && <Emissions />}</TabsContent>
+      </Tabs>
+    </AppShell>
+  );
+}
+
+function ExecutiveOverview({ onReviews }: { onReviews: () => void }) {
+  const overview = useOverview(true);
+  const simulation = useSimulation();
+  const plan = useDisplayedPlan();
+  const measures = useMeasures();
+  const reviews = (
+    <Q q={measures}>{(data) => <ReviewSummary measures={data} onReviews={onReviews} />}</Q>
+  );
+  return (
+    <section id="targets" className="space-y-5">
+      <StartingPlanNotice compact />
+      <PlanningProjection>
+        <Q q={simulation}>
+          {(result) => (
+            <Q q={overview}>
+              {(data) => (
+                <AdministrationScorecard
+                  overview={data}
+                  result={result}
+                  suggested={plan.suggested}
+                  reviewSummary={reviews}
+                />
+              )}
+            </Q>
           )}
         </Q>
-      </div>
-    </AppShell>
+      </PlanningProjection>
+      {!plan.ready && reviews}
+    </section>
+  );
+}
+
+function Approvals(props: Pick<Parameters<typeof ApprovalWorkspace>[0], "filter" | "onFilter">) {
+  const measures = useMeasures();
+  const overview = useOverview(true);
+  return (
+    <Q q={measures}>
+      {(data) => (
+        <>
+          <ApprovalWorkspace measures={data} {...props} />
+          <Q q={overview}>
+            {({ managementRisks }) =>
+              managementRisks.length > 0 && (
+                <div className="mt-4">
+                  <DetailDrawer
+                    title="Management risks"
+                    trigger={
+                      <Button size="sm" variant="outline">
+                        Management risks
+                      </Button>
+                    }
+                  >
+                    {managementRisks.map((risk) => {
+                      const recommendation = managementRecommendation(risk, data, api.isDemo);
+                      return (
+                        <DetailBlock key={risk.title} title={risk.title}>
+                          <RiskBadge level={risk.level} />
+                          <p className="mt-2">{risk.detail}</p>
+                          {recommendation && (
+                            <Button asChild size="sm" variant="link">
+                              <Link to="/studio" hash={`measure-${recommendation.id}`}>
+                                Review in Optimization Studio
+                              </Link>
+                            </Button>
+                          )}
+                        </DetailBlock>
+                      );
+                    })}
+                  </DetailDrawer>
+                </div>
+              )
+            }
+          </Q>
+        </>
+      )}
+    </Q>
+  );
+}
+
+function Performance() {
+  const overview = useOverview(true);
+  return (
+    <div id="monthly">
+      <Q q={overview}>{(data) => <HistoricalPerformance overview={data} executive />}</Q>
+    </div>
+  );
+}
+
+function Emissions() {
+  const overview = useOverview(true);
+  const simulation = useSimulation();
+  return (
+    <Q q={overview}>
+      {(data) => (
+        <AdministrationEmissions
+          overview={data}
+          result={simulation.data}
+          savingsPending={simulation.isFetching}
+          savingsError={simulation.isError}
+        />
+      )}
+    </Q>
   );
 }

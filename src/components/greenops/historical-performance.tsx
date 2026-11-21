@@ -1,5 +1,6 @@
 // GreenOps adaptation of the supplied LineChart6: metric cards, dotted plot, cursor and active point.
 import { useState, useId } from "react";
+import { Cloud, Leaf, Wallet, Zap } from "lucide-react";
 import {
   Line,
   LineChart,
@@ -11,9 +12,10 @@ import {
 } from "recharts";
 import { useReducedMotion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import type { HistoricalMetric, Overview } from "@/lib/api/types";
+import type { HistoricalMetric, MonthlyObservation, Overview } from "@/lib/api/types";
 import {
   isAvailable,
+  marketCoverageLabel,
   monthLabel,
   monthlyTotal,
   monthlyComparison,
@@ -24,6 +26,7 @@ import { api } from "@/lib/api/client";
 import { DetailBlock, DetailDrawer } from "./details";
 import { CalcInfo } from "./ui";
 import { historicalDomain } from "@/lib/historical-domain";
+import { priorCalendarMonth } from "@/lib/administration";
 import { reveal } from "@/lib/reveal";
 
 const METRICS = [
@@ -35,9 +38,11 @@ const METRICS = [
 export function HistoricalPerformance({
   overview,
   operational = false,
+  executive = false,
 }: {
   overview: Overview;
   operational?: boolean;
+  executive?: boolean;
 }) {
   const metrics = operational
     ? [METRICS[2], METRICS[0], METRICS[1], METRICS[3]].filter((m) => m != null)
@@ -45,7 +50,7 @@ export function HistoricalPerformance({
   const first =
     metrics.find((m) => overview.monthly.some((r) => isAvailable(r[m.key]))) ?? METRICS[0];
   const [metric, setMetric] = useState<HistoricalMetric>(first.key);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(() => executive ? overview.monthly.at(-1)?.month ?? null : null);
   const reduced = useReducedMotion();
   const summaryId = useId();
   const [zero, setZero] = useState(false);
@@ -289,7 +294,7 @@ export function HistoricalPerformance({
               </Button>
             ))}
           </div>
-          {selected && (
+          {selected && !executive && (
             <section id={summaryId} role="status" className="mt-5 border-t pt-4">
               <header className="mb-3 flex flex-wrap items-center gap-3">
                 <h3 className="font-semibold">{monthLabel(selected.month)}</h3>
@@ -319,6 +324,83 @@ export function HistoricalPerformance({
           Monthly {current.label} is unavailable. Annual totals cannot supply monthly observations.
         </p>
       )}
+      {executive && selected && <SelectedMonthSummary id={summaryId} rows={rows} selected={selected} />}
     </section>
+  );
+}
+
+const executiveMetrics = [
+  { ...METRICS[0], label: "Digital spending", Icon: Wallet, color: "var(--chart-1)" },
+  { ...METRICS[1], label: "Location-based CO₂", Icon: Cloud, color: "var(--chart-2)" },
+  { ...METRICS[2], label: "Energy consumption", Icon: Zap, color: "var(--chart-4)" },
+  { ...METRICS[3], label: "Market-based CO₂", Icon: Leaf, color: "var(--chart-3)" },
+];
+
+export function SelectedMonthSummary({ id, rows, selected }: {
+  id: string; rows: MonthlyObservation[]; selected: MonthlyObservation;
+}) {
+  const previous = rows.find((row) => row.month === priorCalendarMonth(selected.month));
+  return (
+    <section id={id} aria-label="Selected month summary" className="@container mt-5 border-t pt-4">
+      <header className="mb-3 flex flex-wrap items-center gap-3">
+        <h3 className="font-semibold">{monthLabel(selected.month)}</h3>
+        <span className="text-xs text-muted-foreground">{selected.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}</span>
+      </header>
+      <dl className="grid gap-3 @md:grid-cols-2 @4xl:grid-cols-4">
+        {executiveMetrics.map(({ key, label, Icon, color, format }) => {
+          const value = selected[key];
+          const before = previous?.[key];
+          const change = isAvailable(value) && isAvailable(before) ? percentDifference(before, value) : null;
+          return (
+            <div key={key} className="min-w-0 rounded-lg border bg-card p-3">
+              <dt className="flex items-center gap-2 text-xs"><Icon aria-hidden className="size-4 shrink-0" style={{ color }} />{label}</dt>
+              <dd className="num mt-2 break-words text-lg font-semibold">{isAvailable(value) ? format(value) : "Unavailable"}</dd>
+              <dd><ObservationSparkline rows={rows} metric={key} selected={selected.month} color={color} /></dd>
+              <dd className="text-xs text-muted-foreground">
+                {change == null ? "Monthly change unavailable" : `${change === 0 ? "0.0%" : `${Math.abs(change).toFixed(1)}% ${change > 0 ? "decrease" : "increase"}`} vs previous month`}
+              </dd>
+              {key === "co2KgMarket" && <dd className="mt-1 text-xs text-muted-foreground">
+                {selected.marketCoverage ? marketCoverageLabel(selected.marketCoverage) : "Market coverage unavailable."}
+                {selected.marketCoverage?.status === "partial" && " Covered subtotal."}
+              </dd>}
+            </div>
+          );
+        })}
+      </dl>
+    </section>
+  );
+}
+
+function monthIndex(month: string) {
+  const year = Number(month.slice(0, 4));
+  const number = Number(month.slice(5, 7));
+  return year * 12 + number;
+}
+
+function ObservationSparkline({ rows, metric, selected, color }: {
+  rows: MonthlyObservation[]; metric: HistoricalMetric; selected: string; color: string;
+}) {
+  const values = rows.map((row) => row[metric]).filter(isAvailable);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const first = monthIndex(rows[0]?.month ?? selected);
+  const span = monthIndex(rows.at(-1)?.month ?? selected) - first;
+  const x = (month: string) => span > 0 ? 6 + (monthIndex(month) - first) / span * 108 : 60;
+  const y = (value: number) => max > min ? 33 - (value - min) / (max - min) * 26 : 20;
+  return (
+    <svg viewBox="0 0 120 40" className="my-1 h-10 w-full" role="img" aria-label={values.length ? "Historical observations with selected month marked" : "Historical observations unavailable"}>
+      <line x1={x(selected)} x2={x(selected)} y1="3" y2="37" className="stroke-muted-foreground/50" strokeDasharray="2 2" />
+      {rows.map((row, index) => {
+        const value = row[metric];
+        if (!isAvailable(value)) return null;
+        const previous = rows[index - 1];
+        const before = previous?.[metric];
+        return <g key={row.month}>
+          {previous && previous.month === priorCalendarMonth(row.month) && isAvailable(before) &&
+            <line x1={x(previous.month)} y1={y(before)} x2={x(row.month)} y2={y(value)} stroke={color} strokeWidth="1.75" />}
+          <circle cx={x(row.month)} cy={y(value)} r={row.month === selected ? 3.5 : 1.75} fill={color} className={row.month === selected ? "stroke-foreground" : undefined} />
+        </g>;
+      })}
+    </svg>
   );
 }

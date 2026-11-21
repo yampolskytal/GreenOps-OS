@@ -6,6 +6,8 @@ import { TARGETS } from "./optimizer";
 import { normalizePaths, type SavedPath } from "./paths";
 import { newInitialization, restoreInitialization, settledInitialization, mayInitialize, displayedPlan, type PlanInitialization } from "./starting-plan";
 
+type LocalDecisions = Record<string, { approved: boolean; reason: string; decidedAt: string; role: "ceo" }>;
+
 export interface AppState {
   initialization: PlanInitialization;
   role: Role | null;
@@ -21,10 +23,8 @@ export interface AppState {
   theme: "dark" | "light";
   sidebarCollapsed: boolean;
   paths: SavedPath[];
-  demoExceptions: Record<
-    string,
-    { approved: boolean; reason: string; decidedAt: string; role: "ceo" }
-  >;
+  demoExceptions: LocalDecisions;
+  simulationDecisions: LocalDecisions;
 }
 const initial: AppState = {
   initialization: newInitialization(),
@@ -42,6 +42,7 @@ const initial: AppState = {
   sidebarCollapsed: false,
   paths: [],
   demoExceptions: {},
+  simulationDecisions: {},
 };
 const KEY = "greenops-state-v1";
 
@@ -49,7 +50,7 @@ type CtxValue = {
   hydrated: boolean;
   s: AppState;
   set: (p: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => void;
-  decideException: (measureId: string, reason: string, approved: boolean) => void;
+  decideException: (measureId: string, reason: string, approved: boolean | null, connected?: boolean) => void;
   commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => void;
   beginInitialization: (requestId: string) => boolean;
   finishInitialization: (requestId: string, candidate: OptimizeResult | null, error: string | null) => void;
@@ -152,17 +153,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       beginInitialization,
       finishInitialization,
       retryInitialization,
-      decideException: (measureId: string, reason: string, approved: boolean) =>
-        set((x) => {
-          if (x.role !== "ceo") return x;
-          return {
-            ...x,
-            demoExceptions: {
-              ...x.demoExceptions,
-              [measureId]: { approved, reason, role: "ceo", decidedAt: new Date().toISOString() },
-            },
-          };
-        }),
+      decideException: (measureId: string, reason: string, approved: boolean | null, connected = false) => {
+        const x = current.current;
+        if (x.role !== "ceo") return;
+        const field = connected ? "simulationDecisions" : "demoExceptions";
+        const decisions = { ...x[field] };
+        if (approved === null) delete decisions[measureId];
+        else decisions[measureId] = { approved, reason, role: "ceo", decidedAt: new Date().toISOString() };
+        publish({ ...x, [field]: decisions }, true);
+      },
       commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => {
         const next = { ...current.current, ...plan, initialization: settledInitialization(plan.measureIds.length ? "committed" : "cleared") };
         publish(next, true);

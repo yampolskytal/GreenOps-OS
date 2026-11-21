@@ -362,10 +362,12 @@ html.light {
   }
   .inspector-layout[data-inspector="open"] .app-navigation > a > span + span,
   .inspector-layout[data-inspector="open"] .app-navigation nav a > span,
-  .inspector-layout[data-inspector="open"] .app-navigation button > span.flex {
+  .inspector-layout[data-inspector="open"] .app-navigation button > span.flex,
+  .inspector-layout[data-inspector="open"] .app-navigation .ask-greenops-label {
     display: none;
   }
-  .inspector-layout[data-inspector="open"] .app-navigation nav a {
+  .inspector-layout[data-inspector="open"] .app-navigation nav a,
+  .inspector-layout[data-inspector="open"] .app-navigation .ask-greenops-button {
     justify-content: center;
     padding-inline: 0;
   }

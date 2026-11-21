@@ -21,7 +21,7 @@ export function demoChatReply(history: ChatMessage[]): ChatMessage {
         { source: "ai_subscriptions.csv", detail: "licences_purchased, licences_active_30d" },
         { source: "exchange_rates.csv", detail: "usd_chf for 2026-08" },
       ],
-      actions: [{ type: "navigate", to: "/cfo", label: "Open CFO view" }],
+      actions: [{ type: "navigate", to: "/cfo", label: "Open Finance view" }],
     };
   if (q.includes("gpu"))
     return {
@@ -45,7 +45,7 @@ export function demoChatReply(history: ChatMessage[]): ChatMessage {
       role: "assistant",
       demo: true,
       content:
-        "Not as proposed. The production platform is needed on the last 3 workdays of each month (incl. evenings) and for the 06:00 daily load. The CFO and CTO must decide before any schedule change.",
+        "Not as proposed. The production platform is needed on the last 3 workdays of each month (incl. evenings) and for the 06:00 daily load. The Finance and CTO must decide before any schedule change.",
       evidence: [
         { source: "data_platform_usage.csv", detail: "Evening queries at month-end" },
         { source: "business_calendar.csv", detail: "Workdays" },

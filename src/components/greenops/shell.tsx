@@ -2,8 +2,8 @@ import { reveal } from "@/lib/reveal";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Briefcase,
-  Calculator,
+  Building2,
+  Wallet,
   Server,
   SlidersHorizontal,
   Search,
@@ -48,12 +48,24 @@ export const ROLES: {
   id: Role;
   to: "/ceo" | "/cfo" | "/it";
   label: string;
-  Icon: typeof Briefcase;
+  Icon: typeof Building2;
 }[] = [
-  { id: "ceo", to: "/ceo", label: "CEO", Icon: Briefcase },
-  { id: "cfo", to: "/cfo", label: "CFO", Icon: Calculator },
-  { id: "it", to: "/it", label: "IT Manager", Icon: Server },
+  { id: "ceo", to: "/ceo", label: "Administration", Icon: Building2 },
+  { id: "cfo", to: "/cfo", label: "Finance", Icon: Wallet },
+  { id: "it", to: "/it", label: "IT", Icon: Server },
 ];
+export function GreenOpsLogo({ compact = false, hideLabelOnSmall = false, className }: { compact?: boolean; hideLabelOnSmall?: boolean; className?: string }) {
+  return (
+    <Link to="/" aria-label="GreenOps OS home" className={cn("inline-flex items-center gap-2", className)}>
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary">
+        <Leaf className="size-4 text-primary-foreground" />
+      </span>
+      {!compact && <span className={cn("font-display font-semibold", hideLabelOnSmall && "max-lg:hidden")}>
+        GreenOps <span className="text-primary">OS</span>
+      </span>}
+    </Link>
+  );
+}
 function GlobalSearch() {
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -155,12 +167,14 @@ export function AppShell({
   kicker,
   children,
   actions,
+  showStartingPlan = true,
 }: {
   title: string;
   subtitle?: string;
-  kicker: string;
+  kicker?: string;
   children: ReactNode;
   actions?: ReactNode;
+  showStartingPlan?: boolean;
 }) {
   const { s, set } = useApp();
   const navigate = useNavigate();
@@ -198,16 +212,7 @@ export function AppShell({
             collapsed ? "w-16" : "w-56 max-sm:w-16",
           )}
         >
-          <Link to="/" className="mb-8 flex items-center gap-2 px-1 py-2" title="GreenOps OS">
-            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary">
-              <Leaf className="size-4 text-primary-foreground" />
-            </span>
-            {!collapsed && (
-              <span className="font-display font-semibold max-lg:hidden">
-                GreenOps <span className="text-primary">OS</span>
-              </span>
-            )}
-          </Link>
+          <GreenOpsLogo compact={collapsed} hideLabelOnSmall className="mb-8 px-1 py-2" />
           <nav className="space-y-2">
             {nav.map((n) => (
               <Button
@@ -230,13 +235,13 @@ export function AppShell({
           <div className="mt-auto space-y-4">
             <Button
               variant="outline"
-              className="w-full justify-start max-lg:justify-center max-lg:px-0"
+              className="ask-greenops-button w-full justify-start max-lg:justify-center max-lg:px-0"
               title="Ask GreenOps"
               aria-label="Ask GreenOps"
               onClick={() => set({ chatOpen: true })}
             >
               <Sparkles />
-              <span className={cn("max-lg:hidden", collapsed && "hidden")}>Ask GreenOps</span>
+              <span className={cn("ask-greenops-label max-lg:hidden", collapsed && "hidden")}>Ask GreenOps</span>
             </Button>
             <Button
               variant="ghost"
@@ -280,15 +285,15 @@ export function AppShell({
           <main className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 lg:px-8">
             <div className="mb-8 grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-primary">{kicker}</p>
-                <h1 className="mt-2 text-3xl font-semibold">{title}</h1>
+                {kicker && <p className="text-xs font-semibold text-primary">{kicker}</p>}
+                <h1 className={cn("text-3xl font-semibold", kicker && "mt-2")}>{title}</h1>
                 {subtitle && (
                   <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
                 )}
               </div>
               {actions}
             </div>
-            <StartingPlanNotice />
+            {showStartingPlan && <StartingPlanNotice />}
             {children}
           </main>
         </div>

@@ -18,7 +18,7 @@ import { useMeasures } from "@/lib/queries";
 export const Route = createFileRoute("/cfo")({
   head: () =>
     seo(
-      "Financial Dashboard — GreenOps OS",
+      "Finance Dashboard — GreenOps OS",
       "Financial snapshot, ranked spending drivers and implementation budget for the shared plan.",
     ),
   component: Cfo,
@@ -36,7 +36,7 @@ function Cfo() {
   const measures = useMeasures();
   return (
     <AppShell
-      kicker="CFO · Dashboard"
+      kicker="Finance · Dashboard"
       title="Make spending work harder"
       subtitle="Annual spending, financial opportunities and the cost of your selected plan."
     >
