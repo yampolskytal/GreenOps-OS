@@ -1,3 +1,16 @@
+## V6 Unified Path Planning
+- [x] Remove separate Preview basket; Paths + Current Plan only; V5 Paths/plan migrated (old Preview was never persisted, nothing to offer)
+- [x] One-step Path creation by name, multi-select Add to Paths with create-and-add, bulk add
+- [x] Clickable Path cards, docked Path inspector with remove + recommended additions
+- [x] One shared Recharts comparison chart (history solid, scenarios dashed, stable Path colors) for Compare Paths and Forecasts
+- [x] Forecasts show genuine monthly history; annual forecasts shown as yearly monthly-average points only
+- [x] Recommended package: generate scrolls to result, Save as Path (new/replace), Commit as Current Plan
+- [x] Commit navigates to Current Plan; actions scroll/highlight their result; search hash reveal
+- [ ] Simplify CEO dashboard hierarchy
+- [ ] Explore comparison bar alignment and footprint calendar control grouping
+- [ ] Full V6 layout audit at all widths
+- [ ] Use uploaded line-charts-4 template exactly — blocked: message(1).txt not attached to this remix
+
 # Roadmap — GreenOps OS frontend
 
 - [x] V5 shared typography/layout, inspectors, navigation and Ask GreenOps

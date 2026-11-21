@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { GlobalQuery, Priority, Role } from "./api/types";
 import { initialMeasureIds } from "./planning";
 import { TARGETS } from "./optimizer";
-import type { SavedPath } from "./paths";
+import { normalizePaths, type SavedPath } from "./paths";
 
 export interface AppState {
   role: Role | null;
@@ -62,7 +62,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setS({ ...initial, ...JSON.parse(raw), chatOpen: false });
+      if (raw) {
+        // V5 → V6 migration: keep saved Paths and the committed plan; assign stable Path colors.
+        const parsed = JSON.parse(raw) as Partial<AppState>;
+        setS({
+          ...initial,
+          ...parsed,
+          paths: normalizePaths(Array.isArray(parsed.paths) ? parsed.paths : []),
+          chatOpen: false,
+        });
+      }
     } catch {
       /* ignore */
     }

@@ -11,6 +11,12 @@
   --color-forecast-actual: var(--forecast-actual);
   --color-forecast-without: var(--forecast-without);
   --color-forecast-plan: var(--forecast-plan);
+  --color-path-a: var(--path-a);
+  --color-path-b: var(--path-b);
+  --color-path-c: var(--path-c);
+  --color-scenario-history: var(--scenario-history);
+  --color-scenario-none: var(--scenario-none);
+  --color-scenario-plan: var(--scenario-plan);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -61,6 +67,12 @@
   --forecast-actual: oklch(0.724261 0.01552 264.471);
   --forecast-without: oklch(0.710627 0.166148 22.216);
   --forecast-plan: oklch(0.800349 0.18206 151.711);
+  --path-a: #60a5fa;
+  --path-b: #a78bfa;
+  --path-c: #fbbf24;
+  --scenario-history: #a1a6b0;
+  --scenario-none: #737b89;
+  --scenario-plan: #4ade80;
   --background: oklch(0.154098 0.004578 264.432);
   --foreground: oklch(0.970151 0 89.876);
   --card: oklch(0.204236 0.008553 264.367);
@@ -115,6 +127,12 @@ html.light {
   --forecast-actual: oklch(0.515969 0.018881 262.69);
   --forecast-without: oklch(0.557269 0.184145 25.492);
   --forecast-plan: oklch(0.538284 0.128381 153.994);
+  --path-a: #2563eb;
+  --path-b: #7c3aed;
+  --path-c: #c2780a;
+  --scenario-history: #3f4652;
+  --scenario-none: #7a828f;
+  --scenario-plan: #15803d;
   --background: oklch(0.972949 0.00287 264.542);
   --foreground: oklch(0.204236 0.008553 264.367);
   --card: oklch(1 0 89.876);
@@ -434,4 +452,19 @@ html.light {
   .app-navigation [data-slot="select-trigger"] > svg {
     display: none;
   }
+}
+
+[id] {
+  scroll-margin-top: 96px;
+}
+@keyframes reveal-flash {
+  0% { box-shadow: 0 0 0 2px var(--ring); }
+  100% { box-shadow: 0 0 0 2px transparent; }
+}
+.reveal-flash {
+  animation: reveal-flash 1.6s ease-out;
+  border-radius: var(--radius);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-flash { animation: none; outline: 2px solid var(--ring); }
 }

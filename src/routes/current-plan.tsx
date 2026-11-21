@@ -34,14 +34,14 @@ function CurrentPlanPage() {
       subtitle="Your saved proposal. Projected benefits are not evidence of executed or approved operational changes."
       actions={
         <Button asChild variant="outline">
-          <Link to="/studio">
-            Edit in Studio
+          <Link to="/studio" hash="paths">
+            Edit alternatives in Studio
             <ArrowRight />
           </Link>
         </Button>
       }
     >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y py-4">
+      <div id="plan-summary" className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y py-4">
         <span className="flex items-center gap-2 font-medium">
           <ClipboardCheck className="size-5 text-primary" />
           {s.measureIds.length} committed measures

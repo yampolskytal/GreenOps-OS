@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { reveal } from "@/lib/reveal";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Briefcase,
@@ -301,6 +302,10 @@ export function AppShell({
   const navigate = useNavigate();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const current = ROLES.find((r) => r.to === path)?.id ?? s.role ?? "ceo";
+  const hash = useRouterState({ select: (r) => r.location.hash });
+  useEffect(() => {
+    if (hash) reveal(hash.replace(/^#/, ""));
+  }, [hash, path]);
   const collapsed = s.sidebarCollapsed;
   const nav = [
     {

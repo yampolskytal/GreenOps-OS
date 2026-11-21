@@ -7,6 +7,7 @@ import { useApp } from "@/lib/store";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { canSelectMeasure } from "@/lib/planning";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { RiskBadge } from "./ui";
 import { PathMembership } from "./path-membership";
@@ -14,19 +15,20 @@ import { DetailBlock, DetailDrawer } from "./details";
 export function MeasureCard({
   m,
   compact = false,
-  selected,
-  onToggle,
+  bulkSelected,
+  onBulkToggle,
 }: {
   m: Measure;
   compact?: boolean;
-  selected?: boolean;
-  onToggle?: () => void;
+  bulkSelected?: boolean;
+  onBulkToggle?: (value: boolean) => void;
 }) {
   const { s } = useApp();
   const [open, setOpen] = useState(false);
   const hash = useRouterState({ select: (r) => r.location.hash });
   const committed = s.measureIds.includes(m.id);
-  const inPlan = selected ?? committed;
+  const inPlan = committed;
+  const pathNames = s.paths.filter((p) => p.measureIds.includes(m.id)).map((p) => p.name);
   useEffect(() => {
     const inspect = () => {
       if (window.location.hash === `#measure-${m.id}`) {
@@ -119,36 +121,29 @@ export function MeasureCard({
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <RiskBadge level={m.risk.level} />
           <span className="text-xs text-muted-foreground">
-            {selected === undefined
-              ? committed
-                ? "In Current Plan"
-                : "Not selected"
-              : committed && selected
-                ? "In both"
-                : committed
-                  ? "In Current Plan"
-                  : selected
-                    ? "In Preview only"
-                    : "Not selected"}
+            {[committed ? "In Current Plan" : null, pathNames.length ? `Paths: ${pathNames.join(", ")}` : null]
+              .filter(Boolean)
+              .join(" · ") || "Not in any Path"}
           </span>
         </div>
         <div className="flex flex-wrap gap-2 sm:col-span-2 sm:justify-end">
-          <PathMembership measureId={m.id} />
-          {onToggle ? (
-            <Button
-              size="sm"
-              variant={inPlan ? "default" : "outline"}
-              disabled={blocked}
-              onClick={onToggle}
-            >
-              {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
-              {blocked ? "Blocked" : inPlan ? "Remove from Preview" : "Add to Preview"}
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" asChild>
+          {onBulkToggle && (
+            <label className="mr-auto inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <Checkbox checked={!!bulkSelected} onCheckedChange={(v) => onBulkToggle(v === true)} />
+              Select for bulk
+            </label>
+          )}
+          {blocked && (
+            <span className="inline-flex items-center gap-1 text-xs text-destructive">
+              <Lock className="size-3" /> Blocked — can be kept in a Path, not committed
+            </span>
+          )}
+          <PathMembership measureIds={[m.id]} />
+          {!onBulkToggle && (
+            <Button size="sm" variant="ghost" asChild>
               <Link to="/studio" hash={`measure-${m.id}`}>
-                {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
-                {blocked ? "Blocked" : inPlan ? "In Current Plan" : "Preview measure"}
+                {inPlan ? <Check /> : <Plus />}
+                Open in Studio
               </Link>
             </Button>
           )}
