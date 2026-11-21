@@ -1,3 +1,6 @@
+## Details-button flow sweep
+- [x] Verify selected-item details across dashboards, Studio, Explore, Current Plan, forecasts, data/report pages and nested assistant sources without changing saved data.
+
 ## Screenshot refinements
 - [x] Link management attention to its exact recommendation
 - [x] Deepen four-tier footprint blues in both themes

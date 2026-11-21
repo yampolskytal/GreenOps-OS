@@ -18,6 +18,8 @@ const InspectorContext = createContext<{
   target: HTMLElement | null;
   desktop: boolean;
 } | null>(null);
+type NestedDetails = { title: string; description?: ReactNode; children: ReactNode };
+const NestedInspectorContext = createContext<((details: NestedDetails) => void) | null>(null);
 export function InspectorProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<string | null>(null);
   const [target, setTarget] = useState<HTMLElement | null>(null);
@@ -56,6 +58,9 @@ export function AnalyticalInspector({
   fullWidth?: boolean;
 }) {
   const ctx = useContext(InspectorContext);
+  const showNestedDetails = useContext(NestedInspectorContext);
+  const [detailStack, setDetailStack] = useState<NestedDetails[]>([]);
+  const currentDetails = detailStack.at(-1);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const wasOpen = useRef(false);
@@ -75,6 +80,7 @@ export function AnalyticalInspector({
   }, [requestedOpen, id, setActive]);
   useEffect(() => {
     if (wasOpen.current && !open) callback.current?.(false);
+    if (!open) setDetailStack([]);
     wasOpen.current = open;
   }, [open]);
   const close = () => {
@@ -134,7 +140,12 @@ export function AnalyticalInspector({
         ref={anchor}
         data-inspector-trigger
         className={fullWidth ? "block w-full min-w-0" : "inline-flex max-w-full"}
-        onClick={() => {
+        onClick={(event) => {
+          if (showNestedDetails) {
+            event.stopPropagation();
+            showNestedDetails({ title, description, children });
+            return;
+          }
           previousFocus.current =
             document.activeElement instanceof HTMLElement ? document.activeElement : null;
           setActive?.(open ? null : id);
@@ -153,6 +164,17 @@ export function AnalyticalInspector({
           >
             <header className="flex items-start gap-3 border-b bg-background p-5">
               <div className="min-w-0 flex-1">
+                {currentDetails && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mb-3"
+                    onClick={() => setDetailStack((stack) => stack.slice(0, -1))}
+                  >
+                    <ArrowLeft />
+                    Back to {detailStack.length > 1 ? "previous details" : "summary"}
+                  </Button>
+                )}
                 {!ctx.desktop && (
                   <Button variant="ghost" size="sm" className="mb-3" onClick={close}>
                     <ArrowLeft />
@@ -160,10 +182,12 @@ export function AnalyticalInspector({
                   </Button>
                 )}
                 <h2 id={`${id}-title`} className="break-words font-semibold">
-                  {title}
+                  {currentDetails?.title ?? title}
                 </h2>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {description ?? "Evidence, assumptions and planning limitations"}
+                  {currentDetails?.description ??
+                    description ??
+                    "Evidence, assumptions and planning limitations"}
                   {api.isDemo && " · DEMO"}
                 </div>
               </div>
@@ -177,7 +201,16 @@ export function AnalyticalInspector({
                 <X />
               </Button>
             </header>
-            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 text-sm">{children}</div>
+            <NestedInspectorContext.Provider
+              value={(details) => setDetailStack((stack) => [...stack, details])}
+            >
+              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 text-sm">
+                <div hidden={currentDetails != null} className="space-y-5">
+                  {children}
+                </div>
+                {currentDetails && <div key={detailStack.length}>{currentDetails.children}</div>}
+              </div>
+            </NestedInspectorContext.Provider>
           </div>,
           ctx.target,
         )}

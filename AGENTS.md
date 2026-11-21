@@ -60,4 +60,5 @@ use the editor.
 - Path-result links use stable Path hashes and an origin-local open event; opening an existing Path never changes membership or Current Plan.
 - Management DEMO risk links use explicit recommendation IDs; Studio always reveals the linked measure despite browsing filters, without changing saved selections.
 - Switching inspector triggers updates the active dock directly; outside-click dismissal excludes other inspector triggers to prevent close/reopen layout jumps.
+- Inspectors opened inside a dock use its local detail stack and preserve the parent content, so nested details cannot unmount their own trigger or leave an empty panel.
 - Footprint ranges use the tested inclusive `footprint-range.ts` filter on supplied daily rows while planning uses the fixed official query; historical domains and selected-month summaries consume supplied values only.
