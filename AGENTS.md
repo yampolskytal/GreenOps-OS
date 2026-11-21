@@ -41,3 +41,5 @@ use the editor.
 - Budget and priority changes request debounced suggestions through GreenOpsApi; replacing an existing plan requires confirmation, so recommendations never mutate user selections implicitly.
 - Official exports use the fixed baseline query and cache prepared files against the plan/query context, so display filters and stale files cannot alter a submission.
 - Prebundle route-only React hook libraries at startup and reject outdated optimizer requests, so hot reload cannot mix React dispatchers from different dependency generations.
+
+- Year and month footprints share the original skyline renderer with a tested calendar geometry model; legends derive their ranges from the exact visible metric values, so period and metric changes cannot display stale scales.

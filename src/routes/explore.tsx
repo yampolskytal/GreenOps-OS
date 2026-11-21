@@ -45,6 +45,10 @@ function Explore() {
           <TabsTrigger value="findings">Waste Findings</TabsTrigger>
         </TabsList>
         <TabsContent value="footprint" id="footprint">
+          <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
+            Explore how your company’s digital footprint changes over time. Switch between monthly
+            and yearly views, or use 3D mode to compare two metrics.
+          </p>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Footprint calendar</h2>
             <div className="flex gap-1">
@@ -69,6 +73,10 @@ function Explore() {
           <Q q={daily}>{(d) => <FootprintCalendar days={d} metric={metric} />}</Q>
         </TabsContent>
         <TabsContent value="compare" id="compare">
+          <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
+            Identify the biggest drivers of cost, energy use and emissions. Select a category and
+            metric to compare resources.
+          </p>
           <ComparisonBoard />
           <DetailDrawer
             title="Additional operational analysis"

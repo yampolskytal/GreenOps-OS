@@ -141,9 +141,9 @@ function Ceo() {
                           name={
                             metric === "costChf" ? "Cost" : metric === "co2Kg" ? "CO₂" : "Energy"
                           }
-                          fill="var(--primary)"
+                          fill="var(--chart-1)"
                           fillOpacity={0.12}
-                          stroke="var(--primary)"
+                          stroke="var(--chart-1)"
                           strokeWidth={2}
                         />
                       </AreaChart>

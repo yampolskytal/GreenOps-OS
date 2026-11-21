@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 "use client";
 import * as React from "react";
+import { buildFootprintGrid } from "@/lib/calendar-model";
 export const DAY_MS = 86400000;
 export const clamp01 = (v) => (v > 0 ? (v < 1 ? v : 1) : 0);
 export const lerp = (a, b, t) => a + (b - a) * t;
@@ -52,36 +53,7 @@ export const rng = (seed) => {
  * Levels 1–4 split the non-zero days by their share of a busy day — the 95th
  * percentile, so one freak day can't wash every other day out to level 1.
  */
-export const buildGrid = (data, endMs, weekStart = 0) => {
-    const counts = new Map();
-    for (const d of data) {
-        if (!d || typeof d.date !== "string")
-            continue;
-        const ms = dayMs(d.date);
-        const c = Number(d.count);
-        if (!Number.isFinite(ms) || !(c > 0) || !Number.isFinite(c))
-            continue;
-        const k = toKey(ms);
-        counts.set(k, (counts.get(k) ?? 0) + c);
-    }
-    let start = endMs - 364 * DAY_MS;
-    start -= ((new Date(start).getUTCDay() - weekStart + 7) % 7) * DAY_MS;
-    const cells = [];
-    for (let ms = start, i = 0; ms <= endMs; ms += DAY_MS, i++) {
-        const date = toKey(ms);
-        cells.push({ date, count: counts.get(date) ?? 0, missing: !data.some(d => d.date === date && Number.isFinite(d.count)), level: 0, week: Math.floor(i / 7), day: i % 7 });
-    }
-    if (!data.length)
-        return { cells: [], weeks: 0, max: 0 };
-    const nz = cells.map((c) => c.count).filter((c) => c > 0).sort((a, b) => a - b);
-    const busy = nz.length ? nz[Math.floor(0.95 * (nz.length - 1))] : 0;
-    const colorMax = Math.max(1, ...data.map(d => d.colorCount ?? d.count));
-    for (const c of cells) {
-        const value = data.find(d => d.date === c.date);
-        c.level = value ? levelOf(value.colorCount ?? value.count, colorMax) : 0;
-    }
-    return { cells, weeks: cells.length ? cells[cells.length - 1].week + 1 : 0, max: nz.length ? nz[nz.length - 1] : 0 };
-};
+export const buildGrid = buildFootprintGrid;
 /** 0 for an empty day, else 1–4 by quarters of `busy`. Anything at or past `busy` is 4. */
 export const levelOf = (count, busy) => count <= 0 ? 0 : busy <= 0 ? 4 : 1 + Math.min(3, Math.floor((count / busy) * 4));
 /** Total, busiest day, longest run, and the run that reaches today (or yesterday — today isn't over). */
@@ -293,15 +265,15 @@ function Stat({ label, value, unit, sub, accent, size, align, }) {
       </div>
     </div>);
 }
-export default function ContributionSkyline({ data, endDate, view: viewProp, defaultView = "2d", onViewChange, palette = "github", title, unit = "contribution", unitPlural, heightScale = 1, duration = 1300, weekStart = 0, orbit = true, showStats = false, showLegend = true, showToggle = true, footer, locale = "en-US", seed = 7, onCellClick, className = "", }) {
+export default function ContributionSkyline({ data, month, endDate, view: viewProp, defaultView = "2d", onViewChange, palette = "github", title, unit = "contribution", unitPlural, heightScale = 1, duration = 1300, weekStart = 0, orbit = true, showStats = false, showLegend = true, showToggle = true, footer, locale = "en-US", seed = 7, onCellClick, className = "", }) {
     const endKey = endDate == null ? null : dayMs(endDate);
     const model = React.useMemo(() => {
         const dates = (data ?? []).map((d) => dayMs(d.date)).filter(Number.isFinite);
         const end = endKey ?? (dates.length ? Math.max(...dates) : dayMs(new Date()));
         const days = data ?? [];
-        const grid = buildGrid(days, end, weekStart);
-        return { ...grid, stats: computeStats(grid.cells), months: monthLabels(grid.cells, grid.weeks, locale) };
-    }, [data, endKey, seed, weekStart, locale]);
+        const grid = buildGrid(days, end, weekStart, month);
+        return { ...grid, stats: computeStats(grid.cells), months: month ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map((label,week)=>({label,week})) : monthLabels(grid.cells, grid.weeks, locale) };
+    }, [data, month, endKey, seed, weekStart, locale]);
     const [innerView, setInnerView] = React.useState(defaultView);
     const view = viewProp ?? innerView;
     const setView = (v) => {
@@ -379,6 +351,7 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
         // cells
         let n = 0;
         let weeks = 0;
+        let rows = 7;
         let wk = new Float32Array(0);
         let dy = new Float32Array(0);
         let lv = new Uint8Array(0);
@@ -402,6 +375,9 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
             const m = cfg.current.model;
             n = m.cells.length;
             weeks = m.weeks;
+            rows = m.rows;
+            hovered = pinned = activeIdx = -1;
+            cfg.current.setActive(-1);
             if (wk.length !== n) {
                 wk = new Float32Array(n);
                 dy = new Float32Array(n);
@@ -426,7 +402,7 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
             weekdayRows = [];
             for (let d = 0; d < 7 && d < n; d++) {
                 const dow = new Date(dayMs(m.cells[d].date)).getUTCDay();
-                if (dow === 1 || dow === 3 || dow === 5)
+                if (!m.monthly && (dow === 1 || dow === 3 || dow === 5 || dow === 0))
                     weekdayRows.push({ day: d, label: wf.format(dayMs(m.cells[d].date)) });
             }
             if (hovered >= n)
@@ -492,8 +468,8 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
                 add(x0 + w, y0, 0);
             }
             // room for the month labels that run along the front edge in 3D
-            add(0, 7 + 1.5 * e, 0);
-            add(weeks, 7 + 1.5 * e, 0);
+            add(0, rows + 1.5 * e, 0);
+            add(weeks, rows + 1.5 * e, 0);
             return { minx, maxx, miny, maxy };
         };
         const relayout = () => {
@@ -502,7 +478,7 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
                 return;
             W = w;
             // Narrow cards give the weekday names' column to the grid instead; rows get too tight to label.
-            gutter = W < 520 ? 0 : labelW;
+            gutter = cfg.current.model.monthly ? 0 : labelW;
             dpr = Math.min(2, window.devicePixelRatio || 1);
             const b2 = extent(camera(0), 0, true);
             H2 = 20 + 4 + ((b2.maxy - b2.miny) / (b2.maxx - b2.minx)) * (W - gutter - 4);
@@ -637,6 +613,14 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
                     ctx.stroke();
                     ctx.setLineDash([]);
                 }
+                if (cfg.current.model.monthly && e < .5) {
+                    ctx.fillStyle = luminance([r,g,bl]) > .6 ? getComputedStyle(root).getPropertyValue("--primary-foreground").trim() : rgbString(...fg);
+                    if (luminance([r,g,bl]) <= .6) ctx.fillStyle = rgbString(...fg);
+                    ctx.font = "600 14px " + (getComputedStyle(root).fontFamily || "sans-serif");
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(String(Number(cfg.current.model.cells[i].date.slice(8))), px(wk[i] + .5, dy[i] + .5), py(wk[i] + .5, dy[i] + .5, z));
+                }
                 if (outline > 0.004) {
                     ctx.strokeStyle = "rgba(" + fg[0] + "," + fg[1] + "," + fg[2] + "," + outline.toFixed(3) + ")";
                     ctx.lineWidth = 1;
@@ -663,7 +647,7 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
                     const tw = ctx.measureText(m.label).width;
                     if (x < edge || x + tw > W)
                         continue;
-                    ctx.fillText(m.label, x, py(m.week + off, -0.3, 0) - 3);
+                    if (!cfg.current.model.monthly) ctx.fillText(m.label, x, py(m.week + off, -0.3, 0) - 3);
                     edge = x + tw + 6;
                 }
                 ctx.textAlign = "right";
@@ -678,10 +662,10 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
                 ctx.textBaseline = "top";
                 let edge = -Infinity;
                 for (const m of months) {
-                    const x = px(m.week + 0.5, 7.3);
+                    const x = px(m.week + 0.5, rows + .3);
                     if (x < edge || x + ctx.measureText(m.label).width > W)
                         continue;
-                    ctx.fillText(m.label, x, py(m.week + 0.5, 7.3, 0) + 2);
+                    ctx.fillText(m.label, x, py(m.week + 0.5, rows + .3, 0) + 2);
                     edge = x + ctx.measureText(m.label).width + 10;
                 }
             }
@@ -874,18 +858,20 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
             }
             if (pinned >= 0 || activeIdx >= 0) {
                 if (ev.key === "ArrowLeft")
-                    i -= 7;
+                    i -= cfg.current.model.monthly ? 1 : 7;
                 if (ev.key === "ArrowRight")
-                    i += 7;
+                    i += cfg.current.model.monthly ? 1 : 7;
                 if (ev.key === "ArrowUp")
-                    i -= 1;
+                    i -= cfg.current.model.monthly ? 7 : 1;
                 if (ev.key === "ArrowDown")
-                    i += 1;
+                    i += cfg.current.model.monthly ? 7 : 1;
                 if (ev.key === "Home")
                     i = 0;
                 if (ev.key === "End")
                     i = n - 1;
             }
+            if (ev.key === "Home") i = 0;
+            if (ev.key === "End") i = n - 1;
             i = Math.max(0, Math.min(n - 1, i));
             pinned = i;
             hovered = -1;
@@ -1084,7 +1070,7 @@ export default function ContributionSkyline({ data, endDate, view: viewProp, def
               </>)}
           </div>
 
-          <div ref={tipRef} role="tooltip" aria-hidden={active < 0} className="pointer-events-none absolute top-3 left-3 z-20 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[12px] leading-none shadow-lg transition-opacity duration-150 sm:top-4 sm:left-4 motion-reduce:transition-none" style={{
+          <div ref={tipRef} role="tooltip" aria-hidden={active < 0} className="pointer-events-none absolute top-3 left-3 z-20 max-w-full whitespace-normal rounded-md px-2.5 py-1.5 text-[12px] leading-none shadow-lg transition-opacity duration-150 sm:top-4 sm:left-4 motion-reduce:transition-none" style={{
             opacity: active >= 0 ? 1 : 0,
             background: "var(--foreground)",
             color: "var(--background)",

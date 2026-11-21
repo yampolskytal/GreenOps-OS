@@ -98,7 +98,7 @@ export function ForecastChart({
             <g key={series}>
               <motion.path
                 d={band(series)}
-                fill={i ? "var(--primary)" : "var(--forecast)"}
+                fill={i ? "var(--chart-1)" : "var(--forecast)"}
                 fillOpacity={0.12}
                 initial={{ opacity: reduced ? 1 : 0 }}
                 animate={{ opacity: 1 }}
@@ -108,7 +108,7 @@ export function ForecastChart({
                 key={`${f.metric}-${points.length}-${last[series].mid}`}
                 d={path(series, "mid")}
                 fill="none"
-                stroke={i ? "var(--primary)" : "var(--forecast)"}
+                stroke={i ? "var(--chart-1)" : "var(--forecast)"}
                 strokeWidth="2.5"
                 strokeDasharray="5 5"
                 initial={{ opacity: reduced ? 1 : 0 }}
@@ -120,20 +120,20 @@ export function ForecastChart({
                 cy={y(last[series].mid)}
                 r="4"
                 fill="var(--card)"
-                stroke={i ? "var(--primary)" : "var(--forecast)"}
+                stroke={i ? "var(--chart-1)" : "var(--forecast)"}
               />
               <line
                 x1={x(points.length - 1) + 5}
                 y1={y(last[series].mid)}
                 x2={W - right + 10}
                 y2={labelBase + i * 48}
-                stroke={i ? "var(--primary)" : "var(--forecast)"}
+                stroke={i ? "var(--chart-1)" : "var(--forecast)"}
                 strokeOpacity=".5"
               />
               <text
                 x={W - right + 16}
                 y={labelBase + i * 48}
-                fill={i ? "var(--primary)" : "var(--forecast)"}
+                fill={i ? "var(--chart-1)" : "var(--forecast)"}
                 fontSize="11"
               >
                 {i ? "With selected plan" : "Without optimization"}
@@ -208,7 +208,7 @@ export function ForecastChart({
       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
         <span>● Observed annual baseline</span>
         <span className="text-forecast">┄ Without optimization</span>
-        <span className="text-primary">┄ With selected plan</span>
+        <span className="text-accent-ink">┄ With selected plan</span>
         <span>Shading: supported low–high estimates</span>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">

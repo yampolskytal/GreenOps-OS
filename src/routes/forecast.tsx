@@ -34,7 +34,7 @@ function ForecastPage() {
     <AppShell
       kicker="Know the limits · Forecasts"
       title="Two paths ahead"
-      subtitle="Projected annual results—not observations or realized savings."
+      subtitle="Compare future performance with and without your selected optimization measures. Projections are not realized savings."
     >
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-1">

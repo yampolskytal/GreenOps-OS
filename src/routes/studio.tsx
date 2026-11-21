@@ -68,7 +68,7 @@ function Studio() {
     <AppShell
       kicker="Decide · Optimization Studio"
       title="Build a better operating plan"
-      subtitle="Suggestions update automatically. Only your explicit choices become part of the selected plan."
+      subtitle="Choose your priority and budget, then review suggested measures to build your optimization plan. Only explicit choices change your plan."
     >
       <div className="grid gap-10 xl:grid-cols-[.9fr_1.1fr]">
         <ChartCard title="Optimization settings">

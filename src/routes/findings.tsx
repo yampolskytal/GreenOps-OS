@@ -38,46 +38,52 @@ export function WasteFindings() {
   return (
     <div>
       <p className="mb-5 text-sm text-muted-foreground">
-        Discover potential inefficiencies, review their impact and identify suitable improvements
-        for your optimization plan.
+        Discover potential inefficiencies, filter findings by actionability and sort them by impact
+        or risk.
       </p>
       <div className="mb-6 flex flex-wrap gap-3">
-        <Select value={risk} onValueChange={setRisk}>
-          <SelectTrigger className="w-48" aria-label="Finding risk">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[
-              ["actionable", "Actionable opportunities"],
-              ["all", "All risks"],
-              ["low", "Low risk"],
-              ["review", "Review required"],
-              ["blocked", "Blocked"],
-            ].map(([v, l]) => (
-              <SelectItem key={v} value={v ?? ""}>
-                {l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className="w-48" aria-label="Sort findings">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[
-              ["risk", "Lowest risk"],
-              ["cost", "Cost savings"],
-              ["co2", "CO₂ savings"],
-              ["energy", "Energy savings"],
-              ["effort", "Implementation effort"],
-            ].map(([v, l]) => (
-              <SelectItem key={v} value={v ?? ""}>
-                {l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">Show findings</p>
+          <Select value={risk} onValueChange={setRisk}>
+            <SelectTrigger className="w-64 max-w-full" aria-label="Show findings">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                ["actionable", "Actionable opportunities"],
+                ["all", "All findings"],
+                ["low", "Low risk"],
+                ["review", "Review required"],
+                ["blocked", "Blocked measures"],
+              ].map(([v, l]) => (
+                <SelectItem key={v} value={v ?? ""}>
+                  {l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">Sort by</p>
+          <Select value={sort} onValueChange={setSort}>
+            <SelectTrigger className="w-64 max-w-full" aria-label="Sort by">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                ["risk", "Lowest risk"],
+                ["cost", "Highest cost savings"],
+                ["co2", "Highest CO₂ savings"],
+                ["energy", "Highest energy savings"],
+                ["effort", "Lowest implementation effort"],
+              ].map(([v, l]) => (
+                <SelectItem key={v} value={v ?? ""}>
+                  {l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <Q q={fs}>
         {(all) => (

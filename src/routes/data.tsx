@@ -20,7 +20,7 @@ function DataReports() {
     <AppShell
       kicker="Connect · Report"
       title="Data & Reports"
-      subtitle="Source coverage, validation and your official submission."
+      subtitle="Manage source data, review data quality and prepare your submission exports."
     >
       <Tabs defaultValue="management">
         <TabsList className="mb-6">

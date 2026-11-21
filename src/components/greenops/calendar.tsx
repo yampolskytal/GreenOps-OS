@@ -17,39 +17,44 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { availableRange } from "@/lib/calendar-model";
 import ContributionSkyline from "./contribution-skyline";
 export type CalMetric = "co2Kg" | "costChf" | "energyKwh";
-const fmt = { co2Kg: kg, costChf: chf, energyKwh: kwh };
+const LABELS = { co2Kg: "CO₂ emissions", costChf: "Cost", energyKwh: "Energy" };
+const UNITS = { co2Kg: "kg CO₂", costChf: "CHF", energyKwh: "kWh" };
+const fmt = {
+  co2Kg: (v: number) => `${v.toFixed(1)} kg CO₂`,
+  costChf: chf,
+  energyKwh: (v: number) => `${v.toFixed(1)} kWh`,
+};
+const valid = (v: number) => (Number.isFinite(v) && v >= 0 ? v : null);
 export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; metric: CalMetric }) {
   const [view, setView] = useState<"2d" | "3d">("2d");
   const [period, setPeriod] = useState<"year" | "month">("year");
   const months = [...new Set(days.map((d) => d.date.slice(0, 7)))].sort();
   const [selectedMonth, setMonth] = useState("");
-  const month = selectedMonth || months.at(-1) || "";
-  const [swap, setSwap] = useState(false);
+  const month = months.includes(selectedMonth) ? selectedMonth : (months.at(-1) ?? "");
+  const [heightMetric, setHeightMetric] = useState<CalMetric>("co2Kg");
+  const [colorMetric, setColorMetric] = useState<CalMetric>("costChf");
   const [sel, setSel] = useState<DailyFootprint | null>(null);
+  const shown = period === "month" ? days.filter((d) => d.date.startsWith(month)) : days;
+  const color = view === "2d" ? metric : colorMetric;
+  const heightRange = availableRange(shown.map((d) => d[heightMetric]));
+  const colorRange = availableRange(shown.map((d) => d[color]));
+  const display = (d: DailyFootprint, m: CalMetric) =>
+    valid(d[m]) === null ? "Unavailable" : fmt[m](d[m]);
+  const data = shown.map((d) => ({
+    date: d.date,
+    count: valid(d[heightMetric]),
+    colorCount: valid(d[color]),
+    detail: `${d.date} · ${view === "3d" ? `Height: ${display(d, heightMetric)} · Color: ${display(d, color)}` : display(d, color)} · ${d.coverage}`,
+  }));
   if (!days.length)
     return (
       <p className="py-12 text-center text-muted-foreground">
         Daily footprint data is unavailable.
       </p>
     );
-  const heightMetric = swap ? "costChf" : "co2Kg",
-    colorMetric = view === "2d" ? metric : swap ? "co2Kg" : "costChf";
-  const desc = (d: DailyFootprint) =>
-    `${d.date} · ${chf(d.costChf)} · ${kg(d.co2Kg)} CO₂ · ${kwh(d.energyKwh)} · ${d.coverage}`;
-  const data = days.map((d) => ({
-    date: d.date,
-    count: d[heightMetric],
-    colorCount: d[colorMetric],
-    detail: desc(d),
-  }));
-  const shown = days.filter((d) => d.date.startsWith(month));
-  const first = new Date(`${month}-01T00:00:00Z`);
-  const start = (first.getUTCDay() + 6) % 7;
-  const length = new Date(first.getUTCFullYear(), first.getUTCMonth() + 1, 0).getDate();
-  const max = Math.max(1, ...shown.map((d) => d[metric]));
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center gap-2">
@@ -63,11 +68,11 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
             {p === "year" ? "Year" : "Month"}
           </Button>
         ))}
-        {period === "month" ? (
+        {period === "month" && (
           <>
             <Button
-              size="icon"
               variant="ghost"
+              size="icon"
               aria-label="Previous month"
               disabled={months.indexOf(month) <= 0}
               onClick={() => setMonth(months[months.indexOf(month) - 1] ?? month)}
@@ -87,8 +92,8 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
               </SelectContent>
             </Select>
             <Button
-              size="icon"
               variant="ghost"
+              size="icon"
               aria-label="Next month"
               disabled={months.indexOf(month) >= months.length - 1}
               onClick={() => setMonth(months[months.indexOf(month) + 1] ?? month)}
@@ -96,75 +101,135 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
               <ArrowRight />
             </Button>
           </>
-        ) : (
-          view === "3d" && (
-            <Button size="sm" variant="outline" onClick={() => setSwap(!swap)}>
-              <ArrowLeftRight />
-              Swap height / color
+        )}
+        <div className="ml-auto flex gap-1" role="group" aria-label="Chart view">
+          {(["2d", "3d"] as const).map((v) => (
+            <Button
+              key={v}
+              size="sm"
+              aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
+              aria-pressed={view === v}
+              variant={view === v ? "secondary" : "ghost"}
+              onClick={() => setView(v)}
+            >
+              {v.toUpperCase()}
             </Button>
-          )
+          ))}
+        </div>
+      </div>
+      <div className="mb-4 grid grid-cols-1 items-start gap-x-8 gap-y-4 border-y py-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
+        {view === "3d" && (
+          <div className="min-w-0 flex-1">
+            <div className="flex items-end gap-3">
+              <span className="flex h-9 w-10 shrink-0 items-end gap-1" aria-hidden="true">
+                <span className="h-3 w-2 rounded-sm bg-chart-1" />
+                <span className="h-6 w-2 rounded-sm bg-chart-1" />
+                <span className="h-9 w-2 rounded-sm bg-chart-1" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold">Bar height: {LABELS[heightMetric]}</p>
+                <p className="text-xs text-muted-foreground">
+                  {UNITS[heightMetric]} · linear scale
+                </p>
+              </div>
+            </div>
+            <Select value={heightMetric} onValueChange={(v) => setHeightMetric(v as CalMetric)}>
+              <SelectTrigger className="mt-3 w-full max-w-60" aria-label="Height metric">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(LABELS).map(([v, l]) => (
+                  <SelectItem key={v} value={v}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="num mt-2 text-xs text-muted-foreground">
+              {heightRange
+                ? `0 → ${fmt[heightMetric](heightRange.max)} · available range ${fmt[heightMetric](heightRange.min)}–${fmt[heightMetric](heightRange.max)}`
+                : "Height metric unavailable"}
+            </p>
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">
+            {view === "3d" ? "Bar color" : "Cell color"}: {LABELS[color]}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {UNITS[color]} · lightest = lowest, darkest = highest
+          </p>
+          {view === "3d" && (
+            <Select value={colorMetric} onValueChange={(v) => setColorMetric(v as CalMetric)}>
+              <SelectTrigger className="mt-3 w-full max-w-60" aria-label="Color metric">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(LABELS).map(([v, l]) => (
+                  <SelectItem key={v} value={v}>
+                    {l}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="mt-3 flex h-3 overflow-hidden rounded" aria-hidden="true">
+            {[1, 2, 3, 4].map((i) => (
+              <span key={i} className="flex-1" style={{ background: `var(--heat-${i})` }} />
+            ))}
+          </div>
+          <div className="num mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-muted-foreground">
+            {colorRange ? (
+              [0, 0.25, 0.5, 0.75, 1].map((p) => (
+                <span key={p}>
+                  {fmt[color](colorRange.min + (colorRange.max - colorRange.min) * p)}
+                </span>
+              ))
+            ) : (
+              <span>Color metric unavailable</span>
+            )}
+          </div>
+        </div>
+        {view === "3d" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setHeightMetric(colorMetric);
+              setColorMetric(heightMetric);
+            }}
+          >
+            <ArrowLeftRight />
+            Swap height / color
+          </Button>
         )}
       </div>
-      {period === "year" ? (
-        <ContributionSkyline
-          data={data}
-          view={view}
-          onViewChange={setView}
-          weekStart={1}
-          palette={["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"]}
-          showStats={false}
-          showLegend
-          title={`${days[0]?.date} — ${days.at(-1)?.date}`}
-          footer={
-            view === "3d"
-              ? `Linear height: ${swap ? "cost (CHF)" : "CO₂ (kg)"} · Color: ${swap ? "CO₂ (kg)" : "cost (CHF)"} · independent scales`
-              : `Color: ${metric === "co2Kg" ? "CO₂ (kg)" : metric === "costChf" ? "cost (CHF)" : "energy (kWh)"}`
-          }
-          onCellClick={(d) => setSel(days.find((x) => x.date === d.date) ?? null)}
-        />
-      ) : (
-        <div className="mx-auto grid max-w-3xl grid-cols-7 gap-2">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-            <span key={d} className="text-center text-xs text-muted-foreground">
-              {d}
-            </span>
-          ))}
-          {Array.from({ length: start }, (_, i) => (
-            <span key={`blank-${i}`} />
-          ))}
-          {Array.from({ length }, (_, i) => {
-            const date = `${month}-${String(i + 1).padStart(2, "0")}`;
-            const d = shown.find((x) => x.date === date);
-            return (
-              <Button
-                key={date}
-                variant="ghost"
-                className={cn(
-                  "h-auto aspect-square flex-col rounded-md border p-1",
-                  !d && "border-dashed text-muted-foreground",
-                )}
-                aria-label={d ? desc(d) : `${date}: unavailable`}
-                title={d ? desc(d) : "Unavailable"}
-                onClick={() => d && setSel(d)}
-                style={
-                  d
-                    ? {
-                        background: `color-mix(in oklab, var(--heat-4) ${15 + (d[metric] / max) * 85}%, var(--heat-1))`,
-                      }
-                    : undefined
-                }
-              >
-                <span>{i + 1}</span>
-                {d?.holiday && <span className="size-1 rounded-full bg-warning" />}
-              </Button>
-            );
-          })}
-        </div>
+      {view === "3d" && (
+        <p className="mb-4 text-xs text-muted-foreground">
+          Height represents one metric, while color represents another. Hover over a day to see its
+          values.
+        </p>
       )}
+      {period === "month" && view === "2d" && <div className="mb-1 grid grid-cols-7 text-center text-xs text-muted-foreground">{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><span key={d}>{d}</span>)}</div>}
+      <ContributionSkyline
+        data={data}
+        heightScale={period === "month" ? .28 : 1}
+        {...(period === "month" ? { month } : {})}
+        view={view}
+        onViewChange={setView}
+        showToggle={false}
+        weekStart={1}
+        palette={["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"]}
+        showStats={false}
+        showLegend={false}
+        title={period === "month" ? month : `${days[0]?.date} — ${days.at(-1)?.date}`}
+        footer="Dashed cells: unavailable metric coverage"
+        onCellClick={(d) => setSel(shown.find((x) => x.date === d.date) ?? null)}
+      />
       <p className="mt-4 text-xs text-muted-foreground">
-        Daily coverage: {days.filter((d) => d.coverage === "measured").length} measured ·{" "}
-        {days.filter((d) => d.coverage === "allocated").length} allocated ·{" "}
-        {days.filter((d) => d.coverage === "estimated").length} estimated. Missing dates are
+        Daily coverage: {shown.filter((d) => d.coverage === "measured").length} measured ·{" "}
+        {shown.filter((d) => d.coverage === "allocated").length} allocated ·{" "}
+        {shown.filter((d) => d.coverage === "estimated").length} estimated. Missing dates are
         unavailable, not zero.
       </p>
       <Sheet
@@ -187,7 +252,7 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
           {sel && (
             <div className="mt-6 space-y-4 text-sm">
               <p className="num">
-                {chf(sel.costChf)} · {kg(sel.co2Kg)} CO₂ · {kwh(sel.energyKwh)}
+                {display(sel, "costChf")} · {display(sel, "co2Kg")} · {display(sel, "energyKwh")}
               </p>
               <p>{sel.holiday ?? (sel.workday ? "Workday" : "Weekend")}</p>
               <h4 className="font-semibold">CO₂ contributors</h4>

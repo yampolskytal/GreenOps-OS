@@ -1,4 +1,6 @@
 # Roadmap — GreenOps OS frontend
+- [x] V3 neutral themes, quantitative calendar legends, monthly skyline, Sunday labels, findings labels and guidance
+- [x] V3 interaction and crash regression checks
 - [x] Design system + app shell (sidebar, top bar, global state)
 - [x] Role welcome + persistent role switcher
 - [x] CEO / CFO / IT dashboards
