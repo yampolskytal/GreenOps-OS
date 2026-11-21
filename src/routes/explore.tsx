@@ -4,7 +4,7 @@ import { AppShell } from "@/components/greenops/shell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { FootprintCalendar, type CalMetric } from "@/components/greenops/calendar";
-import { ComparisonBoard } from "@/components/greenops/compare";
+import { ComparisonBoard, comparisonFromHash } from "@/components/greenops/compare";
 import { Q } from "@/components/greenops/ui";
 import { WasteFindings } from "./findings";
 import { useDaily, useBonus } from "@/lib/queries";
@@ -24,17 +24,22 @@ function Explore() {
     bonus = useBonus();
   const navigate = useNavigate();
   const hash = useRouterState({ select: (r) => r.location.hash });
+  const comparison = comparisonFromHash(hash);
   const hydrated = useHydrated();
   const [tab, setTab] = useState("footprint");
   const [metric, setMetric] = useState<CalMetric>("co2Kg");
   const [compareFootprint, setCompareFootprint] = useState(false);
+  const footprintMetric = hash === "footprint-market" && daily.data?.some((d) => d.co2KgMarket != null)
+    ? "co2KgMarket" : metric;
   const effective = !hydrated
     ? tab
     : hash.startsWith("finding-")
       ? "findings"
-      : hash === "compare"
+      : hash === "compare" || comparison
         ? "compare"
-        : tab;
+        : hash === "footprint" || hash === "footprint-market"
+          ? "footprint"
+          : tab;
   return (
     <AppShell
       kicker="Connect · Find"
@@ -73,11 +78,12 @@ function Explore() {
                 <Button
                   key={v}
                   size="sm"
-                  variant={metric === v ? "secondary" : "ghost"}
+                  variant={footprintMetric === v ? "secondary" : "ghost"}
                   disabled={v === "co2KgMarket" && !daily.data?.some((d) => d.co2KgMarket != null)}
                   onClick={() => {
                     setMetric(v);
                     setCompareFootprint(false);
+                    if (hash === "footprint-market") void navigate({ to: "/explore", hash: "footprint" });
                   }}
                 >
                   {l}
@@ -95,19 +101,19 @@ function Explore() {
             {(d) => (
               <FootprintCalendar
                 days={d}
-                metric={metric}
+                metric={footprintMetric}
                 compare={compareFootprint}
                 onCompareChange={setCompareFootprint}
               />
             )}
           </Q>
         </TabsContent>
-        <TabsContent value="compare" id="compare">
+        <TabsContent value="compare" id={comparison ? hash : "compare"}>
           <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
             Identify the biggest drivers of cost, energy use and emissions. Select a category and
             metric to compare resources.
           </p>
-          <ComparisonBoard />
+          <ComparisonBoard key={comparison ? hash : "compare"} initial={comparison} />
         </TabsContent>
         <TabsContent value="findings">
           <WasteFindings />

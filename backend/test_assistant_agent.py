@@ -54,7 +54,7 @@ class AgentSafety(unittest.TestCase):
         plan = {"reply": "You save 123,456 CHF at https://x.example", "calls": [
             {"tool": "approve_measure", "args": {}}, {"tool": "navigate", "args": {"page": "https://x.example"}},
             {"tool": "set_filters", "args": {"department": "nope"}}, {"tool": "stage_plan", "args": {"measures": ["not-a-measure"]}}]}
-        reply, _ = self.ask("hi", plan)
+        reply, _ = self.ask("Could you point me in the right direction?", plan)
         self.assertNotIn("123,456", reply["content"])
         self.assertNotIn("x.example", json.dumps(reply))
         self.assertFalse(any(a["type"] in ("setFilters", "stagePlan") for a in reply["actions"]))
@@ -70,6 +70,40 @@ class AgentSafety(unittest.TestCase):
         reply, _ = self.ask("delete the production platform now")
         self.assertIn("can't change", reply["content"])
         self.assertTrue(all(a["type"] in ("navigate", "openMeasure") for a in reply["actions"]))
+
+    def test_chat_tables_are_requested_metrics_only_and_keep_followup_grouping(self):
+        prior, _ = self.ask("cost by department")
+        self.assertEqual(prior["tables"][0]["columns"], ["Department", "CHF"])
+        with mock.patch.dict(os.environ, {}, clear=True):
+            followup = self.agent.answer(self.q, [{"role": "assistant", "context": prior["context"]},
+                                                  {"role": "user", "content": "and carbon?"}])
+        self.assertEqual(followup["tables"][0]["columns"], ["Department", "kg CO₂e"])
+        self.assertEqual(followup["context"]["grouping"], "department")
+        with mock.patch.object(self.agent, "plan_with_model", side_effect=AssertionError("Navigation should stay local.")):
+            link = self.agent.answer(self.q, [{"role": "assistant", "context": followup["context"]},
+                                              {"role": "user", "content": "Show that as a chart"}])
+        self.assertEqual(link["actions"][0]["hash"], "compare-byDepartment-co2Kg")
+
+    def test_single_cost_answer_uses_the_requested_month(self):
+        reply, _ = self.ask("What did we spend in August 2026?")
+        self.assertIn("CHF", reply["content"])
+        self.assertIn("2026-08", reply["content"])
+        self.assertEqual(reply["tables"], [])
+        self.assertEqual(reply["context"]["filters"]["month"], ["2026-08"])
+
+    def test_navigation_opens_the_requested_chart_without_an_llm_roundtrip(self):
+        data, seen = self.ask("Open the market-based emissions calendar", {"calls": []})
+        self.assertEqual(seen, [])
+        self.assertEqual(data["actions"][0]["hash"], "footprint-market")
+        self.assertEqual(data["tables"], [])
+
+    def test_forecast_uses_explicit_device_plan_and_handles_unavailable_results(self):
+        product = {"unit": "kg CO₂", "granularity": "annual", "points": [], "growthAssumption": ""}
+        with mock.patch.object(self.api, "forecast", return_value=product) as forecast:
+            reply, _ = self.ask("Forecast market-based CO₂ for the next year")
+        forecast.assert_called_once_with(self.q, "co2Market", 1, [])
+        self.assertIn("No supported", reply["content"])
+        self.assertEqual(reply["actions"][0]["hash"], "forecast-co2Market")
 
 
 if __name__ == "__main__":

@@ -12,9 +12,16 @@ import { Q } from "./ui";
 import { LeaderboardBars } from "./leaderboard-bars";
 import { ResourceDetails } from "./resource-details";
 type Category = "byDepartment" | "byProvider" | "byTool" | "byService" | "servers";
-export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
-  const [category, setCategory] = useState<Category>("byDepartment");
-  const [metric, setMetric] = useState("costChf");
+export function comparisonFromHash(hash: string) {
+  const match = /^compare-(byDepartment|byProvider|byTool|byService)-(costChf|energyKwh|co2KgMarket|co2Kg)$/.exec(hash);
+  return match ? { category: match[1] as Category, metric: match[2]! } : undefined;
+}
+export function ComparisonBoard({
+  finance = false,
+  initial,
+}: { finance?: boolean; initial?: ReturnType<typeof comparisonFromHash> }) {
+  const [category, setCategory] = useState<Category>(initial?.category ?? "byDepartment");
+  const [metric, setMetric] = useState(initial?.metric ?? "costChf");
   const b = useBreakdowns();
   const rs = useResources();
   const operational = category === "servers";

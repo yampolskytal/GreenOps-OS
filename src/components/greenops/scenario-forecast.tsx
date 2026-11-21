@@ -28,16 +28,18 @@ export function ScenarioForecastPanel({
   title,
   emptyNote,
   onState,
+  initialMetric,
 }: {
   selections: ScenarioSelection[];
   title: string;
   emptyNote?: string;
+  initialMetric?: Forecast["metric"];
   onState?: (s: { metric: Forecast["metric"]; horizon: number }) => void;
 }) {
   const ov = useOverview();
   const support = ov.data?.forecastSupport ?? [];
   const supported = (id: Forecast["metric"]) => support.some((x) => x.metric === id && x.horizons.length);
-  const [chosen, setChosen] = useState<Forecast["metric"] | null>(null);
+  const [chosen, setChosen] = useState<Forecast["metric"] | null>(initialMetric ?? null);
   const [chosenH, setH] = useState<number | null>(null);
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
   const metric = chosen && supported(chosen) ? chosen : (FORECAST_METRICS.find((m) => supported(m.id))?.id ?? "cost");

@@ -8,12 +8,8 @@ export default defineConfig({
       proxy: {
         "/api/v2": {
           target: "http://127.0.0.1:8765",
-          changeOrigin: true,
-          configure: (proxy) => {
-            proxy.on("proxyReq", (proxyReq) => {
-              proxyReq.removeHeader("origin");
-            });
-          },
+          // Keep the host and origin so Python can reject cross-origin POSTs.
+          changeOrigin: false,
         },
       },
     },

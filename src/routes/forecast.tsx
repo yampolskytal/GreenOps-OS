@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
-import { ScenarioForecastPanel } from "@/components/greenops/scenario-forecast";
+import { FORECAST_METRICS, ScenarioForecastPanel } from "@/components/greenops/scenario-forecast";
 import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
 import { Button } from "@/components/ui/button";
 import type { Forecast } from "@/lib/api/types";
@@ -18,6 +18,8 @@ export const Route = createFileRoute("/forecast")({
   component: ForecastPage,
 });
 function ForecastPage() {
+  const hash = useRouterState({ select: (r) => r.location.hash });
+  const chartMetric = FORECAST_METRICS.find((m) => hash === `forecast-${m.id}`)?.id;
   const plan = useDisplayedPlan();
   const [metric, setMetric] = useState<Forecast["metric"]>("cost");
   const fc = useForecast(metric, 1);
@@ -28,9 +30,11 @@ function ForecastPage() {
       title={`${plan.label} forecast`}
       subtitle={`Actual monthly history, then projections without changes and with your ${plan.suggested ? "suggested starting strategy" : "committed Current Plan"}. Projections are not realized savings.`}
     >
-      <section data-analysis-region id="forecast">
+      <section data-analysis-region id={chartMetric ? `forecast-${chartMetric}` : "forecast"}>
         <PlanningProjection>
         <ScenarioForecastPanel
+          key={chartMetric ?? "forecast"}
+          initialMetric={chartMetric ?? "cost"}
           title={`${plan.label} vs. without changes`}
           onState={(x) => setMetric(x.metric)}
           selections={[

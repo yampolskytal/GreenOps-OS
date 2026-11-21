@@ -373,6 +373,9 @@ export interface ChatMessage {
   content: string;
   evidence?: Evidence[];
   calculation?: string;
+  details?: string;
+  assistant?: string;
+  tables?: { title: string; columns: string[]; rows: string[][] }[];
   actions?: ChatAction[];
   demo?: boolean;
   /** Opaque follow-up context returned by the backend assistant; sent back with the history. */
@@ -433,7 +436,7 @@ export interface GreenOpsApi {
   getDataQuality(q: GlobalQuery): Promise<DataQuality>;
   getBonus(q: GlobalQuery): Promise<Bonus>;
   importFiles(files: File[]): Promise<ImportResult>;
-  chat(q: GlobalQuery, history: ChatMessage[]): Promise<ChatMessage>;
+  chat(q: GlobalQuery, history: ChatMessage[], planMeasureIds?: string[]): Promise<ChatMessage>;
   exportBaseline(q: GlobalQuery): Promise<ExportFile>;
   exportMeasures(q: GlobalQuery, measureIds: string[]): Promise<ExportFile>;
 }

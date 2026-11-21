@@ -66,7 +66,11 @@ For live scheduling, place timestamped grid data in `hourly_grid.csv`. In `job_d
 
 ### Apertus
 
-Serve local Apertus on `127.0.0.1:8000` and set `GREENOPS_APERTUS_MODEL` to the deployed model ID before starting GreenOps. Set `GREENOPS_APERTUS_API_KEY` if the local server requires authentication. For a hosted OpenAI-compatible Apertus endpoint, set `GREENOPS_LLM_BASE_URL`, `GREENOPS_LLM_MODEL`, and `GREENOPS_LLM_API_KEY`. Set `GREENOPS_LLM_TOOLS=0` when the model serves JSON output without tool calling. Only unmatched question text goes to the configured model. GreenOps executes the validated read-only query and returns its own calculations. The rule-based assistant remains available if the endpoint fails.
+For local development, copy `apertus.env.example` to `apertus.env`, enter your Public AI key, and restart the Python backend. The example uses `swiss-ai/apertus-70b-instruct` at `https://api.publicai.co/v1`. The loader accepts this file on Windows and the file is ignored by Git and Docker.
+
+On the deployed Python service, configure `GREENOPS_LLM_BASE_URL`, `GREENOPS_LLM_MODEL`, `GREENOPS_LLM_TOOLS=0`, and `GREENOPS_LLM_API_KEY` as service environment variables. The Python backend talks to Public AI. The frontend only calls `/api/v2/chat`. For a self-hosted model, set `GREENOPS_APERTUS_MODEL` and serve the endpoint on `127.0.0.1:8000`.
+
+The assistant opens views directly for clear navigation requests. Apertus routes analytical questions into local read-only tools. Sources, assumptions and the routing source appear under **Sources and details**. If Apertus is unavailable, common questions still run through the local lookup.
 
 ### Bonus evidence
 

@@ -328,6 +328,13 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
       content: z.string(),
       evidence: evidence.optional(),
       calculation: z.string().optional(),
+      details: z.string().optional(),
+      assistant: z.string().optional(),
+      tables: z.array(z.object({
+        title: z.string(),
+        columns: z.array(z.string()).min(1).max(6),
+        rows: z.array(z.array(z.string()).max(6)).max(10),
+      })).max(2).optional(),
       actions: z
         .array(
           z.discriminatedUnion("type", [

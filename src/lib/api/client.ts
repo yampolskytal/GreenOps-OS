@@ -226,9 +226,14 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
         "Imports are not enabled in this public workspace. An authenticated administrator connection is required. No files were uploaded and no figures changed.",
       issues: [],
     }),
-    chat: (q, history: ChatMessage[]) =>
+    chat: (q, history: ChatMessage[], planMeasureIds = []) =>
       post(`/chat?${qs(q)}`, {
-        messages: history.slice(-20).map(({ role, content }) => ({ role, content })),
+        messages: history.slice(-20).map(({ role, content, context }) => ({
+          role,
+          content: content.slice(0, 4000),
+          ...(role === "assistant" && context ? { context } : {}),
+        })),
+        planMeasureIds: planMeasureIds.slice(0, 30),
       }),
     exportBaseline: (q) => req(`/exports/baseline?${qs(q)}`),
     exportMeasures: (q, ids) => post(`/exports/measures?${qs(q)}`, { measureIds: ids }),

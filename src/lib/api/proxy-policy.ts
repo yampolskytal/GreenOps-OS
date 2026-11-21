@@ -42,12 +42,19 @@ const POST_SCHEMAS: Record<string, z.ZodType> = {
   "exports/measures": z.object({ measureIds: selection }).strict(),
   chat: z
     .object({
+      planMeasureIds: selection.optional(),
       messages: z
         .array(
           z
             .object({
               role: z.enum(["user", "assistant"]),
               content: z.string().min(1).max(4000),
+              context: z.object({
+                metric: z.enum(["chf", "kwh", "kg", "kg_market"]),
+                grouping: z.enum(["department", "tool", "category", "provider", "region", "project", "resource", "month"]).nullable(),
+                filters: z.record(z.enum(["department", "tool", "category", "provider", "region", "project", "resource", "month"]),
+                  z.array(z.string().max(200)).max(30)),
+              }).strict().optional(),
             })
             .strict(),
         )

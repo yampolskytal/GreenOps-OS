@@ -40,26 +40,23 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Use Node.js 22.12+ and Python 3.11+. In PowerShell, open two terminals in the project folder.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+In the first terminal, start the Python backend with the official dataset:
+
+```powershell
+npm.cmd run backend
 ```
 
-## Running with the GreenOps backend
+Wait for `http://127.0.0.1:8765` to appear. The backend also serves the classic dashboard at that address. Use `npm.cmd run backend:demo` to try the representative dataset instead.
 
-The backend (`backend/`, Python 3.11+, no third-party runtime dependencies; install `tzdata` if your OS lacks Europe/Zurich) serves the organizer's data and all calculations. The frontend reaches it at `/api/v2/*`, which the Vite dev server proxies to `http://127.0.0.1:8765` (override with `GREENOPS_BACKEND_URL`).
+In the second terminal, install the frontend dependencies the first time and start the current dashboard:
 
-```sh
-# terminal 1 – backend on the official case data (organizer files in backend/inputs/)
-npm run backend          # or: npm run backend:demo  (representative demo dataset)
-
-# terminal 2 – frontend
-echo 'VITE_API_BASE_URL=/api/v2' > .env.local   # without it the UI uses the built-in DEMO adapter
-npm run dev
+```powershell
+npm.cmd install
+npm.cmd run dev:local
 ```
+
+Open [the local dashboard](http://127.0.0.1:8080). Both `npm.cmd run dev:local` and `npm.cmd run dev` connect to the local Python backend. Keep both terminals open, and press Ctrl+C in each to stop. If Python cannot find Europe/Zurich, install its time-zone data with `python -m pip install tzdata`.
 
 `backend/frontend_api.py` maps the backend's workspace (ledger, measure catalog, optimizer, forecast, diagnostics, assistant) to the frontend contract in `src/lib/api/types.ts`. The backend's own CLI (export, validate, assistant-check) and its legacy dashboard keep working — see `backend/README.md`. Backend tests: `npm run test:backend`.

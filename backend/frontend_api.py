@@ -657,8 +657,8 @@ class FrontendApi:
         for r in self.a.data.get("ai_usage", []):
             if "2025-09" <= r["date"][:7] <= "2026-08":
                 row = models[r["model"]]
-                row[0] += sum(float(r.get(k) or 0) for k in ("tokens_in", "tokens_out")) / 1e6
-                row[1] += float(r.get("cost_chf") or 0)
+                row[0] += sum(number(r.get(k)) or 0 for k in ("tokens_in", "tokens_out")) / 1e6
+                row[1] += number(r.get("cost_chf")) or 0
                 row[2] = r["provider"]
         total_cost = sum(v[1] for v in models.values()) or 1
         ai = [{"model": k, "provider": v[2], "tokensM": round(v[0], 2), "costChf": round(v[1], 2), "share": v[1] / total_cost}
@@ -670,7 +670,8 @@ class FrontendApi:
     def chat(self, q, body):
         from assistant_agent import agent_for
         history = [m for m in (body.get("messages") or []) if isinstance(m, dict)][-20:]
-        return agent_for(self.w, self).answer(q, history)
+        ids = body.get("planMeasureIds", [])
+        return agent_for(self.w, self).answer(q, history, ids if isinstance(ids, list) else [])
 
     def chat_legacy(self, q, body):
         history = body.get("messages") or []

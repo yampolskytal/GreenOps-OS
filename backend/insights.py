@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 from statistics import mean
 
+from accounting import MarketSummary
 from greenops import END, day, number, total
 
 
@@ -100,7 +101,7 @@ def projections(a, plan):
             "method": "Category demand, price and intensity scenarios. Documented step changes persist after their effective forecast year. Planned savings are subtracted as absolute values."}
 
 
-def query(w, question, prior=None):
+def query(w, question, prior=None, *, scope=None):
     """Translate bounded analytical language to typed ledger operations, never code or SQL."""
     q = question.casefold().strip()
     prior = prior if isinstance(prior, dict) else {}
@@ -128,31 +129,36 @@ def query(w, question, prior=None):
               "region": "region", "project": "project", "resource": "resource", "month": "month"}
     metrics = [("market", "kg_market"), ("carbon", "kg"), ("co2", "kg"), ("emissions", "kg"),
                ("energy", "kwh"), ("kwh", "kwh"), ("cost", "chf"), ("chf", "chf"), ("spend", "chf")]
-    followup = q.startswith(("and ", "what about", "how about"))
+    followup = q.startswith(("and ", "what about", "how about", "only ", "same ", "und ", "nur "))
     metric = next((v for k, v in metrics if re.search(r"\b" + k + r"s?\b", q)), prior.get("metric") if followup else None)
-    if metric not in {"kg_market", "kg", "kwh", "chf"}:
+    if metric not in ("kg_market", "kg", "kwh", "chf"):
         return {"answer": "Ask for cost, energy, or carbon by department, tool, provider, region, project, resource, or month. You can also ask about forecasts, reconciliations, CI waste, or a challenge question.",
                 "result": None, "context": {}}
     grouping = next((col for phrase, col in fields.items()
                      if re.search(r"\b(?:by|per|which|top|highest)\s+(?:\d{1,2}\s+)?" + phrase + r"s?\b", q)),
                     prior.get("grouping") if followup else None)
-    grouping = grouping if grouping in fields else None
+    grouping = grouping if isinstance(grouping, str) and grouping in fields else None
     rows = w.a.lines
     filters = {}
     for field in fields:
-        if field == grouping:
-            continue
         options = sorted({str(r.get(field) or "") for r in rows}, key=len, reverse=True)
         matches = [option for option in options if len(option) >= 3 and re.search(r"(?<![\w-])" + re.escape(option.casefold()) + r"(?![\w-])", q)]
         if field == "month":
             matches += [option for option in options if re.fullmatch(r"\d{4}-\d{2}", option)
-                        and re.search(r"\b" + calendar.month_name[int(option[5:])].casefold() + r"\s+" + option[:4] + r"\b", q)]
+                        and re.search(r"\b" + calendar.month_name[int(option[5:])].casefold() +
+                                      r"(?:\s+(" + option[:4] + r")\b|(?!\s+20\d{2})\b)", q)]
         if not matches and followup:
             previous = prior.get("filters", {})
             received = previous.get(field, []) if isinstance(previous, dict) else []
             matches = [v for v in received if isinstance(v, str) and v in options] if isinstance(received,list) else []
         if matches:
-            filters[field] = matches
+            filters[field] = list(dict.fromkeys(matches))
+    if scope:
+        if "month" not in filters:
+            rows = [r for r in rows if scope["from"] <= r["month"] <= scope["to"]]
+        for field in ("department", "provider"):
+            if field not in filters and scope[field] != "all":
+                filters[field] = [scope[field]]
     if filters:
         rows = [r for r in rows if all(r.get(f) in values for f, values in filters.items())]
     groups = defaultdict(list)
@@ -160,9 +166,10 @@ def query(w, question, prior=None):
         groups[str(row.get(grouping) or "Unallocated") if grouping else "Total"].append(row)
     def amount(group):
         observed = [r[metric] for r in group if r.get(metric) is not None]
-        value = (round(sum(observed), 2) if metric == "chf" else
+        value = (round(sum(observed), 2) if metric == "chf" and observed else
                  [round(sum(v[i] for v in observed), 4) for i in range(3)]) if observed else None
-        return {"value": value, "observed_lines": len(observed), "missing_lines": len(group) - len(observed),
+        coverage = {"coverage_pct": MarketSummary(group).coverage()["coveragePct"]} if metric == "kg_market" else {}
+        return {"value": value, "observed_lines": len(observed), "missing_lines": len(group) - len(observed), **coverage,
                 "source_files": sorted({r["ref"].split(":")[0] for r in group}),
                 "reference_sample": list(dict.fromkeys(r["ref"] for r in group))[:8]}
     result = [{"group": k, **amount(group)} for k, group in groups.items()]
