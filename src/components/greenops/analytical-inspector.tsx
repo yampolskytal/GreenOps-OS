@@ -23,7 +23,7 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [desktop, setDesktop] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1180px)");
+    const mq = window.matchMedia("(min-width: 768px)");
     const update = () => setDesktop(mq.matches);
     update();
     mq.addEventListener("change", update);

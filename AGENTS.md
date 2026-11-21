@@ -45,7 +45,7 @@ use the editor.
 
 - Year and month footprints share the original skyline renderer with a tested calendar geometry model; legends derive their ranges from the exact visible metric values, so period and metric changes cannot display stale scales.
 - Shared historical charts and forecast fans consume supplied observation granularity; aggregation only averages actual monthly points, so annual endpoints cannot invent finer observations.
-- Analytical inspectors and the assistant share a non-modal dock on wide screens and an Analysis/Details view on narrow screens, so evidence never overlays actionable content.
+- Analytical inspectors and the assistant share a non-modal side-by-side dock from 768px, with the CSS and matchMedia breakpoint kept identical; smaller phones use Analysis/Details so evidence never overlays actionable content.
 - Optional market emissions and provenance remain unavailable at unsupported levels and are never derived from location reductions, so alternate accounting stays independent of mandatory targets.
 - Saved alternative scenarios use the shared persisted store independently of the temporary Studio preview and committed plan; each comparison calls GreenOpsApi.simulate, so alternatives never mutate the plan or invent aggregate savings.
 - Studio recommendations recompute automatically using a budget debounce and settings-keyed queries; saved Paths and Current Plan never follow generator updates.

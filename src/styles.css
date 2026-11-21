@@ -345,7 +345,7 @@ html.light {
 .inspector-slot {
   display: none;
 }
-@media (min-width: 1180px) {
+@media (min-width: 768px) {
   .inspector-layout[data-inspector="open"] {
     grid-template-columns: minmax(0, 1fr) clamp(300px, 28vw, 390px);
   }
@@ -452,7 +452,7 @@ html.light {
   }
 }
 
-@media (max-width: 1179px) {
+@media (max-width: 767px) {
   .inspector-layout[data-inspector="open"] .inspector-main {
     visibility: hidden;
     height: 0;
