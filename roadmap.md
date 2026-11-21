@@ -1,4 +1,13 @@
 # Roadmap — GreenOps OS frontend
+
+- [x] V4 shared monthly line charts and executive hierarchy
+- [x] V4 docked analytical inspectors and mobile dismissal
+- [x] V4 live preview separated from committed plan, commit/reset/discard
+- [x] V4 calendar-integrated legends and predictable defaults
+- [x] V4 shared forecast refinement and supported-granularity contract
+- [x] V4 market accounting availability, evidence and backend integration requirements
+- [x] V4 functional and rendering regression checks
+- [ ] V4 authoritative market results, monthly forecasts and backend plan persistence — blocked: user confirmed team contract not yet available
 - [x] V3 neutral themes, quantitative calendar legends, monthly skyline, Sunday labels, findings labels and guidance
 - [x] V3 interaction and crash regression checks
 - [x] Design system + app shell (sidebar, top bar, global state)

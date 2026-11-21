@@ -1,14 +1,6 @@
 import type { ReactNode } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { AnalyticalInspector } from "./analytical-inspector";
 import { Button } from "@/components/ui/button";
-import { DemoTag } from "./ui";
 export function DetailDrawer({
   title,
   description,
@@ -21,18 +13,9 @@ export function DetailDrawer({
   children: ReactNode;
 }) {
   return (
-    <Sheet>
-      <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
-          <SheetDescription>
-            {description ?? "Evidence, assumptions and planning limitations"} <DemoTag />
-          </SheetDescription>
-        </SheetHeader>
-        <div className="mt-6 space-y-5 pb-8 text-sm">{children}</div>
-      </SheetContent>
-    </Sheet>
+    <AnalyticalInspector title={title} {...(description ? { description } : {})} trigger={trigger}>
+      {children}
+    </AnalyticalInspector>
   );
 }
 export function DetailBlock({ title, children }: { title: string; children: ReactNode }) {

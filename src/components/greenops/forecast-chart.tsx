@@ -1,6 +1,7 @@
 // Adapted from the uploaded PriceTargetFan: animated history, projection paths, endpoint focus and scrub tooltip.
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { forecastLabel, percentDifference } from "@/lib/analytics";
 import type { Forecast } from "@/lib/api/types";
 export function ForecastChart({
   f,
@@ -30,8 +31,10 @@ export function ForecastChart({
     .flatMap((p) => [
       p.baseline.low,
       p.baseline.high,
+      p.baseline.mid,
       p.optimized.low,
       p.optimized.high,
+      p.optimized.mid,
       ...(p.observed == null ? [] : [p.observed]),
     ])
     .filter(Number.isFinite);
@@ -39,20 +42,28 @@ export function ForecastChart({
     max = Math.max(...nums) * 1.08;
   const y = (v: number) => top + (1 - (v - min) / (max - min || 1)) * (H - top - bottom);
   const x = (i: number) => left + (i / Math.max(1, points.length - 1)) * (W - left - right);
+  const observed = points.map((p, i) => ({ p, i })).filter((v) => v.p.observed != null);
+  const lastObserved = observed.at(-1);
+  const boundary = lastObserved?.i ?? 0;
   const path = (series: "baseline" | "optimized", bound: "low" | "mid" | "high") =>
-    points.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p[series][bound])}`).join(" ");
+    points
+      .map((p, i) =>
+        i < boundary ? "" : `${i === boundary ? "M" : "L"}${x(i)},${y(p[series][bound])}`,
+      )
+      .join(" ");
   const band = (series: "baseline" | "optimized") =>
-    `${path(series, "high")} ${[...points]
+    `${path(series, "high")} ${points
+      .slice(boundary)
       .reverse()
       .map((p, i) => `L${x(points.length - 1 - i)},${y(p[series].low)}`)
       .join(" ")} Z`;
-  const observed = points.map((p, i) => ({ p, i })).filter((v) => v.p.observed != null);
   const history = observed
-    .map(({ p, i }, j) => `${j ? "L" : "M"}${x(i)},${y(p.observed ?? 0)}`)
+    .map(
+      ({ p, i }, j) =>
+        `${j && observed[j - 1]?.i === i - 1 ? "L" : "M"}${x(i)},${y(p.observed ?? 0)}`,
+    )
     .join(" ");
   const selected = active == null ? null : points[active];
-  const lastObserved = observed.at(-1);
-  const boundary = lastObserved?.i ?? 0;
   const labelBase = Math.min(
     H - bottom - 65,
     Math.max(top + 18, (y(last.baseline.mid) + y(last.optimized.mid)) / 2 - 28),
@@ -62,7 +73,7 @@ export function ForecastChart({
       <div className="w-full overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
-          className="block min-w-[640px] w-full"
+          className="block min-w-[540px] w-full"
           role="img"
           aria-label={`${f.unit} forecast with and without the selected plan`}
           onPointerLeave={() => setActive(null)}
@@ -161,15 +172,21 @@ export function ForecastChart({
             fill="none"
             stroke="var(--foreground)"
             strokeWidth="3"
-            initial={{ opacity: reduced ? 1 : 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ pathLength: reduced ? 1 : 0, opacity: reduced ? 1 : 0 }}
+            animate={{ pathLength: 1, opacity: 1 }}
             transition={{ duration: reduced ? 0 : 0.8 }}
           />
           {observed.map(({ p, i }) => (
-            <circle key={p.year} cx={x(i)} cy={y(p.observed ?? 0)} r="4" fill="var(--foreground)" />
+            <circle
+              key={`${p.date ?? p.year}-${i}`}
+              cx={x(i)}
+              cy={y(p.observed ?? 0)}
+              r="4"
+              fill="var(--foreground)"
+            />
           ))}
           {points.map((p, i) => (
-            <g key={p.year}>
+            <g key={`${p.date ?? p.year}-${i}`}>
               <text
                 x={x(i)}
                 y={H - 18}
@@ -177,12 +194,16 @@ export function ForecastChart({
                 textAnchor="middle"
                 fontSize="12"
               >
-                {p.year}
+                {i === 0 ||
+                i === points.length - 1 ||
+                i % Math.max(1, Math.ceil(points.length / 6)) === 0
+                  ? forecastLabel(p)
+                  : ""}
               </text>
               <circle
                 tabIndex={0}
                 role="button"
-                aria-label={`${p.year}: without plan ${format(p.baseline.mid)}, with plan ${format(p.optimized.mid)}`}
+                aria-label={`${forecastLabel(p)}: without plan ${format(p.baseline.mid)}, with plan ${format(p.optimized.mid)}`}
                 cx={x(i)}
                 cy={y(p.optimized.mid)}
                 r="8"
@@ -190,6 +211,12 @@ export function ForecastChart({
                 onFocus={() => setActive(i)}
                 onBlur={() => setActive(null)}
                 onClick={() => setActive(i)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActive(i);
+                  }
+                }}
               />
             </g>
           ))}
@@ -206,19 +233,27 @@ export function ForecastChart({
         </svg>
       </div>
       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span>● Observed annual baseline</span>
+        <span>● Historical observations</span>
         <span className="text-forecast">┄ Without optimization</span>
         <span className="text-accent-ink">┄ With selected plan</span>
         <span>Shading: supported low–high estimates</span>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
-        Forecast boundary: {points[boundary]?.year}. Annual endpoints only; connecting lines are
-        visual interpolation, not additional observations.
+        {f.granularity === "monthly"
+          ? "Supplied monthly points or labeled period averages."
+          : "Annual endpoints only; no monthly or quarterly variations are inferred."}{" "}
+        Axis range: {format(min)}–{format(max)} {f.unit}.{" "}
+        {lastObserved
+          ? `Forecast boundary: ${forecastLabel(lastObserved.p)}.`
+          : "Historical observations unavailable."}
       </p>
       {selected && (
-        <div role="status" className="mt-3 rounded-lg border bg-popover p-3 text-xs">
+        <div
+          role="status"
+          className="pointer-events-none absolute left-4 top-4 z-10 max-w-[min(360px,90%)] rounded-lg border bg-popover p-3 text-xs shadow-sm"
+        >
           <b>
-            {selected.year}
+            {forecastLabel(selected)}
             {selected.observed != null ? " · Observed baseline" : " · Projected"}
           </b>
           <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
@@ -230,7 +265,16 @@ export function ForecastChart({
               With plan: {format(selected.optimized.mid)} ({format(selected.optimized.low)}–
               {format(selected.optimized.high)})
             </span>
-            <span>Difference: {format(selected.baseline.mid - selected.optimized.mid)}</span>
+            <span>
+              Difference: {format(selected.baseline.mid - selected.optimized.mid)}
+              {percentDifference(selected.baseline.mid, selected.optimized.mid) != null
+                ? ` · ${percentDifference(selected.baseline.mid, selected.optimized.mid)?.toFixed(1)}%`
+                : ""}
+            </span>
+            <span>
+              {f.unit} ·{" "}
+              {selected.coverage ?? (f.granularity === "monthly" ? "Monthly" : "Annual endpoint")}
+            </span>
           </div>
         </div>
       )}

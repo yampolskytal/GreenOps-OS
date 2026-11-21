@@ -51,18 +51,20 @@ function Explore() {
           </p>
           <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">Footprint calendar</h2>
-            <div className="flex gap-1">
+            <div className="flex max-w-full flex-wrap gap-1">
               {(
                 [
-                  ["co2Kg", "CO₂"],
+                  ["co2Kg", "CO₂ — Location-based"],
                   ["costChf", "Cost"],
                   ["energyKwh", "Energy"],
+                  ["co2KgMarket", "CO₂ — Market-based"],
                 ] as const
               ).map(([v, l]) => (
                 <Button
                   key={v}
                   size="sm"
                   variant={metric === v ? "secondary" : "ghost"}
+                  disabled={v === "co2KgMarket" && !daily.data?.some((d) => d.co2KgMarket != null)}
                   onClick={() => setMetric(v)}
                 >
                   {l}
@@ -70,6 +72,12 @@ function Explore() {
               ))}
             </div>
           </div>
+          {!daily.data?.some((d) => d.co2KgMarket != null) && (
+            <p className="mb-4 text-xs text-muted-foreground">
+              Daily market-based emissions unavailable. Annual accounting totals do not provide
+              daily values.
+            </p>
+          )}
           <Q q={daily}>{(d) => <FootprintCalendar days={d} metric={metric} />}</Q>
         </TabsContent>
         <TabsContent value="compare" id="compare">

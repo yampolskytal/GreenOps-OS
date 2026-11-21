@@ -3,6 +3,7 @@ import { useMeasures } from "@/lib/queries";
 import { Q } from "./ui";
 import { MeasureCard } from "./measure-card";
 import { DetailBlock } from "./details";
+import { EmissionMetric } from "./emissions-evidence";
 import { chf } from "@/lib/format";
 export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) {
   const ms = useMeasures();
@@ -27,6 +28,18 @@ export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) 
         </p>
         <p>Estimated idle cost: {chf(r.idleCostChfYear)}/year</p>
       </DetailBlock>
+      {(r.co2Location || r.co2Market) && (
+        <>
+          <EmissionMetric
+            label="Location-based emissions"
+            {...(r.co2Location ? { kpi: r.co2Location } : {})}
+          />
+          <EmissionMetric
+            label="Market-based emissions"
+            {...(r.co2Market ? { kpi: r.co2Market } : {})}
+          />
+        </>
+      )}
       <DetailBlock title="Operational safety">
         <p>Criticality: {r.criticality}</p>
         {r.flag && <p className="text-warning">{r.flag}</p>}

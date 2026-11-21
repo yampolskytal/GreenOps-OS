@@ -34,11 +34,21 @@ const initial: AppState = {
 };
 const KEY = "greenops-state-v1";
 
-type CtxValue = { s: AppState; set: (p: Partial<AppState>) => void };
+type CtxValue = {
+  s: AppState;
+  set: (p: Partial<AppState>) => void;
+  commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => void;
+};
 // Keep one context instance across hot reloads so the provider and consumers always match.
 const g = globalThis as unknown as { __greenopsCtx?: React.Context<CtxValue | null> };
 const Ctx = (g.__greenopsCtx ??= createContext<CtxValue | null>(null));
-const fallback: CtxValue = { s: initial, set: () => {} };
+const fallback: CtxValue = {
+  s: initial,
+  set: () => {},
+  commitPlan: () => {
+    throw new Error("Plan storage unavailable");
+  },
+};
 
 /** One shared state across all dashboards; persisted so role switches never reset it. */
 export function AppStateProvider({ children }: { children: ReactNode }) {
@@ -54,14 +64,28 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
   useEffect(() => {
-    if (ready) localStorage.setItem(KEY, JSON.stringify(s));
+    if (ready) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(s));
+      } catch {
+        /* Explicit plan commits surface persistence failures separately. */
+      }
+    }
   }, [s, ready]);
   useEffect(() => {
     document.documentElement.classList.toggle("dark", s.theme === "dark");
     document.documentElement.classList.toggle("light", s.theme === "light");
   }, [s.theme]);
   const value = useMemo(
-    () => ({ s, set: (p: Partial<AppState>) => setS((x) => ({ ...x, ...p })) }),
+    () => ({
+      s,
+      set: (p: Partial<AppState>) => setS((x) => ({ ...x, ...p })),
+      commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => {
+        const next = { ...s, ...plan };
+        localStorage.setItem(KEY, JSON.stringify(next));
+        setS(next);
+      },
+    }),
     [s],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

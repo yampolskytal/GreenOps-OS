@@ -53,6 +53,7 @@ import { DetailDrawer } from "./details";
 import { MeasureCard } from "./measure-card";
 import { TargetPanel } from "./targets";
 import { Q } from "./ui";
+import { InspectorProvider } from "./analytical-inspector";
 export const ROLES: {
   id: Role;
   to: "/ceo" | "/cfo" | "/it";
@@ -393,134 +394,140 @@ export function AppShell({
     { to: "/data" as const, label: "Data & Reports", Icon: Files },
   ];
   return (
-    <div className="flex min-h-screen">
-      <aside
-        className={cn(
-          "sticky top-0 flex h-screen shrink-0 flex-col border-r bg-sidebar p-3 transition-[width]",
-          collapsed ? "w-16" : "w-56 max-sm:w-16",
-        )}
-      >
-        <Link to="/" className="mb-8 flex items-center gap-2 px-1 py-2" title="GreenOps OS">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary">
-            <Leaf className="size-4 text-primary-foreground" />
-          </span>
-          {!collapsed && (
-            <span className="font-display font-semibold max-sm:hidden">
-              GreenOps <span className="text-primary">OS</span>
-            </span>
+    <InspectorProvider>
+      <div className="greenops-shell flex min-h-screen">
+        <aside
+          className={cn(
+            "app-navigation",
+            "sticky top-0 flex h-screen shrink-0 flex-col border-r bg-sidebar p-3 transition-[width]",
+            collapsed ? "w-16" : "w-56 max-sm:w-16",
           )}
-        </Link>
-        <div className="mb-8">
-          <Select
-            value={current}
-            onValueChange={(v) => {
-              const r = ROLES.find((x) => x.id === v);
-              if (r) {
-                set({ role: r.id });
-                void navigate({ to: r.to });
-              }
-            }}
-          >
-            <SelectTrigger
-              aria-label="Presentation role"
-              className={cn("bg-card", collapsed ? "w-10 px-1" : "max-sm:w-10 max-sm:px-1")}
+        >
+          <Link to="/" className="mb-8 flex items-center gap-2 px-1 py-2" title="GreenOps OS">
+            <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary">
+              <Leaf className="size-4 text-primary-foreground" />
+            </span>
+            {!collapsed && (
+              <span className="font-display font-semibold max-sm:hidden">
+                GreenOps <span className="text-primary">OS</span>
+              </span>
+            )}
+          </Link>
+          <div className="mb-8">
+            <Select
+              value={current}
+              onValueChange={(v) => {
+                const r = ROLES.find((x) => x.id === v);
+                if (r) {
+                  set({ role: r.id });
+                  void navigate({ to: r.to });
+                }
+              }}
             >
-              <SelectValue>
-                {collapsed ? (
-                  current.toUpperCase()
-                ) : (
-                  <>
-                    <span className="max-sm:hidden">
-                      {ROLES.find((r) => r.id === current)?.label}
-                    </span>
-                    <span className="hidden max-sm:inline">{current.toUpperCase()}</span>
-                  </>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {ROLES.map((r) => (
-                <SelectItem key={r.id} value={r.id}>
-                  {r.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <nav className="space-y-2">
-          {nav.map((n) => (
-            <Button
-              key={n.label}
-              asChild
-              variant="ghost"
-              className={cn(
-                "h-11 w-full justify-start px-3",
-                path === n.to && "bg-card text-primary",
-                collapsed && "justify-center px-0",
-              )}
-            >
-              <Link to={n.to} title={n.label}>
-                <n.Icon className="size-4 shrink-0" />
-                {!collapsed && <span className="max-sm:hidden">{n.label}</span>}
-              </Link>
-            </Button>
-          ))}
-        </nav>
-        <div className="mt-auto space-y-4">
-          <CurrentPlan collapsed={collapsed} />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-full"
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            onClick={() => set({ sidebarCollapsed: !collapsed })}
-          >
-            {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-          </Button>
-        </div>
-      </aside>
-      <div className="min-w-0 flex-1">
-        <DemoBanner />
-        <header className="sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b bg-background/95 px-5 py-3 backdrop-blur lg:px-8">
-          <span className="mr-auto text-xs text-muted-foreground">
-            {s.from} — {s.to}
-          </span>
-          <GlobalSearch />
-          <Filters />
-          <DataHealth />
-          <Button
-            variant="ghost"
-            size="icon"
-            title={s.theme === "dark" ? "Light theme" : "Dark theme"}
-            aria-label={s.theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            onClick={() => set({ theme: s.theme === "dark" ? "light" : "dark" })}
-          >
-            {s.theme === "dark" ? <Sun /> : <Moon />}
-          </Button>
-        </header>
-        <main className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 lg:px-8">
-          <div className="mb-8 flex flex-wrap items-end gap-4">
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-primary">{kicker}</p>
-              <h1 className="mt-2 text-3xl font-semibold">{title}</h1>
-              {subtitle && (
-                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
-              )}
-            </div>
-            {actions}
+              <SelectTrigger
+                aria-label="Presentation role"
+                className={cn("bg-card", collapsed ? "w-10 px-1" : "max-sm:w-10 max-sm:px-1")}
+              >
+                <SelectValue>
+                  {collapsed ? (
+                    current.toUpperCase()
+                  ) : (
+                    <>
+                      <span className="max-sm:hidden">
+                        {ROLES.find((r) => r.id === current)?.label}
+                      </span>
+                      <span className="hidden max-sm:inline">{current.toUpperCase()}</span>
+                    </>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {ROLES.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          {children}
-        </main>
+          <nav className="space-y-2">
+            {nav.map((n) => (
+              <Button
+                key={n.label}
+                asChild
+                variant="ghost"
+                className={cn(
+                  "h-11 w-full justify-start px-3",
+                  path === n.to && "bg-card text-primary",
+                  collapsed && "justify-center px-0",
+                )}
+              >
+                <Link to={n.to} title={n.label}>
+                  <n.Icon className="size-4 shrink-0" />
+                  {!collapsed && <span className="max-sm:hidden">{n.label}</span>}
+                </Link>
+              </Button>
+            ))}
+          </nav>
+          <div className="mt-auto space-y-4">
+            <CurrentPlan collapsed={collapsed} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-full"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              onClick={() => set({ sidebarCollapsed: !collapsed })}
+            >
+              {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+            </Button>
+          </div>
+        </aside>
+        <div className="min-w-0 flex-1">
+          <DemoBanner />
+          <header className="sticky top-0 z-30 flex flex-wrap items-center gap-3 border-b bg-background/95 px-5 py-3 backdrop-blur lg:px-8">
+            <span className="mr-auto text-xs text-muted-foreground">
+              {s.from} — {s.to}
+            </span>
+            <GlobalSearch />
+            <Filters />
+            <DataHealth />
+            <Button
+              variant="ghost"
+              size="icon"
+              title={s.theme === "dark" ? "Light theme" : "Dark theme"}
+              aria-label={s.theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              onClick={() => set({ theme: s.theme === "dark" ? "light" : "dark" })}
+            >
+              {s.theme === "dark" ? <Sun /> : <Moon />}
+            </Button>
+          </header>
+          <main className="mx-auto max-w-[1400px] px-5 pb-24 pt-8 lg:px-8">
+            <div className="mb-8 flex flex-wrap items-end gap-4">
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-primary">{kicker}</p>
+                <h1 className="mt-2 text-3xl font-semibold">{title}</h1>
+                {subtitle && (
+                  <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
+                )}
+              </div>
+              {actions}
+            </div>
+            {children}
+          </main>
+        </div>
+        <Button
+          className={cn(
+            "fixed right-6 z-40 h-12 rounded-full shadow-lg",
+            path === "/studio" ? "bottom-24" : "bottom-6",
+          )}
+          onClick={() => set({ chatOpen: true })}
+        >
+          <Sparkles />
+          AI Copilot
+        </Button>
+        <ChatPanel />
       </div>
-      <Button
-        className="fixed bottom-6 right-6 z-40 h-12 rounded-full shadow-lg"
-        onClick={() => set({ chatOpen: true })}
-      >
-        <Sparkles />
-        AI Copilot
-      </Button>
-      <ChatPanel />
-    </div>
+    </InspectorProvider>
   );
 }

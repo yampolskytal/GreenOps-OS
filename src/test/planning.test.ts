@@ -5,6 +5,7 @@ import {
   runtimeSegments,
   canSelectMeasure,
   canDownloadExport,
+  validatePreview,
 } from "@/lib/planning";
 import { demoMeasures } from "@/lib/api/demo-data";
 import { demoApi } from "@/lib/api/client";
@@ -16,6 +17,40 @@ const q = {
   provider: "AWS",
 };
 describe("refactor planning integrity", () => {
+  it("rejects commitments over the CHF 16,500 official budget", async () => {
+    const result = await demoApi.simulate(q, {
+      measureIds: [],
+      budgetChf: 17000,
+      chfPerPersonDay: 1100,
+    });
+    expect(validatePreview([], demoMeasures, 17000, result)).toContain("16,500");
+  });
+  it("rejects commitments over 15 person-days", async () => {
+    const result = await demoApi.simulate(q, {
+      measureIds: [],
+      budgetChf: 16500,
+      chfPerPersonDay: 1100,
+    });
+    expect(validatePreview([], demoMeasures, 16500, { ...result, effortDays: 15.5 })).toContain(
+      "15 person-days",
+    );
+  });
+  it("keeps blocked measures out of committed packages", async () => {
+    const result = await demoApi.simulate(q, {
+      measureIds: ["M7"],
+      budgetChf: 16500,
+      chfPerPersonDay: 1100,
+    });
+    expect(validatePreview(["M7"], demoMeasures, 16500, result)).toContain("blocked");
+  });
+  it("does not claim market-based savings when the simulation does not provide them", async () => {
+    const result = await demoApi.simulate(q, {
+      measureIds: ["M1"],
+      budgetChf: 16500,
+      chfPerPersonDay: 1100,
+    });
+    expect(result.savingsCo2KgMarket).toBeUndefined();
+  });
   it("blocks demo export downloads while permitting backend files", () => {
     expect(canDownloadExport(true)).toBe(false);
     expect(canDownloadExport(false)).toBe(true);

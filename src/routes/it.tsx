@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { DetailDrawer } from "@/components/greenops/details";
 import { ResourceDetails } from "@/components/greenops/resource-details";
 import { MeasureCard } from "@/components/greenops/measure-card";
-import { useMeasures, useResources } from "@/lib/queries";
+import { useMeasures, useResources, useOverview } from "@/lib/queries";
 import { runtimeSegments } from "@/lib/planning";
+import { HistoricalPerformance } from "@/components/greenops/historical-performance";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/it")({
   head: () =>
@@ -19,7 +20,8 @@ export const Route = createFileRoute("/it")({
 });
 function It() {
   const rs = useResources(),
-    ms = useMeasures();
+    ms = useMeasures(),
+    ov = useOverview();
   return (
     <AppShell
       kicker="IT Manager · Dashboard"
@@ -132,6 +134,7 @@ function It() {
           </>
         )}
       </Q>
+      <Q q={ov}>{(o) => <HistoricalPerformance overview={o} operational />}</Q>
       <section className="mt-8 border-t pt-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Recommended operational changes</h2>

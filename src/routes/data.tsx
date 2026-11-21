@@ -3,8 +3,9 @@ import { AppShell } from "@/components/greenops/shell";
 import { DataManagement } from "./import";
 import { SubmissionContent } from "./submission";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useQuality } from "@/lib/queries";
+import { useQuality, useOverview } from "@/lib/queries";
 import { Q } from "@/components/greenops/ui";
+import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/data")({
   head: () =>
@@ -15,7 +16,8 @@ export const Route = createFileRoute("/data")({
   component: DataReports,
 });
 function DataReports() {
-  const quality = useQuality();
+  const quality = useQuality(),
+    ov = useOverview();
   return (
     <AppShell
       kicker="Connect · Report"
@@ -50,6 +52,14 @@ function DataReports() {
             )}
           </Q>
           <DataManagement />
+          <div className="mt-6">
+            <Q q={ov}>{(o) => <EmissionsEvidence overview={o} />}</Q>
+          </div>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Real market-based results require the team API contract: annual totals, period, units,
+            region, methodology, factors, sources, coverage, missing inputs and procurement
+            assumptions. Monthly/daily values and scenario effects must be supplied separately.
+          </p>
           <p className="mt-6 text-xs text-muted-foreground">
             Import history and additional JSONL validation require the team backend; no local upload
             changes your analytics.

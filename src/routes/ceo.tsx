@@ -1,14 +1,4 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { ArrowRight, Coins, Cloud, PiggyBank } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
 import { ChartCard, KpiCard, Q, RiskBadge } from "@/components/greenops/ui";
@@ -17,7 +7,9 @@ import { TargetPanel } from "@/components/greenops/targets";
 import { DetailDrawer } from "@/components/greenops/details";
 import { Button } from "@/components/ui/button";
 import { useMeasures, useOverview, useSimulation } from "@/lib/queries";
-import { chf, kchf, kg, kwh } from "@/lib/format";
+import { kchf, kg } from "@/lib/format";
+import { HistoricalPerformance } from "@/components/greenops/historical-performance";
+import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/ceo")({
   head: () =>
@@ -31,8 +23,6 @@ function Ceo() {
   const ov = useOverview(),
     sim = useSimulation(),
     ms = useMeasures();
-  const [metric, setMetric] = useState<"costChf" | "co2Kg" | "energyKwh">("costChf");
-  const fmt = metric === "costChf" ? kchf : metric === "co2Kg" ? kg : kwh;
   return (
     <AppShell
       kicker="CEO · Dashboard"
@@ -68,90 +58,26 @@ function Ceo() {
                 icon={<PiggyBank className="size-4" />}
               />
             </div>
-            <div className="mt-6 grid gap-8 xl:grid-cols-[.9fr_1.2fr]">
-              <div id="targets">
-                <ChartCard title="Projected targets" subtitle="Selection is not implementation">
-                  <Q q={sim}>{(r) => <TargetPanel r={r} />}</Q>
-                  <Button asChild variant="link" className="mt-4 px-0">
-                    <Link to="/studio">
-                      Review optimization plan
-                      <ArrowRight />
-                    </Link>
-                  </Button>
-                </ChartCard>
-              </div>
-              <div id="monthly">
-                <ChartCard
-                  title="Monthly performance"
-                  info={
-                    metric === "costChf"
-                      ? o.cost.calc
-                      : metric === "co2Kg"
-                        ? o.co2Location.calc
-                        : o.energy.calc
-                  }
-                  action={
-                    <div className="flex">
-                      {(
-                        [
-                          ["costChf", "Cost"],
-                          ["co2Kg", "CO₂"],
-                          ["energyKwh", "Energy"],
-                        ] as const
-                      ).map(([v, l]) => (
-                        <Button
-                          key={v}
-                          variant={metric === v ? "secondary" : "ghost"}
-                          size="sm"
-                          onClick={() => setMetric(v)}
-                        >
-                          {l}
-                        </Button>
-                      ))}
-                    </div>
-                  }
-                >
-                  <div className="h-64">
-                    <ResponsiveContainer>
-                      <AreaChart data={o.monthly} margin={{ right: 12 }}>
-                        <CartesianGrid stroke="var(--border)" vertical={false} />
-                        <XAxis
-                          dataKey="month"
-                          tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tickFormatter={fmt}
-                          width={80}
-                          tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            background: "var(--popover)",
-                            border: "1px solid var(--border)",
-                            borderRadius: 8,
-                          }}
-                          formatter={(v: number) => fmt(v)}
-                        />
-                        <Area
-                          dataKey={metric}
-                          name={
-                            metric === "costChf" ? "Cost" : metric === "co2Kg" ? "CO₂" : "Energy"
-                          }
-                          fill="var(--chart-1)"
-                          fillOpacity={0.12}
-                          stroke="var(--chart-1)"
-                          strokeWidth={2}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </ChartCard>
-              </div>
+            <div className="mt-4">
+              <EmissionsEvidence overview={o} />
             </div>
+            <div id="monthly">
+              <HistoricalPerformance overview={o} />
+            </div>
+            <section id="targets" className="border-b py-5">
+              <ChartCard
+                title="Projected optimization targets"
+                subtitle="Current Plan · projections, not historical results"
+              >
+                <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
+                <Button asChild variant="link" className="mt-4 px-0">
+                  <Link to="/studio">
+                    Review optimization plan
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              </ChartCard>
+            </section>
             <section className="mt-8">
               <h2 className="mb-4 text-lg font-semibold">Top opportunities</h2>
               <Q q={ms}>

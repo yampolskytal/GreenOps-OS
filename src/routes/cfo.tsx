@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useForecast, useOverview, useSimulation } from "@/lib/queries";
 import { useApp } from "@/lib/store";
 import { chf, kchf } from "@/lib/format";
+import { HistoricalPerformance } from "@/components/greenops/historical-performance";
+import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/cfo")({
   head: () =>
@@ -20,7 +22,11 @@ export const Route = createFileRoute("/cfo")({
 function Cfo() {
   const ov = useOverview(),
     sim = useSimulation(),
-    fc = useForecast("cost", 3);
+    fc = useForecast(
+      "cost",
+      3,
+      !!ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)),
+    );
   const { s } = useApp();
   return (
     <AppShell
@@ -53,6 +59,16 @@ function Cfo() {
           icon={<Hammer className="size-4" />}
         />
       </div>
+      <Q q={ov}>
+        {(o) => (
+          <>
+            <HistoricalPerformance overview={o} />
+            <div className="mt-4">
+              <EmissionsEvidence overview={o} />
+            </div>
+          </>
+        )}
+      </Q>
       <div className="mt-6 grid gap-10 xl:grid-cols-[1.35fr_.8fr]">
         <ChartCard
           title="Where the money goes"
@@ -110,7 +126,13 @@ function Cfo() {
             </Button>
           }
         >
-          <Q q={fc}>{(f) => <ForecastChart f={f} format={kchf} height={260} />}</Q>
+          {ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)) ? (
+            <Q q={fc}>{(f) => <ForecastChart f={f} format={kchf} height={260} />}</Q>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Three-year cost projections are not available from this provider.
+            </p>
+          )}
         </ChartCard>
       </section>
     </AppShell>

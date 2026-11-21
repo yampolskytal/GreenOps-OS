@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { DailyFootprint } from "@/lib/api/types";
 import { chf, kg, kwh } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, ArrowRight, ArrowLeftRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowLeftRight, RotateCcw, ChevronDown } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -19,30 +19,39 @@ import {
 } from "@/components/ui/sheet";
 import { availableRange } from "@/lib/calendar-model";
 import ContributionSkyline from "./contribution-skyline";
-export type CalMetric = "co2Kg" | "costChf" | "energyKwh";
-const LABELS = { co2Kg: "CO₂ emissions", costChf: "Cost", energyKwh: "Energy" };
-const UNITS = { co2Kg: "kg CO₂", costChf: "CHF", energyKwh: "kWh" };
+export type CalMetric = "co2Kg" | "costChf" | "energyKwh" | "co2KgMarket";
+const LABELS = {
+  co2Kg: "CO₂ — Location-based",
+  co2KgMarket: "CO₂ — Market-based",
+  costChf: "Cost",
+  energyKwh: "Energy",
+};
+const UNITS = { co2Kg: "kg CO₂", co2KgMarket: "kg CO₂", costChf: "CHF", energyKwh: "kWh" };
 const fmt = {
+  co2KgMarket: (v: number) => `${v.toFixed(1)} kg CO₂`,
   co2Kg: (v: number) => `${v.toFixed(1)} kg CO₂`,
   costChf: chf,
   energyKwh: (v: number) => `${v.toFixed(1)} kWh`,
 };
-const valid = (v: number) => (Number.isFinite(v) && v >= 0 ? v : null);
+const valid = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
 export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; metric: CalMetric }) {
   const [view, setView] = useState<"2d" | "3d">("2d");
   const [period, setPeriod] = useState<"year" | "month">("year");
   const months = [...new Set(days.map((d) => d.date.slice(0, 7)))].sort();
   const [selectedMonth, setMonth] = useState("");
-  const month = months.includes(selectedMonth) ? selectedMonth : (months.at(-1) ?? "");
+  const month = months.includes(selectedMonth) ? selectedMonth : (months[0] ?? "");
   const [heightMetric, setHeightMetric] = useState<CalMetric>("co2Kg");
   const [colorMetric, setColorMetric] = useState<CalMetric>("costChf");
+  const frame = useRef<HTMLDivElement>(null);
+  const [legendOpen, setLegendOpen] = useState(true);
   const [sel, setSel] = useState<DailyFootprint | null>(null);
   const shown = period === "month" ? days.filter((d) => d.date.startsWith(month)) : days;
   const color = view === "2d" ? metric : colorMetric;
   const heightRange = availableRange(shown.map((d) => d[heightMetric]));
   const colorRange = availableRange(shown.map((d) => d[color]));
   const display = (d: DailyFootprint, m: CalMetric) =>
-    valid(d[m]) === null ? "Unavailable" : fmt[m](d[m]);
+    valid(d[m]) === null ? "Unavailable" : fmt[m](valid(d[m]) ?? 0);
   const data = shown.map((d) => ({
     date: d.date,
     count: valid(d[heightMetric]),
@@ -117,83 +126,57 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
           ))}
         </div>
       </div>
-      <div className="mb-4 grid grid-cols-1 items-start gap-x-8 gap-y-4 border-y py-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
-        {view === "3d" && (
-          <div className="min-w-0 flex-1">
-            <div className="flex items-end gap-3">
-              <span className="flex h-9 w-10 shrink-0 items-end gap-1" aria-hidden="true">
-                <span className="h-3 w-2 rounded-sm bg-chart-1" />
-                <span className="h-6 w-2 rounded-sm bg-chart-1" />
-                <span className="h-9 w-2 rounded-sm bg-chart-1" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold">Bar height: {LABELS[heightMetric]}</p>
-                <p className="text-xs text-muted-foreground">
-                  {UNITS[heightMetric]} · linear scale
-                </p>
-              </div>
-            </div>
-            <Select value={heightMetric} onValueChange={(v) => setHeightMetric(v as CalMetric)}>
-              <SelectTrigger className="mt-3 w-full max-w-60" aria-label="Height metric">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>
-                    {l}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="num mt-2 text-xs text-muted-foreground">
-              {heightRange
-                ? `0 → ${fmt[heightMetric](heightRange.max)} · available range ${fmt[heightMetric](heightRange.min)}–${fmt[heightMetric](heightRange.max)}`
-                : "Height metric unavailable"}
-            </p>
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">
-            {view === "3d" ? "Bar color" : "Cell color"}: {LABELS[color]}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {UNITS[color]} · lightest = lowest, darkest = highest
-          </p>
-          {view === "3d" && (
-            <Select value={colorMetric} onValueChange={(v) => setColorMetric(v as CalMetric)}>
-              <SelectTrigger className="mt-3 w-full max-w-60" aria-label="Color metric">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>
-                    {l}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <div className="mt-3 flex h-3 overflow-hidden rounded" aria-hidden="true">
-            {[1, 2, 3, 4].map((i) => (
-              <span key={i} className="flex-1" style={{ background: `var(--heat-${i})` }} />
-            ))}
-          </div>
-          <div className="num mt-2 flex flex-wrap justify-between gap-2 text-[11px] text-muted-foreground">
-            {colorRange ? (
-              [0, 0.25, 0.5, 0.75, 1].map((p) => (
-                <span key={p}>
-                  {fmt[color](colorRange.min + (colorRange.max - colorRange.min) * p)}
-                </span>
-              ))
-            ) : (
-              <span>Color metric unavailable</span>
-            )}
-          </div>
-        </div>
-        {view === "3d" && (
+      {view === "3d" && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          <Select
+            value={heightMetric}
+            onValueChange={(v) => {
+              const next = v as CalMetric;
+              if (next === colorMetric) setColorMetric(heightMetric);
+              setHeightMetric(next);
+            }}
+          >
+            <SelectTrigger className="w-52" aria-label="Height metric">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(LABELS).map(([v, l]) => (
+                <SelectItem
+                  key={v}
+                  value={v}
+                  disabled={v === "co2KgMarket" && !shown.some((d) => valid(d.co2KgMarket) != null)}
+                >
+                  {l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={colorMetric}
+            onValueChange={(v) => {
+              const next = v as CalMetric;
+              if (next === heightMetric) setHeightMetric(colorMetric);
+              setColorMetric(next);
+            }}
+          >
+            <SelectTrigger className="w-52" aria-label="Color metric">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(LABELS).map(([v, l]) => (
+                <SelectItem
+                  key={v}
+                  value={v}
+                  disabled={v === "co2KgMarket" && !shown.some((d) => valid(d.co2KgMarket) != null)}
+                >
+                  {l}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
-            variant="outline"
             size="sm"
+            variant="outline"
             onClick={() => {
               setHeightMetric(colorMetric);
               setColorMetric(heightMetric);
@@ -202,30 +185,115 @@ export function FootprintCalendar({ days, metric }: { days: DailyFootprint[]; me
             <ArrowLeftRight />
             Swap height / color
           </Button>
-        )}
-      </div>
-      {view === "3d" && (
-        <p className="mb-4 text-xs text-muted-foreground">
-          Height represents one metric, while color represents another. Hover over a day to see its
-          values.
-        </p>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              frame.current
+                ?.querySelector("canvas")
+                ?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }))
+            }
+          >
+            <RotateCcw />
+            Reset View
+          </Button>
+        </div>
       )}
-      {period === "month" && view === "2d" && <div className="mb-1 grid grid-cols-7 text-center text-xs text-muted-foreground">{["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=><span key={d}>{d}</span>)}</div>}
-      <ContributionSkyline
-        data={data}
-        heightScale={period === "month" ? .28 : 1}
-        {...(period === "month" ? { month } : {})}
-        view={view}
-        onViewChange={setView}
-        showToggle={false}
-        weekStart={1}
-        palette={["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"]}
-        showStats={false}
-        showLegend={false}
-        title={period === "month" ? month : `${days[0]?.date} — ${days.at(-1)?.date}`}
-        footer="Dashed cells: unavailable metric coverage"
-        onCellClick={(d) => setSel(shown.find((x) => x.date === d.date) ?? null)}
-      />
+      {period === "month" && view === "2d" && (
+        <div className="mb-1 grid grid-cols-7 text-center text-xs text-muted-foreground">
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+            <span key={d}>{d}</span>
+          ))}
+        </div>
+      )}
+      <div ref={frame} className="calendar-chart-frame" data-view={view}>
+        {view === "3d" && (
+          <div className="calendar-floating-legend" data-collapsed={!legendOpen}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-auto w-full justify-between whitespace-normal p-0 text-left"
+              onClick={() => setLegendOpen(!legendOpen)}
+              aria-expanded={legendOpen}
+            >
+              <span className="text-xs">
+                Height: {LABELS[heightMetric]} · Color: {LABELS[color]}
+              </span>
+              <ChevronDown className="size-4 shrink-0" />
+            </Button>
+            {legendOpen && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <div className="flex items-end gap-3">
+                    <span className="flex h-6 gap-1 items-end" aria-hidden="true">
+                      <span className="h-2 w-2 bg-chart-2" />
+                      <span className="h-4 w-2 bg-chart-2" />
+                      <span className="h-6 w-2 bg-chart-2" />
+                    </span>
+                    <p className="text-xs">{UNITS[heightMetric]} · zero-based linear height</p>
+                  </div>
+                  <p className="num mt-2 text-[11px] text-muted-foreground">
+                    {heightRange
+                      ? `Range ${fmt[heightMetric](heightRange.min)}–${fmt[heightMetric](heightRange.max)}`
+                      : "Unavailable"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs">{UNITS[color]} · lightest = lowest, darkest = highest</p>
+                  <div className="mt-2 flex h-2 overflow-hidden rounded">
+                    {[1, 2, 3, 4].map((i) => (
+                      <span key={i} className="flex-1" style={{ background: `var(--heat-${i})` }} />
+                    ))}
+                  </div>
+                  <div className="num mt-2 flex flex-wrap justify-between gap-2 text-[10px] text-muted-foreground">
+                    {colorRange
+                      ? [0, 0.25, 0.5, 0.75, 1].map((p) => (
+                          <span key={p}>
+                            {fmt[color](colorRange.min + (colorRange.max - colorRange.min) * p)}
+                          </span>
+                        ))
+                      : "Unavailable"}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {view === "2d" && (
+          <div className="mb-3 text-xs text-muted-foreground">
+            <p>
+              Color: {LABELS[color]} · {UNITS[color]}
+            </p>
+            <div className="mt-2 flex h-2 overflow-hidden rounded">
+              {[1, 2, 3, 4].map((i) => (
+                <span key={i} className="flex-1" style={{ background: `var(--heat-${i})` }} />
+              ))}
+            </div>
+            <p className="num mt-2">
+              {colorRange
+                ? `${fmt[color](colorRange.min)} → ${fmt[color](colorRange.max)} · lightest to darkest`
+                : "Unavailable"}
+            </p>
+          </div>
+        )}
+        <div className="calendar-renderer">
+          <ContributionSkyline
+            data={data}
+            heightScale={period === "month" ? 0.28 : 1}
+            {...(period === "month" ? { month } : {})}
+            view={view}
+            onViewChange={setView}
+            showToggle={false}
+            weekStart={1}
+            palette={["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"]}
+            showStats={false}
+            showLegend={false}
+            title={period === "month" ? month : `${days[0]?.date} — ${days.at(-1)?.date}`}
+            footer="Dashed cells: unavailable metric coverage"
+            onCellClick={(d) => setSel(shown.find((x) => x.date === d.date) ?? null)}
+          />
+        </div>
+      </div>
       <p className="mt-4 text-xs text-muted-foreground">
         Daily coverage: {shown.filter((d) => d.coverage === "measured").length} measured ·{" "}
         {shown.filter((d) => d.coverage === "allocated").length} allocated ·{" "}

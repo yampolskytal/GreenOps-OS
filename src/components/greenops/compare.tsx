@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useBreakdowns, useResources } from "@/lib/queries";
-import { useApp } from "@/lib/store";
 import { chf, kg, kwh } from "@/lib/format";
 import {
   Select,
@@ -14,10 +13,7 @@ import { LeaderboardBars } from "./leaderboard-bars";
 import { ResourceDetails } from "./resource-details";
 type Category = "byDepartment" | "byProvider" | "byTool" | "byService" | "servers";
 export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
-  const { s } = useApp();
-  const [category, setCategory] = useState<Category>(
-    !finance && s.role === "it" ? "servers" : "byDepartment",
-  );
+  const [category, setCategory] = useState<Category>("byDepartment");
   const [metric, setMetric] = useState("costChf");
   const b = useBreakdowns();
   const rs = useResources();
@@ -31,7 +27,8 @@ export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
       ]
     : [
         ["costChf", "Annual cost (CHF)"],
-        ["co2Kg", "CO₂ (kg)"],
+        ["co2Kg", "CO₂ — Location-based (kg)"],
+        ["co2KgMarket", "CO₂ — Market-based (kg)"],
         ["energyKwh", "Energy (kWh)"],
       ];
   const effective = metrics.some((m) => m[0] === metric)
@@ -42,7 +39,7 @@ export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
   const fmt =
     effective.includes("Cost") || effective === "costChf"
       ? chf
-      : effective === "co2Kg"
+      : effective === "co2Kg" || effective === "co2KgMarket"
         ? kg
         : effective === "energyKwh"
           ? kwh
@@ -81,6 +78,12 @@ export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
           </SelectContent>
         </Select>
       </div>
+      {!operational && !b.data?.[category].some((d) => d.co2KgMarket != null) && (
+        <p className="mb-4 text-xs text-muted-foreground">
+          Market-based comparison unavailable at this entity level; annual totals cannot supply
+          entity values.
+        </p>
+      )}
       {operational ? (
         <Q q={rs}>
           {(data) => (

@@ -23,7 +23,14 @@ const byDept = <T extends { department?: string }>(q: GlobalQuery, xs: T[]) =>
 /** DEMO adapter — local placeholder logic. Never presents results as real analytics. */
 export const demoApi: GreenOpsApi = {
   isDemo: true,
-  getOverview: () => delay(demoOverview),
+  getOverview: () =>
+    delay({
+      ...demoOverview,
+      forecastSupport: (["cost", "co2Location", "energy", "co2Market"] as const).map((metric) => ({
+        metric,
+        horizons: [1, 2, 3, 5],
+      })),
+    }),
   getBreakdowns: () => delay(demoBreakdowns),
   getResources: (q) =>
     delay(
@@ -73,6 +80,7 @@ export const demoApi: GreenOpsApi = {
     return delay({
       metric,
       unit,
+      granularity: "annual",
       growthAssumption:
         "DEMO: 2% / 5% / 9% growth per year (headcount + AI adoption). Backend will justify.",
       points,

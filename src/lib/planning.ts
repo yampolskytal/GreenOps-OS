@@ -15,3 +15,27 @@ export function runtimeSegments(runtime: number, active?: number) {
 }
 
 export const canDownloadExport = (isDemo: boolean) => !isDemo;
+
+/** Planning validation is independent of implementation approval and numerical target success. */
+export function validatePreview(
+  ids: string[],
+  measures: Measure[],
+  budget: number,
+  result: import("./api/types").SimulationResult,
+) {
+  if (budget > 16500 || budget < 0 || !Number.isFinite(budget))
+    return "Budget must be within CHF 16,500.";
+  if (ids.some((id) => !measures.some((m) => m.id === id && canSelectMeasure(m))))
+    return "Unknown or blocked measures cannot be committed.";
+  if (result.excluded.length) return "Excluded measures must be removed before committing.";
+  if (
+    !Number.isFinite(result.effortChf) ||
+    !Number.isFinite(result.effortDays) ||
+    result.effortChf < 0 ||
+    result.effortDays < 0 ||
+    result.effortChf > budget ||
+    result.effortDays > 15
+  )
+    return "Implementation effort exceeds the preview budget or 15 person-days.";
+  return null;
+}

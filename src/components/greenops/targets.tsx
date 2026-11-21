@@ -3,10 +3,10 @@ import type { SimulationResult } from "@/lib/api/types";
 import { api } from "@/lib/api/client";
 import { chf, pct } from "@/lib/format";
 import { TargetProgress } from "./ui";
-export function TargetPanel({ r }: { r: SimulationResult }) {
+export function TargetPanel({ r, compact = false }: { r: SimulationResult; compact?: boolean }) {
   const constraints = r.constraints.filter((c) => c.unit !== "CHF");
   return (
-    <div className="space-y-5">
+    <div className={compact ? "grid gap-5 md:grid-cols-3" : "space-y-5"}>
       {constraints.map((c) => (
         <div key={c.label}>
           <TargetProgress
@@ -23,7 +23,7 @@ export function TargetPanel({ r }: { r: SimulationResult }) {
           </p>
         </div>
       ))}
-      <div className="flex gap-2 border-t pt-3 text-sm">
+      <div className={`flex gap-2 border-t pt-3 text-sm ${compact ? "md:col-span-3" : ""}`}>
         {r.feasible ? (
           <CheckCircle2 className="size-4 shrink-0 text-success" />
         ) : (

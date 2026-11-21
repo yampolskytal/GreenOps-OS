@@ -30,6 +30,7 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+
 - All data flows through the `GreenOpsApi` interface (`src/lib/api/types.ts`); `client.ts` uses the demo adapter unless `VITE_API_BASE_URL` is set — so the teammates' backend replaces demo data without touching UI.
 - Shared cross-view state (role, filters, date range, dataset, plan, budget) lives in `src/lib/store.tsx`, persisted to localStorage — so role switches never reset selections.
 - `src/lib/optimizer.ts` is a demo stand-in for backend optimization; the backend stays authoritative.
@@ -38,8 +39,11 @@ use the editor.
 - No backend and no raw dataset import in this frontend — calculations belong to the separate team backend.
 
 - Imported visualization engines take adapter data only and resolve theme tokens before canvas painting; missing cells stay visibly distinct, so rendering never invents analytical values.
-- Budget and priority changes request debounced suggestions through GreenOpsApi; replacing an existing plan requires confirmation, so recommendations never mutate user selections implicitly.
+- Studio settings and manual selections remain a temporary debounced GreenOpsApi preview; only validated explicit commits persist the shared plan, so experiments never mutate saved selections.
 - Official exports use the fixed baseline query and cache prepared files against the plan/query context, so display filters and stale files cannot alter a submission.
 - Prebundle route-only React hook libraries at startup and reject outdated optimizer requests, so hot reload cannot mix React dispatchers from different dependency generations.
 
 - Year and month footprints share the original skyline renderer with a tested calendar geometry model; legends derive their ranges from the exact visible metric values, so period and metric changes cannot display stale scales.
+- Shared historical charts and forecast fans consume supplied observation granularity; aggregation only averages actual monthly points, so annual endpoints cannot invent finer observations.
+- Analytical inspectors share a non-modal dock on wide screens and modal sheets on narrow screens, so evidence never covers its associated desktop chart.
+- Optional market emissions and provenance remain unavailable at unsupported levels and are never derived from location reductions, so alternate accounting stays independent of mandatory targets.

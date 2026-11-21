@@ -3,16 +3,27 @@ import { useState } from "react";
 import { ChevronDown, Plus, Check, Lock, ShieldCheck } from "lucide-react";
 import type { Measure } from "@/lib/api/types";
 import { chf, kg, kwh } from "@/lib/format";
-import { useApp, toggleId } from "@/lib/store";
+import { useApp } from "@/lib/store";
+import { Link } from "@tanstack/react-router";
 import { canSelectMeasure } from "@/lib/planning";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { RiskBadge } from "./ui";
 import { DetailBlock, DetailDrawer } from "./details";
-export function MeasureCard({ m, compact = false }: { m: Measure; compact?: boolean }) {
-  const { s, set } = useApp();
+export function MeasureCard({
+  m,
+  compact = false,
+  selected,
+  onToggle,
+}: {
+  m: Measure;
+  compact?: boolean;
+  selected?: boolean;
+  onToggle?: () => void;
+}) {
+  const { s } = useApp();
   const [open, setOpen] = useState(false);
-  const inPlan = s.measureIds.includes(m.id);
+  const inPlan = selected ?? s.measureIds.includes(m.id);
   const blocked = !canSelectMeasure(m);
   const details = (
     <div className="space-y-5">
@@ -95,15 +106,24 @@ export function MeasureCard({ m, compact = false }: { m: Measure; compact?: bool
           <ChevronDown className={cn("shrink-0 transition-transform", open && "rotate-180")} />
         </Button>
         <RiskBadge level={m.risk.level} />
-        <Button
-          size="sm"
-          variant={inPlan ? "default" : "outline"}
-          disabled={blocked}
-          onClick={() => set({ measureIds: toggleId(s.measureIds, m.id) })}
-        >
-          {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
-          {blocked ? "Blocked" : inPlan ? "In Plan" : "Add to Plan"}
-        </Button>
+        {onToggle ? (
+          <Button
+            size="sm"
+            variant={inPlan ? "default" : "outline"}
+            disabled={blocked}
+            onClick={onToggle}
+          >
+            {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
+            {blocked ? "Blocked" : inPlan ? "In Preview" : "Add to Preview"}
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/studio" hash={`measure-${m.id}`}>
+              {blocked ? <Lock /> : inPlan ? <Check /> : <Plus />}
+              {blocked ? "Blocked" : inPlan ? "In Current Plan" : "Preview measure"}
+            </Link>
+          </Button>
+        )}
       </div>
       {open && (
         <svg

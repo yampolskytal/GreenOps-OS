@@ -44,6 +44,25 @@ export interface Kpi {
   unit: string;
   kind: ValueKind;
   calc: Calculation;
+  coverage?: string;
+  region?: string;
+  entity?: string;
+  missingInputs?: string[];
+  procurementAssumptions?: string[];
+}
+
+export type DataStatus =
+  "source-backed" | "allocated" | "estimated" | "needs-review" | "unavailable" | "demo";
+export type HistoricalMetric = "costChf" | "co2Kg" | "energyKwh" | "co2KgMarket";
+export interface MonthlyObservation {
+  month: string;
+  costChf: number | null;
+  energyKwh: number | null;
+  co2Kg: number | null;
+  co2KgMarket?: number | null;
+  status?: DataStatus;
+  evidence?: Partial<Record<HistoricalMetric, Calculation>>;
+  previous?: Partial<Record<HistoricalMetric, { value: number; period: string }>>;
 }
 
 export interface Overview {
@@ -51,8 +70,9 @@ export interface Overview {
   cost: Kpi;
   energy: Kpi;
   co2Location: Kpi;
-  co2Market: Kpi;
-  monthly: { month: string; costChf: number; energyKwh: number; co2Kg: number }[];
+  co2Market?: Kpi | null;
+  monthly: MonthlyObservation[];
+  forecastSupport?: { metric: Forecast["metric"]; horizons: number[] }[];
   topOpportunities: string[]; // measure ids
   managementRisks: { title: string; detail: string; level: RiskLevel }[];
 }
@@ -62,6 +82,7 @@ export interface Breakdown {
   costChf: number;
   co2Kg: number;
   energyKwh: number;
+  co2KgMarket?: number | null;
 }
 export interface Breakdowns {
   byDepartment: Breakdown[];
@@ -86,6 +107,8 @@ export interface ResourceSummary {
   activeH30d?: number;
   idleCostChfYear: number;
   flag?: string;
+  co2Location?: Kpi | null;
+  co2Market?: Kpi | null;
 }
 
 export interface LocationSummary {
@@ -177,6 +200,7 @@ export interface SimulationResult {
   savingsChf: number;
   savingsKwh: number;
   savingsCo2Kg: number;
+  savingsCo2KgMarket?: number | null;
   effortDays: number;
   effortChf: number;
   costReductionPct: number;
@@ -200,6 +224,9 @@ export interface OptimizeResult {
 
 export interface ForecastPoint {
   year: number;
+  date?: string;
+  periodLabel?: string;
+  coverage?: string;
   baseline: Range;
   optimized: Range;
   observed?: number;
@@ -209,6 +236,9 @@ export interface Forecast {
   unit: string;
   growthAssumption: string;
   points: ForecastPoint[];
+  granularity?: "monthly" | "annual";
+  methodology?: Calculation;
+  implementationTiming?: string;
 }
 
 export interface DailyFootprint {
@@ -216,6 +246,7 @@ export interface DailyFootprint {
   costChf: number;
   energyKwh: number;
   co2Kg: number;
+  co2KgMarket?: number | null;
   workday: boolean;
   holiday?: string;
   coverage: "measured" | "allocated" | "estimated";

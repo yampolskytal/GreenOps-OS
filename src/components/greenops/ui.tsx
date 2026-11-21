@@ -1,18 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Info, OctagonX, ShieldAlert, FileSearch } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import type { Calculation, Evidence, RiskLevel, ValueKind } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
+import { AnalyticalInspector } from "./analytical-inspector";
 
 /** Replaceable loading animation (21st.dev component will drop in here). */
 export function Loader({ label = "Loading" }: { label?: string }) {
@@ -104,9 +97,15 @@ export function KindTag({ kind }: { kind: ValueKind }) {
 
 export function CalcInfo({ calc, children }: { calc: Calculation; children?: ReactNode }) {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        {children ?? (
+    <AnalyticalInspector
+      title={calc.title}
+      description={
+        <>
+          <KindTag kind={calc.kind} /> · {calc.period}
+        </>
+      }
+      trigger={
+        children ?? (
           <Button
             variant="ghost"
             size="icon"
@@ -115,77 +114,70 @@ export function CalcInfo({ calc, children }: { calc: Calculation; children?: Rea
           >
             <Info className="h-3.5 w-3.5" />
           </Button>
+        )
+      }
+    >
+      <div className="space-y-5 px-4 pb-8 text-sm">
+        <Block title="Formula">
+          <code className="num block rounded-lg bg-muted p-3 text-xs leading-relaxed">
+            {calc.formula}
+          </code>
+          <p className="mt-1 text-xs text-muted-foreground">Unit: {calc.units}</p>
+        </Block>
+        {calc.inputs.length > 0 && (
+          <Block title="Inputs">
+            <ul className="space-y-1">
+              {calc.inputs.map((i) => (
+                <li key={i.label} className="flex justify-between">
+                  <span className="text-muted-foreground">{i.label}</span>
+                  <span className="num">{i.value}</span>
+                </li>
+              ))}
+            </ul>
+          </Block>
         )}
-      </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{calc.title}</SheetTitle>
-          <SheetDescription className="flex items-center gap-2">
-            <KindTag kind={calc.kind} /> · {calc.period} <DemoTag />
-          </SheetDescription>
-        </SheetHeader>
-        <div className="space-y-5 px-4 pb-8 text-sm">
-          <Block title="Formula">
-            <code className="num block rounded-lg bg-muted p-3 text-xs leading-relaxed">
-              {calc.formula}
-            </code>
-            <p className="mt-1 text-xs text-muted-foreground">Unit: {calc.units}</p>
-          </Block>
-          {calc.inputs.length > 0 && (
-            <Block title="Inputs">
-              <ul className="space-y-1">
-                {calc.inputs.map((i) => (
-                  <li key={i.label} className="flex justify-between">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className="num">{i.value}</span>
-                  </li>
-                ))}
-              </ul>
-            </Block>
-          )}
-          {calc.factors && (
-            <Block title="Conversion factors (low · mid · high)">
-              <ul className="space-y-2">
-                {calc.factors.map((f) => (
-                  <li key={f.label}>
-                    <div className="flex justify-between">
-                      <span>{f.label}</span>
-                      <span className="num">
-                        {f.low} · {f.mid} · {f.high}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{f.source}</p>
-                  </li>
-                ))}
-              </ul>
-            </Block>
-          )}
-          <Block title="Data sources">
-            <div className="flex flex-wrap gap-1.5">
-              {calc.sources.map((s) => (
-                <span key={s} className="num rounded bg-secondary px-1.5 py-0.5 text-[11px]">
-                  {s}
-                </span>
-              ))}
-            </div>
-          </Block>
-          <Block title="Assumptions">
-            <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-              {calc.assumptions.map((a) => (
-                <li key={a}>{a}</li>
+        {calc.factors && (
+          <Block title="Conversion factors (low · mid · high)">
+            <ul className="space-y-2">
+              {calc.factors.map((f) => (
+                <li key={f.label}>
+                  <div className="flex justify-between">
+                    <span>{f.label}</span>
+                    <span className="num">
+                      {f.low} · {f.mid} · {f.high}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{f.source}</p>
+                </li>
               ))}
             </ul>
           </Block>
-          <Block title="Limitations">
-            <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-              {calc.limitations.map((a) => (
-                <li key={a}>{a}</li>
-              ))}
-            </ul>
-          </Block>
-        </div>
-      </SheetContent>
-    </Sheet>
+        )}
+        <Block title="Data sources">
+          <div className="flex flex-wrap gap-1.5">
+            {calc.sources.map((s) => (
+              <span key={s} className="num rounded bg-secondary px-1.5 py-0.5 text-[11px]">
+                {s}
+              </span>
+            ))}
+          </div>
+        </Block>
+        <Block title="Assumptions">
+          <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+            {calc.assumptions.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ul>
+        </Block>
+        <Block title="Limitations">
+          <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+            {calc.limitations.map((a) => (
+              <li key={a}>{a}</li>
+            ))}
+          </ul>
+        </Block>
+      </div>
+    </AnalyticalInspector>
   );
 }
 function Block({ title, children }: { title: string; children: ReactNode }) {
@@ -207,20 +199,10 @@ export function EvidencePopover({
   label?: string;
 }) {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="sm">
+    <AnalyticalInspector title={label} description="Available source references" trigger={<Button variant="ghost" size="sm">
           <FileSearch />
           {label} ({evidence.length})
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{label}</SheetTitle>
-          <SheetDescription>
-            Available source references <DemoTag />
-          </SheetDescription>
-        </SheetHeader>
+        </Button>}>
         <div className="mt-5">
           <ul className="space-y-2">
             {evidence.map((e) => (
@@ -231,8 +213,7 @@ export function EvidencePopover({
             ))}
           </ul>
         </div>
-      </SheetContent>
-    </Sheet>
+    </AnalyticalInspector>
   );
 }
 
