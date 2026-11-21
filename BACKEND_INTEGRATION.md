@@ -1,12 +1,12 @@
-# GreenOps OS V4 backend integration
+# GreenOps OS backend integration
 
-The team backend now lives in `backend/` (merged from `sprintd`). Run it with `npm run backend` and set `VITE_API_BASE_URL=/api/v2`; Vite proxies `/api` to `http://127.0.0.1:8765`.
+The Python backend lives in `backend/`. The application uses the same-origin `/api/v2` proxy. See [the production connection report](BACKEND_CONNECTION_REPORT.md) for authentication and proxy configuration.
 
 ## Implemented contract (`/api/v2`, `backend/frontend_api.py`)
 
 | Frontend method | Route | Backend source |
 | --- | --- | --- |
-| getOverview | GET overview | summary figures, ledger by month (filtered), package risks |
+| getOverview | GET overview | baseline summary, filtered monthly ledger with market-based emissions and evidence, package risks |
 | getBreakdowns | GET breakdowns | ledger grouped by department/provider/category/tool |
 | getResources | GET resources | server inventory, weekly metrics, measure savings |
 | getLocations | GET locations | ledger by region, grid factors |
@@ -14,7 +14,7 @@ The team backend now lives in `backend/` (merged from `sprintd`). Run it with `n
 | getMeasures | GET measures | measure catalog (`Reports.measures`) |
 | simulate | POST simulation | catalog sums with scope/exclusive/requires/hard-blocker checks vs 25 % / 40 % / CHF / 15 PD |
 | optimize | POST optimize | `Workspace.package` branch-and-bound (balanced→midpoint, cost→first-year, co2→conservative) |
-| getForecast | GET forecast | `bonus.forecast` 3-year scenarios (annual; market forecast unsupported) |
+| getForecast | GET forecast | monthly cost, energy and location emissions scenarios, plus an annual scenario for the evidenced residual-mix market scope |
 | getDailyFootprint | GET metrics/daily | ledger by day; monthly invoices spread over the month, weekly metrics over 7 days (`allocated`) |
 | getDataQuality | GET data-quality | sources, coverage, audit events, contradictions |
 | getBonus | GET bonus | carbon replay, CI diagnostics, workload clusters, AI usage, unused seats |
@@ -22,18 +22,12 @@ The team backend now lives in `backend/` (merged from `sprintd`). Run it with `n
 | exportBaseline / exportMeasures | GET exports/baseline, POST exports/measures | `templates.tables` with the organizer templates |
 | importFiles | POST imports | not supported over HTTP — restart backend with `--data` |
 
-Known gaps: market-based monthly/daily/forecast values (backend market coverage is partial), monthly forecast granularity, backend plan persistence for the frontend's Current Plan.
+## Market-based CO₂e
 
----
-
-## Original handoff notes
-
-
-No actual backend contract or base URL has been supplied. All currently visible company numbers remain DEMO. No independent backend, new endpoint or raw dataset import was added.
-
-## Existing boundary
-
-`GreenOpsApi` remains the only data boundary. `createHttpApi` contains the pre-existing **proposed**, unconfirmed endpoint paths. Do not treat them as an implemented team contract. Once the team supplies its contract, map its actual field names in that adapter, never in the UI. Real mode must not fall back to demo fields on partial responses.
+- Overview history, daily footprint and breakdown rows carry `co2KgMarket`, `co2KgMarketRange` and `marketCoverage`. The monthly calculation is in `evidence.co2KgMarket`. A supported subtotal can be partial. Unavailable figures are `null`, while a sourced zero remains numeric.
+- `marketCoverage` reports the share of modeled kWh covered, unknown-energy row counts, missing factor counts, uncovered regions, factor references and assumptions. Coverage excludes activity with unknown kWh from its denominator. `allocatedCoveredKwh` identifies covered activity spread across days from monthly or weekly inputs.
+- Measures, simulation and optimization expose market-based savings only for evidenced effects. The response identifies partially covered and unavailable measures. Moves require comparable origin and destination evidence. Competition targets continue to use the location-based reduction and CHF savings.
+- The market forecast compounds configured activity growth on covered residual-mix energy at fixed evidenced factors. It excludes dated supplier instruments because future renewal is unknown. Annual values carry the covered scope. The optimized path is `null` when a selection has no supported effect, and explicitly partial when only part of the selection is supported.
 
 ## Required response capabilities
 
@@ -48,9 +42,3 @@ No actual backend contract or base URL has been supplied. All currently visible 
 ## Planning persistence
 
 Per the existing frontend-only project architecture, the committed plan/settings persist on this device in the shared store. Live scenarios are temporary and never persisted as the Current Plan. Commit revalidates through `GreenOpsApi.simulate`, rejects stale contexts and blocked/unknown measures or exceeded limits, then writes storage before reporting success. Pending review is not approval or execution. Cross-device/backend plan persistence needs a future team contract; no endpoint has been invented.
-
-## Connected versus unavailable
-
-Connected now: UI → existing demo adapter, shared-device plan persistence, exact-template DEMO export preparation (downloads blocked).
-
-Awaiting team contract: all authoritative company analytics; market methodology/procurement evidence; daily/monthly market data; market scenario effects; supported monthly forecast points; source-specific monthly/forecast evidence; backend plan persistence and approval records.

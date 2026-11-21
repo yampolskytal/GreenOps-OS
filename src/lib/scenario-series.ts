@@ -83,7 +83,8 @@ export function buildScenarioChart(
       if (target.kind === "actual" && i === 0) target.kind = "projected";
       const scale = monthly ? 1 : 1 / 12;
       if (p.coverage) target.coverage = p.coverage;
-      target[source.key] = isAvailable(p.optimized.mid) ? p.optimized.mid * scale : null;
+      const optimized = p.optimized?.mid;
+      target[source.key] = isAvailable(optimized) ? optimized * scale : null;
       if (!baselineSet) target["noChange"] = isAvailable(p.baseline.mid) ? p.baseline.mid * scale : null;
     });
     baselineSet = true;

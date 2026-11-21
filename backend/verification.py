@@ -56,7 +56,7 @@ def energy_coverage(lines):
             continue
         b["modeled_kwh"] += row["kwh"][1]
         if row.get("kg_market") is not None:
-            b["market_covered_kwh"] += row["kwh"][1]
+            b["market_covered_kwh"] += row["kwh"][1] * row.get("market_fraction", 1)
     totals = {k: sum(b[k] for b in regional.values()) for k in
               ("modeled_kwh", "market_covered_kwh", "energy_gaps", "cost_gaps", "cost_without_energy_chf")}
     for b in [totals, *regional.values()]:

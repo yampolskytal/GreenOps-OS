@@ -65,7 +65,7 @@ export const demoApi: GreenOpsApi = {
             ? result.savingsCo2Kg
             : demoMeasures
                 .filter((m) => ids.includes(m.id) && m.includable && m.risk.level !== "blocked")
-                .reduce((a, m) => a + m.savingsCo2KgMarket, 0);
+                .reduce((a, m) => a + (m.savingsCo2KgMarket ?? 0), 0);
     const cut = Math.min(1, saved / start);
     const points = Array.from({ length: horizon + 1 }, (_, i) => {
       const year = 2026 + i;
@@ -146,7 +146,7 @@ export const demoApi: GreenOpsApi = {
       m.savingsChf,
       m.savingsKwh,
       m.savingsCo2KgLocation,
-      m.savingsCo2KgMarket,
+      m.savingsCo2KgMarket ?? "",
       `${m.risk.why} Protection: ${m.risk.protectionWindows.join("; ") || "none"}`,
       `DEMO. ${m.assumptions.join("; ")} Sources: ${m.evidence.map((e) => e.source).join("; ")}`,
     ]);
@@ -264,7 +264,7 @@ export function getPlanningApi(exceptionIds: string[], provider: GreenOpsApi = a
               ? result.savingsCo2Kg
               : approved
                   .filter((m) => ids.includes(m.id) && m.includable && m.risk.level !== "blocked")
-                  .reduce((sum, m) => sum + m.savingsCo2KgMarket, 0);
+                  .reduce((sum, m) => sum + (m.savingsCo2KgMarket ?? 0), 0);
       const cut = Math.min(1, savings / baseline);
       return {
         ...f,

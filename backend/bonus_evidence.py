@@ -1,6 +1,7 @@
 """Traceable diagnostics that keep unapproved findings outside claimed savings."""
 from collections import defaultdict
 
+from accounting import market_reduction
 from greenops import inside, key, month, natural, obj, project_id
 from verification import evidence_record
 
@@ -62,7 +63,9 @@ def ci_attribution(reports):
                        "billed_minutes": round(billed, 2) if lines else None,
                        "telemetry_minus_billed_minutes": round(run["minutes"] - billed, 2) if lines else None,
                        "recoverable_chf": round(chf * fraction, 2) if chf is not None else None,
-                       "recoverable_kg": impact["kg"], "recoverable_kwh": impact["kwh"], "billing_refs": [r["ref"] for r in lines[:6]]})
+                       "recoverable_kg": impact["kg"], "recoverable_kwh": impact["kwh"],
+                       "market_effect": market_reduction(lines, fraction),
+                       "billing_refs": [r["ref"] for r in lines[:6]]})
     return {"rows": output, "method": "Match normalized runner region and billing month. Claim savings only on owner-attested meter mappings and approved non-required runs. Prorate against the larger of all observed or billed minutes; missing prices remain unknown. Required, unknown, and merely inferred rows stay outside counted savings."}
 
 

@@ -2,6 +2,7 @@
 import csv
 from pathlib import Path
 
+from accounting import MarketSummary
 from greenops import ROOT, csv_text
 
 BASE_NAME = "template_baseline_and_assumptions.csv"
@@ -25,14 +26,19 @@ def skeleton(root, filename, fields):
 
 def tables(a, plan, template_root=None):
     base = a.baseline
+    market = MarketSummary(a.lines)
+    market_cover = market.coverage()
+    market_share = (f"{market_cover['coveragePct']:.1f}% of modeled kWh"
+                    if market_cover["coveragePct"] is not None else "unknown")
     source = a.mode + " | normalized ledger"
     cover = f'{base["missing_cost"]} lines without CHF and {base["missing_energy"]} without energy. See coverage.json and ledger.json.'
     values = {
         "total_cost_baseline_year_chf": (["", base["chf"], ""], source, cover),
         "total_energy_baseline_year_kwh": (base["kwh"], source, cover),
         "total_co2_location_based_baseline_year_kg": (base["kg"], source, cover),
-        "total_co2_market_based_baseline_year_kg": (base["kg_market"] if a.factors.get("market_grid") else [""]*3, source,
-                                                     f'Residual-mix proxy for mapped consumption. {base["missing_market"]} metered rows lack market factors. Supplier instruments require source and scope attestation.'),
+        "total_co2_market_based_baseline_year_kg": (market.result() or [""] * 3, source,
+                                                     f"Covered activity only. Energy coverage: {market_share}. "
+                                                     + " ".join(market_cover["missingInputs"])),
         "allocation_rule_shared_costs": (["", a.policy.get("shared_allocation", "project_hours_then_fte"), ""],
                                          "Project hours, headcount and account mapping", "Original ledger keeps directly tagged spend. See allocation.json for reconciled shared-cost view."),
     }
@@ -40,11 +46,11 @@ def tables(a, plan, template_root=None):
         values[target] = ([round(x * mult, 10) for x in item["values"]], item["source"], item["note"] + extra)
     for region, name in (("ch", "switzerland"), ("de", "germany"), ("ie", "ireland")):
         factor(f"grid_mix_location_based_{name}", a.factors["grid"][region])
-    market = a.factors.get("market_grid")
-    if market:
+    if market.covered:
         actual = [r for r in a.lines if r["kwh"] is not None and r["kg_market"] is not None]
-        effective = [sum(r["kg_market"][i] for r in actual) / max(1e-30, sum(r["kwh"][i] for r in actual))
-                     for i in range(3)]
+        covered_energy = [sum(r["kwh"][i] * r.get("market_fraction", 1) for r in actual) for i in range(3)]
+        effective = [sum(r["kg_market"][i] for r in actual) / energy if energy else ""
+                     for i, energy in enumerate(covered_energy)]
         values["grid_mix_market_based"] = (effective, "Regional residual factors and any attested supplier inputs in factors.json and policy.json",
                                             "Energy-weighted effective intensity of covered activity. See regional sources and market gaps.")
     for suffix, k in (("vcpu_hour", "vcpu-hour"), ("node_hour", "node-hour"), ("gpu_hour", "gpu-hour"),
@@ -72,6 +78,10 @@ def tables(a, plan, template_root=None):
                  f"{r['status']}. Approver: {r['approval']}. Phase: {r['phase']}. "
                  + " ".join(p["source"] for p in r["protection"]),
                  f"{a.mode}. {r['method']} CHF first year {r['first_year_chf']}, kWh {r['kwh']}, kg CO2e {r['kg']}. "
+                 + ("Market-based savings are a covered subtotal. " +
+                    " ".join(r["market_effect"]["coverage"]["missingInputs"]) + " "
+                    if r.get("market_effect", {}).get("coverage", {}).get("status") == "partial" else "")
+                 +
                  f"Sources: {', '.join(sorted({ref.split(':')[0] for ref in r['evidence']}))}; full evidence in package.json.")
                 for r in plan["selected"]]
     return {BASE_NAME: csv_text(BASE_FIELDS, ([r.get(k, "") for k in BASE_FIELDS] for r in rows)),

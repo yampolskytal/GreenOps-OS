@@ -81,6 +81,8 @@ function ForecastPage() {
             </DetailBlock>
             <DetailBlock title="Methodology">
               <p>{f.methodology?.formula ?? "Not supplied"}</p>
+              {f.marketScopeLabel && <p>{f.marketScopeLabel}</p>}
+              {f.methodology?.sources.length ? <p className="break-words">{f.methodology.sources.join(" · ")}</p> : null}
             </DetailBlock>
             <DetailBlock title="Limitations">
               <p>

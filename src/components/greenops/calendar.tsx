@@ -7,7 +7,7 @@ import { RotateCcw } from "lucide-react";
 import { AnalyticalInspector } from "./analytical-inspector";
 import { DetailDrawer } from "./details";
 import { Info } from "lucide-react";
-import { SKYLINE_ENCODING } from "@/lib/analytics";
+import { marketCoverageLabel, SKYLINE_ENCODING } from "@/lib/analytics";
 import { buildFootprintGrid, type buildCalendarScale } from "@/lib/calendar-model";
 import { footprintRange } from "@/lib/footprint-range";
 import ContributionSkyline from "./contribution-skyline";
@@ -320,6 +320,11 @@ export function FootprintCalendar({
         {shown.filter((d) => d.coverage === "estimated").length} estimated ·{" "}
         {shown.filter((d) => d.coverage === "unavailable").length} unavailable.
       </p>
+      {color === "co2KgMarket" && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Market-based values cover activity with a supported factor. Open a day for its coverage and sources.
+        </p>
+      )}
       <DetailDrawer
         title="Daily data-quality details"
         trigger={
@@ -343,10 +348,6 @@ export function FootprintCalendar({
           records lack cost or location-based CO₂. Absent days and missing metrics stay unavailable,
           never zero.
         </p>
-        <p className="mt-3">
-          Day-level factors, source references and allocation methodology are not supplied in this
-          API. Coverage does not establish verified emissions factors.
-        </p>
       </DetailDrawer>
       <AnalyticalInspector
         title={sel?.date ?? "Day details"}
@@ -369,10 +370,16 @@ export function FootprintCalendar({
                 <span>{kg(c.co2Kg)}</span>
               </div>
             ))}
-            <p className="text-muted-foreground">
-              Day-level source references and allocation methodology are not supplied by the current
-              daily API. Confirm with the team before treating estimates as measured evidence.
-            </p>
+            {sel.marketCoverage && (
+              <div className="space-y-2 border-t pt-3">
+                <h4 className="font-semibold">Market-based CO₂</h4>
+                <p>{display(sel, "co2KgMarket")} · {marketCoverageLabel(sel.marketCoverage)}</p>
+                {[...sel.marketCoverage.missingInputs, ...sel.marketCoverage.assumptions].map((s) => (
+                  <p key={s} className="text-muted-foreground">{s}</p>
+                ))}
+                <p className="break-words text-muted-foreground">{sel.marketCoverage.sources.join(" · ")}</p>
+              </div>
+            )}
           </div>
         )}
       </AnalyticalInspector>

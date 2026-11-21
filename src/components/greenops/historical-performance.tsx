@@ -142,7 +142,9 @@ export function HistoricalPerformance({
               </span>
               <span className="mt-2 text-[11px] font-normal text-muted-foreground">
                 {t.available}/{t.total} months ·{" "}
-                {t.available < t.total ? "available subtotal" : "historical period total"}
+                {m.key === "co2KgMarket" && !api.isDemo
+                  ? "covered activity subtotal"
+                  : t.available < t.total ? "available subtotal" : "historical period total"}
               </span>
               {comparison?.percentage != null && (
                 <span
@@ -210,6 +212,11 @@ export function HistoricalPerformance({
                           {row.status ?? (api.isDemo ? "DEMO" : "Status not supplied")} ·{" "}
                           {current.unit}
                         </p>
+                        {metric === "co2KgMarket" && row.marketCoverage?.coveragePct != null && (
+                          <p className="mt-1 text-muted-foreground">
+                            {row.marketCoverage.coveragePct.toFixed(1)}% of modeled energy covered
+                          </p>
+                        )}
                         {change != null && (
                           <p className={change >= 0 ? "text-success" : "text-warning"}>
                             {change.toFixed(1)}% decrease vs {previous.period}

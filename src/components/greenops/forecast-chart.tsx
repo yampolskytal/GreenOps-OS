@@ -19,7 +19,7 @@ type PlotPoint = {
   coverage: string;
   projected: boolean;
 };
-const validRange = (r: Range | undefined): r is Range =>
+const validRange = (r: Range | null | undefined): r is Range =>
   !!r && [r.low, r.mid, r.high].every(isAvailable) && r.low <= r.mid && r.mid <= r.high;
 export function ForecastChart({
   f,

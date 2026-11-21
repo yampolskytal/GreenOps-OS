@@ -1,13 +1,14 @@
 """Adapter from the GreenOps workspace to the GreenOps OS frontend contract.
 
-The frontend (src/lib/api/types.ts) calls `/api/v2/<route>` when VITE_API_BASE_URL
-points at this server. Every figure here comes from the workspace ledger, measure
-catalog or reports; this module only reshapes and filters, it never invents values.
+The frontend contract lives in src/lib/api/types.ts. Market observations use
+the workspace ledger and modeled savings use the evidence-backed measure catalog.
 """
 import calendar
 from collections import Counter, defaultdict
 from datetime import date, timedelta
+from functools import cached_property
 
+from accounting import MarketSummary, market_reduction, merge_market_effects
 from assistant_router import route_question
 from greenops import END
 from templates import BASE_NAME, MEASURE_NAME, tables
@@ -63,6 +64,41 @@ def query(params):
             "department": params.get("department") or "all", "provider": params.get("provider") or "all"}
 
 
+def market_coverage_text(coverage):
+    share = coverage["coveragePct"]
+    return (f"{share:.1f}% of modeled energy covered" if share is not None
+            else "Coverage of modeled energy unavailable")
+
+
+def market_calc(coverage, period, unit, kind="modeled"):
+    return {"title": "Market-based emissions for covered activity",
+            "formula": "Sum of covered energy × dated residual or attested supplier factors",
+            "units": unit, "kind": kind, "period": period,
+            "inputs": [{"label": "Covered energy", "value": f"{coverage['coveredKwh']:,.2f} kWh"},
+                       {"label": "Modeled energy", "value": f"{coverage['modeledKwh']:,.2f} kWh"}],
+            "sources": coverage["sources"], "factors": coverage["factors"],
+            "assumptions": coverage["assumptions"],
+            "limitations": ["Totals describe covered activity only.", *coverage["missingInputs"]]}
+
+
+def market_observation(summary):
+    result = summary.result()
+    return {"co2KgMarket": round(result[1], 3) if result is not None else None,
+            "co2KgMarketRange": rng(result) if result is not None else None,
+            "marketCoverage": summary.coverage()}
+
+
+def market_kpi(summary, period, units):
+    result = summary.result()
+    if result is None:
+        return None
+    cover = summary.coverage()
+    return {"value": rng(result), "unit": "kg CO₂", "kind": "modeled",
+            "calc": market_calc(cover, period, units), "coverage": market_coverage_text(cover),
+            "marketCoverage": cover, "missingInputs": cover["missingInputs"],
+            "procurementAssumptions": cover["assumptions"]}
+
+
 class FrontendApi:
     def __init__(self, work):
         self.w, self.a, self.r = work, work.a, work.reports
@@ -78,6 +114,43 @@ class FrontendApi:
                 if q["from"] <= l["month"] <= q["to"]
                 and (q["department"] == "all" or l["department"] == q["department"])
                 and (q["provider"] == "all" or l["provider"] == q["provider"])]
+
+    def daily_slices(self, q, start, end):
+        # A weekly M365 row can contribute to the first days of the selected month.
+        ledger_query = q | {"from": (start - timedelta(days=6)).strftime("%Y-%m")}
+        for line in self.lines(ledger_query):
+            if not line["day"]:
+                continue
+            beginning = date.fromisoformat(line["day"])
+            source = line["ref"].split(":")[0]
+            span = (calendar.monthrange(beginning.year, beginning.month)[1]
+                    if source in MONTHLY_FILES and beginning.day == 1
+                    else min(7, (END - beginning).days) if source == WEEKLY_M365 else 1)
+            # Server fallback already has one ledger row for each covered day.
+            allocated = span > 1 or source == DAILY_SERVER_FALLBACK
+            for offset in range(span):
+                d = beginning + timedelta(days=offset)
+                if start <= d <= end:
+                    yield d, line, 1 / span, allocated
+
+    def market_groups(self, q, dimensions):
+        start = date.fromisoformat(q["from"] + "-01")
+        year, month = map(int, q["to"].split("-"))
+        end = date(year, month, calendar.monthrange(year, month)[1])
+        grouped = {key: defaultdict(MarketSummary) for key in dimensions}
+        for d, line, share, allocated in self.daily_slices(q, start, end):
+            for key in dimensions:
+                label = d.strftime("%Y-%m") if key == "month" else line[key] or "Unassigned"
+                grouped[key][label].add(line, share, allocated)
+        return grouped
+
+    @cached_property
+    def historical_market(self):
+        return MarketSummary(self.a.lines)
+
+    @cached_property
+    def forecast_market_scope(self):
+        return MarketSummary(self.a.lines, residual_only=True)
 
     def baseline(self):
         b = self.a.baseline
@@ -95,11 +168,14 @@ class FrontendApi:
 
     def to_measure(self, m):
         level = "blocked" if m["hard_blockers"] else "review" if (m["blockers"] or m.get("requires_approval")) else "low"
+        market = m.get("market_effect") or market_reduction([], 1)
         return {
             "id": m["id"], "title": m["name"], "description": m["method"], "resource": m["resource"], "change": m["change"],
             "service": SERVICE.get(self.category.get(m["resource"]), "Cloud"),
             "effortPersonDays": m["days"], "savingsChf": m["chf"], "savingsKwh": mid(m["kwh"]),
-            "savingsCo2KgLocation": mid(m["kg"]), "savingsCo2KgMarket": mid(m["kg_market"]) if m.get("kg_market") else 0,
+            "savingsCo2KgLocation": mid(m["kg"]), "savingsCo2KgMarket": mid(market["range"]),
+            "savingsCo2KgMarketRange": rng(market["range"]) if market["range"] is not None else None,
+            "marketCoverage": market["coverage"],
             "risk": {"level": level, "why": "; ".join(m["hard_blockers"] or m["blockers"]) or m["status"],
                      "consequences": f"Status: {m['status']}. Phase: {m['phase']}.",
                      "protectionWindows": [p["source"] for p in m.get("protection", [])],
@@ -114,17 +190,7 @@ class FrontendApi:
     # ---------- routes
     def overview(self, q):
         plan = self.w.plan
-        cover = self.w.views["summary"]["footprint_coverage"]
-        b = self.a.baseline
-        market = None
-        if b.get("kg_market"):
-            market = {"value": rng(b["kg_market"]), "unit": "kg CO₂", "kind": "modeled",
-                      "calc": {"title": "Market-based CO₂ (bonus)", "formula": "Σ covered energy × residual-mix or attested supplier factor",
-                               "units": "kg CO2e/year", "kind": "modeled", "period": PERIOD, "inputs": [],
-                               "sources": ["factors.json market_grid", "market-breakdown"], "assumptions": [],
-                               "limitations": [f"{b['missing_market']} metered rows lack market factors."]},
-                      "coverage": f"{cover['market_coverage'] * 100:.0f}% of modeled kWh covered by market factors.",
-                      "missingInputs": [f"{b['missing_market']} rows without market factor"]}
+        market_months = self.market_groups(q, ["month"])["month"]
         months = defaultdict(lambda: [0.0, 0.0, 0.0])
         for l in self.lines(q):
             m = months[l["month"]]
@@ -136,34 +202,54 @@ class FrontendApi:
         risks = ([{"title": m["name"] + f" ({m['resource']})", "detail": "; ".join(m["hard_blockers"]), "level": "blocked"} for m in blocked[:3]]
                  + [{"title": m["name"] + f" ({m['resource']})", "detail": f"Approver: {m['approval']}. " + "; ".join(m["blockers"][:2]),
                      "level": "review"} for m in pending[:3]])
+        monthly = []
+        for month in sorted(months.keys() | market_months.keys()):
+            values = months.get(month, [None] * 3)
+            item = {"month": month, "status": "source-backed",
+                    **{k: round(v, p) if v is not None else None for k, v, p in
+                       zip(("costChf", "energyKwh", "co2Kg"), values, (2, 3, 3))}}
+            item.update(market_observation(market_months[month]))
+            item["evidence"] = {"co2KgMarket": market_calc(item["marketCoverage"], month, "kg CO₂e/month")}
+            monthly.append(item)
+        forecast_metrics = ["cost", "energy", "co2Location"]
+        if self.forecast_market_scope.result() is not None:
+            forecast_metrics.append("co2Market")
         return {
             "baselinePeriod": PERIOD,
             "cost": self.kpi("Total annual digital cost", "cost", "financial", "CHF"),
             "energy": self.kpi("Estimated energy", "energy", "estimated", "kWh"),
             "co2Location": self.kpi("Location-based CO₂", "carbon", "modeled", "kg CO₂"),
-            "co2Market": market,
-            "monthly": [{"month": k, "costChf": round(v[0], 2), "energyKwh": round(v[1], 3), "co2Kg": round(v[2], 3),
-                         "status": "source-backed"} for k, v in sorted(months.items())],
-            "forecastSupport": [{"metric": m, "horizons": [1, 2, 3]} for m in ("cost", "energy", "co2Location")],
+            "co2Market": market_kpi(self.historical_market, PERIOD, "kg CO₂e/year"),
+            "marketCoverage": self.historical_market.coverage(),
+            "monthly": monthly,
+            "forecastSupport": [{"metric": m, "horizons": [1, 2, 3]} for m in forecast_metrics],
             "topOpportunities": [m["id"] for m in sorted(plan["selected"], key=lambda m: -m["chf"])[:3]],
             "managementRisks": risks,
         }
 
     def breakdowns(self, q):
+        lines = self.lines(q)
+        groups = self.market_groups(q, ("department", "provider", "category", "tool"))
+
         def group(key):
             g = defaultdict(lambda: [0.0, 0.0, 0.0])
-            for l in self.lines(q):
+            for l in lines:
                 row = g[l[key] or "Unassigned"]
                 row[0] += l["chf"] or 0
                 row[1] += mid(l["kg"]) or 0
                 row[2] += mid(l["kwh"]) or 0
-            return sorted(({"label": k, "costChf": round(v[0], 2), "co2Kg": round(v[1], 3), "energyKwh": round(v[2], 3)}
+            for label in groups[key]:
+                g.setdefault(label, [0.0, 0.0, 0.0])
+            return sorted(({"label": k, "costChf": round(v[0], 2), "co2Kg": round(v[1], 3), "energyKwh": round(v[2], 3),
+                            **market_observation(groups[key][k])}
                            for k, v in g.items()), key=lambda r: -r["costChf"])
         return {"byDepartment": group("department"), "byProvider": group("provider"), "byService": group("category"),
                 "byTool": group("tool")[:25],
                 "allocationRule": f"Direct costs via tags, cost centre or mapping; shared costs: {self.a.policy.get('shared_allocation', 'project_hours_then_fte')} (see allocation view)."}
 
     def resources(self, q):
+        markets = self.market_groups(q, ("resource",))["resource"]
+        period = f"{q['from']}–{q['to']}"
         savings = defaultdict(float)
         flags = {}
         for m in self.r.measures:
@@ -206,6 +292,8 @@ class FrontendApi:
                                        "calc": {"title": f"Location-based CO₂ for {rid}", "formula": "Σ line energy × regional grid factor",
                                                 "units": "kg CO2e/year", "kind": "modeled", "period": PERIOD, "inputs": [],
                                                 "sources": sorted({r["ref"].split(":")[0] for r in rows}), "assumptions": [], "limitations": []}}
+            item["co2Market"] = market_kpi(markets[rid], period, "kg CO₂e over selected period")
+            item["marketCoverage"] = markets[rid].coverage()
             out.append(item)
         return out
 
@@ -217,16 +305,16 @@ class FrontendApi:
         grid = self.a.factors["grid"]
         for (lid, label, country, lat, lng), rows in groups.items():
             region = next(k for k, v in LOCATIONS.items() if v[0] == lid)
-            market_rows = [r for r in rows if r["kg_market"] is not None]
+            market = market_observation(MarketSummary(rows))
             out.append({"id": lid, "label": label, "country": country, "lat": lat, "lng": lng,
                         "resourceCount": len({r["resource"] for r in rows}),
                         "costChf": round(sum(r["chf"] or 0 for r in rows), 2),
                         "energyKwh": round(sum(mid(r["kwh"]) or 0 for r in rows), 3),
                         "co2KgLocation": round(sum(mid(r["kg"]) or 0 for r in rows), 3),
-                        "co2KgMarket": round(sum(mid(r["kg_market"]) for r in market_rows), 3),
+                        **market,
                         "gridKgPerKwh": rng(grid[region]["values"]),
                         "providers": [p for p, _ in Counter(r["provider"] for r in rows if r["provider"]).most_common(6)],
-                        "risks": [f"Market factor coverage: {len(market_rows)}/{len(rows)} lines."]})
+                        "risks": [market_coverage_text(market["marketCoverage"])]})
         return out
 
     def findings(self, q):
@@ -290,7 +378,13 @@ class FrontendApi:
         chf = sum(m["chf"] for m in chosen)
         kwh = sum(mid(m["kwh"]) for m in chosen)
         kg = sum(mid(m["kg"]) for m in chosen)
-        market = sum(mid(m["kg_market"]) for m in chosen if m.get("kg_market"))
+        effects = [(m["id"], m.get("market_effect") or market_reduction([], 1)) for m in chosen]
+        market = merge_market_effects([effect for _, effect in effects])
+        market_savings = {"projectionRange": rng(market["projectionRange"]) if market["projectionRange"] is not None else None,
+                          "partialMeasureIds": [mid for mid, effect in effects if effect["coverage"]["status"] == "partial"],
+                          "unavailableMeasureIds": [mid for mid, effect in effects if effect["coverage"]["status"] == "unavailable"],
+                          "forecastLimitedMeasureIds": [mid for mid, effect in effects if effect["projectionPartial"] or
+                                                      effect["coverage"]["status"] == "unavailable"]}
         days = sum(m["days"] for m in chosen)
         effort_chf = sum(m["implementation_chf"] - m["days"] * DEFAULT_RATE + m["days"] * rate for m in chosen)
         cost_pct = chf / base_chf * 100 if base_chf else 0
@@ -307,7 +401,10 @@ class FrontendApi:
                 reasons.append(f"{c['label']}: {c['achieved']:.1f}% is below the {c['target']}% target." if c["direction"] == "atLeast"
                                else f"{c['label']}: {round(c['achieved'])} exceeds the limit of {c['target']} {c['unit']}.")
         return {"savingsChf": round(chf, 2), "savingsKwh": round(kwh, 3), "savingsCo2Kg": round(kg, 3),
-                "savingsCo2KgMarket": round(market, 3), "effortDays": days, "effortChf": effort_chf,
+                "savingsCo2KgMarket": round(market["range"][1], 3) if market["range"] is not None else None,
+                "savingsCo2KgMarketRange": rng(market["range"]) if market["range"] is not None else None,
+                "marketCoverage": market["coverage"], "marketSavings": market_savings,
+                "effortDays": days, "effortChf": effort_chf,
                 "costReductionPct": cost_pct, "co2ReductionPct": co2_pct, "constraints": constraints,
                 "feasible": bool(chosen) and all(c["met"] for c in constraints), "reasons": reasons, "excluded": excluded,
                 "paybackMonths": effort_chf / chf * 12 if chf > 0 else None}
@@ -322,6 +419,8 @@ class FrontendApi:
         return {"measureIds": ids, "result": self.simulate(q, {"measureIds": ids, "budgetChf": budget, "chfPerPersonDay": rate})}
 
     def forecast(self, q, metric, horizon, ids):
+        if metric == "co2Market":
+            return self.market_forecast(q, horizon, ids)
         key = {"cost": "chf", "energy": "kwh", "co2Location": "kg"}.get(metric)
         if not key:
             raise ValueError("Market-based forecasts are not supported by this backend.")
@@ -347,38 +446,71 @@ class FrontendApi:
                 "growthAssumption": f"{fc['describe'][key]}. {fc['method']}", "points": points, "annualTotals": annual,
                 "implementationTiming": "Optimized path applies the selected measures' annual run-rate from the first forecast month."}
 
+    def market_forecast(self, q, horizon, ids):
+        historical = self.historical_market.result()
+        base = self.forecast_market_scope.result()
+        coverage = self.forecast_market_scope.coverage()
+        scope_label = market_coverage_text(coverage) + " by the residual-mix scenario."
+        growth = self.a.factors["growth"]
+        sim = self.simulate(q, {"measureIds": ids}) if ids else None
+        savings = sim["marketSavings"] if sim else {}
+        delta = savings.get("projectionRange") if ids else rng(0.0)
+        affected = savings.get("forecastLimitedMeasureIds", [])
+        assumptions = ["Compound the configured activity growth on the fixed baseline-year residual-mix scope.",
+                       "Hold the evidenced residual factors fixed for the scenario. No supplier contract renewal, new market coverage or dated market-intensity adjustment is assumed.",
+                       "Use opposite range endpoints for baseline emissions and savings to bound remaining emissions. The physical lower bound is zero."]
+        limitations = ["Annual scenario totals for the modeled residual-mix portion only. Uncovered energy and effects without comparable market factors are excluded."]
+        if affected:
+            limitations.append("Some selected measures have effects outside the residual-mix scenario: " + "; ".join(affected) + ".")
+        if ids and delta is None:
+            limitations.append("The selected plan has no supported market-based effect for this forecast scope.")
+        if sim and sim["excluded"]:
+            limitations.append("Excluded selections: " + "; ".join(row["id"] for row in sim["excluded"]) + ".")
+        methodology = market_calc(coverage, PERIOD, "kg CO₂e/year", "forecast")
+        methodology["formula"] = "Covered residual emissions × (1 + activity growth)^year; subtract supported measure effects on the same scope before applying growth"
+        methodology["assumptions"] += assumptions
+        methodology["sources"] = sorted({*methodology["sources"], growth["source"]})
+        methodology["limitations"] += limitations
+        points = []
+        if base is not None:
+            points.append({"year": 2026, "periodLabel": PERIOD, "baseline": rng(base), "optimized": rng(base),
+                           "observed": mid(historical), "coverage": scope_label, "marketCoverage": coverage})
+            for year in range(1, max(1, min(3, horizon)) + 1):
+                multipliers = [(1 + rate) ** year for rate in growth["values"]]
+                projected = [round(value * factor, 3) for value, factor in zip(base, multipliers)]
+                remaining = None if delta is None else [
+                    round(max(0, value - delta[k]) * factor, 3)
+                    for value, k, factor in zip(base, ("high", "mid", "low"), multipliers)
+                ]
+                points.append({"year": 2026 + year, "periodLabel": f"Sep {2025 + year}–Aug {2026 + year}",
+                               "baseline": rng(projected), "optimized": rng(remaining) if remaining is not None else None,
+                               "coverage": scope_label, "marketCoverage": coverage})
+        return {"metric": "co2Market", "unit": "kg CO₂", "granularity": "annual", "points": points,
+                "growthAssumption": f"Fixed residual factor scenario, with annual compound activity growth of "
+                                    f"{', '.join(f'{rate:.1%}' for rate in growth['values'])} (low, mid, high).",
+                "implementationTiming": "Supported market-based effects use annual run rates from forecast year 1.",
+                "methodology": methodology, "marketCoverage": coverage,
+                "marketSavings": savings, "marketScopeLabel": scope_label if points else "No supported residual-mix forecast scope."}
+
     def daily(self, q):
         start = date.fromisoformat(q["from"] + "-01")
         y, m = map(int, q["to"].split("-"))
         end = date(y, m, calendar.monthrange(y, m)[1])
         days = defaultdict(lambda: {"costChf": None, "energyKwh": None, "co2Kg": None,
                                     "allocated": 0.0, "tools": defaultdict(float)})
-        # A weekly M365 row can contribute to the first days of the selected month.
-        ledger_query = q | {"from": (start - timedelta(days=6)).strftime("%Y-%m")}
-        for l in self.lines(ledger_query):
-            if not l["day"]:
-                continue
-            d0 = date.fromisoformat(l["day"])
-            f = l["ref"].split(":")[0]
-            span = (calendar.monthrange(d0.year, d0.month)[1] if f in MONTHLY_FILES and d0.day == 1
-                    else min(7, (END - d0).days) if f == WEEKLY_M365 else 1)
-            share = 1 / span
+        markets = defaultdict(MarketSummary)
+        for d, l, share, allocated in self.daily_slices(q, start, end):
+            markets[d].add(l, share, allocated)
             values = {"costChf": l["chf"], "energyKwh": mid(l["kwh"]), "co2Kg": mid(l["kg"])}
-            # Server fallback already has one ledger row per day with weekly hours allocated.
-            allocated = span > 1 or f == DAILY_SERVER_FALLBACK
-            for k in range(span):
-                d = d0 + timedelta(days=k)
-                if not start <= d <= end:
-                    continue
-                row = days[d]
-                for metric, value in values.items():
-                    if value is not None:
-                        row[metric] = (row[metric] or 0) + value * share
-                if values["co2Kg"] is not None:
-                    kg = values["co2Kg"] * share
-                    if allocated:
-                        row["allocated"] += kg
-                    row["tools"][l["tool"] or l["resource"]] += kg
+            row = days[d]
+            for metric, value in values.items():
+                if value is not None:
+                    row[metric] = (row[metric] or 0) + value * share
+            if values["co2Kg"] is not None:
+                kg = values["co2Kg"] * share
+                if allocated:
+                    row["allocated"] += kg
+                row["tools"][l["tool"] or l["resource"]] += kg
         cal = {r["date"]: r for r in self.a.data.get("business_calendar", [])}
         out = []
         d = start
@@ -390,7 +522,7 @@ class FrontendApi:
                        for metric, precision in (("costChf", 2), ("energyKwh", 3), ("co2Kg", 3))}
             coverage = ("unavailable" if all(v is None for v in figures.values())
                         else "allocated" if row["allocated"] > (row["co2Kg"] or 0) / 2 else "measured")
-            item = {"date": d.isoformat(), **figures,
+            item = {"date": d.isoformat(), **figures, **market_observation(markets[d]),
                     "workday": c.get("workday") == "1" if c else d.weekday() < 5,
                     "coverage": coverage,
                     "contributors": [{"label": t, "co2Kg": round(v, 3)} for t, v in

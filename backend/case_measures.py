@@ -2,6 +2,7 @@
 from collections import defaultdict
 from datetime import timedelta
 
+from accounting import market_relocation, merge_market_effects, scale_market_effect
 from greenops import START, END, day, inside, key, month, natural, total
 from verification import evidence_record, required_number
 from decision import combine_production
@@ -164,7 +165,7 @@ def case_candidates(r, existing):
             if not allocated:
                 continue
             prorated.append(line | {k: [v * allocated for v in line[k]] if line[k] is not None else None
-                                    for k in ("kwh", "kg", "kg_market")} |
+                                    for k in ("kwh", "kg", "kg_market", "market_residual_kg")} |
                              {"chf": line["chf"] * allocated if line["chf"] is not None else None})
         if spec.get("schedule"):
             # Baseline meter takes precedence. Unmapped direct meters require an owner to specify a schedule.
@@ -210,7 +211,9 @@ def case_candidates(r, existing):
         # Remaining workload moves only after the idle fraction has been deducted.
         item["kg"] = [round(b - e * (1 - fraction) * g, 5)
                       for b, e, g in zip(item["baseline"]["kg"], item["baseline"]["kwh"], ch["values"])]
-        item["kg_market"] = None
+        relocation = market_relocation(a, rows, "ch", 1 - fraction, (quote or {}).get("provider", ""))
+        item["market_effect"] = merge_market_effects([item["market_effect"], relocation])
+        item["kg_market"] = item["market_effect"]["range"]
         item["phase"] = "Joint dependency rehearsal before GPU or development cutover"
         candidates.append(item)
 
@@ -244,7 +247,8 @@ def case_candidates(r, existing):
             if not fraction:
                 continue
             rows.append(line | {"chf": None if line["chf"] is None else line["chf"] * fraction} |
-                        {k: [v * fraction for v in line[k]] if line[k] is not None else None for k in ("kwh", "kg", "kg_market")})
+                        {k: [v * fraction for v in line[k]] if line[k] is not None else None
+                         for k in ("kwh", "kg", "kg_market", "market_residual_kg")})
             refs.extend((line["ref"], u["ref"], r.calendar[d]["ref"]))
         if rows:
             m = r.measure("dp-prod", "Autoscale surplus production workers", "Pilot a minimum capacity of 75%. Keep the service running and restore full capacity for closing, every scheduled job, Sundays and any uncertainty.",
@@ -262,9 +266,11 @@ def case_candidates(r, existing):
                     raise ValueError("Production pilot requires four evidence references and at least a 75% capacity floor.")
                 scale = (1 - floor) / .25
                 m["chf"] = round(m["chf"] * scale, 2)
-                for metric in ("kwh", "kg", "kg_market"):
+                for metric in ("kwh", "kg"):
                     if m[metric] is not None:
                         m[metric] = [round(v * scale, 5) for v in m[metric]]
+                m["market_effect"] = scale_market_effect(m["market_effect"], scale)
+                m["kg_market"] = m["market_effect"]["range"]
                 m["change"] = m["change"].replace("75%", f"{floor:.0%}")
                 m["method"] += f" Pilot-supported surplus limit {1-floor:.1%} replaces the 25% scenario limit."
                 m["pilot_evidence_complete"] = True
@@ -331,10 +337,12 @@ def case_candidates(r, existing):
                 raise ValueError(f"ai_benchmarks/{rid} must confirm quality and name the exact pilot measure ID in scope.")
             cost_fraction = required_number(benchmark, "cost_saving_fraction", 1)
             energy_fraction = required_number(benchmark, "energy_saving_fraction", 1)
+            market = scale_market_effect(part["market_effect"], energy_fraction / part["energy_fraction"])
             best[rid] = part | {"chf": round(part["baseline"]["chf"] * cost_fraction, 2),
                                 "kg": [round(v * energy_fraction, 5) for v in part["baseline"]["kg"]],
                                 "kwh": [round(v * energy_fraction, 5) for v in part["baseline"]["kwh"]],
-                                "kg_market": None, "evidence": [*part["evidence"], benchmark["source"]],
+                                "kg_market": market["range"], "market_effect": market,
+                                "evidence": [*part["evidence"], benchmark["source"]],
                                 "cost_fraction": cost_fraction, "energy_fraction": energy_fraction,
                                 "method": "Scope-matched cost and energy fractions measured in a quality-checked pilot."}
         if best:
@@ -346,8 +354,10 @@ def case_candidates(r, existing):
                         scopes=list(best), components=parts, baseline={k: total([m["baseline"] for m in parts])[k] for k in ("chf", "kwh", "kg")},
                         evidence=list(dict.fromkeys(e for m in parts for e in m["evidence"])),
                         chf=round(sum(m["chf"] for m in parts), 2))
-            for metric in ("kwh", "kg", "kg_market"):
+            for metric in ("kwh", "kg"):
                 item[metric] = [round(sum((m[metric] or [0, 0, 0])[i] for m in parts), 5) for i in range(3)] if any(m[metric] is not None for m in parts) else None
+            item["market_effect"] = merge_market_effects([m["market_effect"] for m in parts])
+            item["kg_market"] = item["market_effect"]["range"]
             candidates = [m for m in candidates if m["name"] not in names]
             candidates.append(item)
     return candidates

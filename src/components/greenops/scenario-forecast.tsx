@@ -70,6 +70,10 @@ export function ScenarioForecastPanel({
   const identical =
     selections.length > 0 &&
     chart.rows.every((r) => selections.every((s) => r[s.key] == null || r[s.key] === r["noChange"]));
+  const withoutMarketEffect = metric === "co2Market" && results.some((r, i) =>
+    (selections[i]?.measureIds.length ?? 0) > 0 && r.data?.points.slice(1).some((p) => p.optimized === null),
+  );
+  const marketScope = metric === "co2Market" && results.find((r) => r.data?.marketScopeLabel)?.data?.marketScopeLabel;
   return (
     <section className="min-w-0 rounded-lg border bg-card p-4 sm:p-5" aria-label={title}>
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -138,6 +142,8 @@ export function ScenarioForecastPanel({
             {pending && <p>Updating projections…</p>}
             {chart.historyCount === 0 && <p>Monthly historical observations unavailable.</p>}
             {chart.historyCount > 0 && <p>Actual: last {chart.historyCount} supplied monthly observations.</p>}
+            {marketScope && <p>{marketScope} Plan projections include supported effects on that scope.</p>}
+            {withoutMarketEffect && <p className="text-warning">A scenario has no supported market-based projection.</p>}
             {chart.granularity === "annual" && (
               <p>
                 Quarterly forecast data is unavailable — the provider supplies annual totals, shown
@@ -146,7 +152,7 @@ export function ScenarioForecastPanel({
             )}
             {chart.granularity === "quarterly" && <p>Projections: supplied monthly values averaged per 3-month period.</p>}
             {!selections.length && emptyNote && <p>{emptyNote}</p>}
-            {identical && !pending && selections.length > 0 && (
+            {identical && !withoutMarketEffect && !pending && selections.length > 0 && (
               <p className="text-warning">
                 Scenario lines overlap “Without changes”: no committed or selected measures with a
                 modeled effect on {m.label}.

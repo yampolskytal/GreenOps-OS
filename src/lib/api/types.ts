@@ -39,6 +39,29 @@ export interface GlobalQuery {
   provider: string | "all";
 }
 
+export interface MarketCoverage {
+  status: "covered" | "partial" | "unavailable" | "no-change";
+  modeledKwh: number;
+  coveredKwh: number;
+  uncoveredKwh: number;
+  allocatedCoveredKwh: number;
+  coveragePct: number | null;
+  missingEnergyRows: number;
+  missingFactorRows: number;
+  uncoveredRegions: string[];
+  sources: string[];
+  factors: NonNullable<Calculation["factors"]>;
+  assumptions: string[];
+  missingInputs: string[];
+}
+
+export interface MarketSavings {
+  projectionRange?: Range | null;
+  partialMeasureIds?: string[];
+  unavailableMeasureIds?: string[];
+  forecastLimitedMeasureIds?: string[];
+}
+
 export interface Kpi {
   value: Range;
   unit: string;
@@ -49,6 +72,7 @@ export interface Kpi {
   entity?: string;
   missingInputs?: string[];
   procurementAssumptions?: string[];
+  marketCoverage?: MarketCoverage;
 }
 
 export type DataStatus =
@@ -60,6 +84,8 @@ export interface MonthlyObservation {
   energyKwh: number | null;
   co2Kg: number | null;
   co2KgMarket?: number | null;
+  co2KgMarketRange?: Range | null;
+  marketCoverage?: MarketCoverage;
   status?: DataStatus;
   evidence?: Partial<Record<HistoricalMetric, Calculation>>;
   previous?: Partial<Record<HistoricalMetric, { value: number; period: string }>>;
@@ -71,6 +97,7 @@ export interface Overview {
   energy: Kpi;
   co2Location: Kpi;
   co2Market?: Kpi | null;
+  marketCoverage?: MarketCoverage;
   monthly: MonthlyObservation[];
   forecastSupport?: { metric: Forecast["metric"]; horizons: number[] }[];
   topOpportunities: string[]; // measure ids
@@ -83,6 +110,8 @@ export interface Breakdown {
   co2Kg: number | null;
   energyKwh: number | null;
   co2KgMarket?: number | null;
+  co2KgMarketRange?: Range | null;
+  marketCoverage?: MarketCoverage;
 }
 export interface Breakdowns {
   byDepartment: Breakdown[];
@@ -121,7 +150,8 @@ export interface LocationSummary {
   costChf: number;
   energyKwh: number;
   co2KgLocation: number;
-  co2KgMarket: number;
+  co2KgMarket: number | null;
+  marketCoverage?: MarketCoverage;
   gridKgPerKwh: Range;
   providers: string[];
   risks: string[];
@@ -143,7 +173,9 @@ export interface Measure {
   savingsChf: number;
   savingsKwh: number;
   savingsCo2KgLocation: number;
-  savingsCo2KgMarket: number;
+  savingsCo2KgMarket?: number | null;
+  savingsCo2KgMarketRange?: Range | null;
+  marketCoverage?: MarketCoverage;
   risk: {
     level: RiskLevel;
     why: string;
@@ -201,6 +233,9 @@ export interface SimulationResult {
   savingsKwh: number;
   savingsCo2Kg: number;
   savingsCo2KgMarket?: number | null;
+  savingsCo2KgMarketRange?: Range | null;
+  marketCoverage?: MarketCoverage;
+  marketSavings?: MarketSavings;
   effortDays: number;
   effortChf: number;
   costReductionPct: number;
@@ -228,7 +263,8 @@ export interface ForecastPoint {
   periodLabel?: string;
   coverage?: string;
   baseline: Range;
-  optimized: Range;
+  optimized: Range | null;
+  marketCoverage?: MarketCoverage;
   observed?: number | null;
 }
 export interface Forecast {
@@ -239,6 +275,9 @@ export interface Forecast {
   granularity?: "monthly" | "annual";
   methodology?: Calculation;
   implementationTiming?: string;
+  marketCoverage?: MarketCoverage;
+  marketSavings?: MarketSavings;
+  marketScopeLabel?: string;
 }
 
 export interface DailyFootprint {
@@ -247,6 +286,8 @@ export interface DailyFootprint {
   energyKwh: number | null;
   co2Kg: number | null;
   co2KgMarket?: number | null;
+  co2KgMarketRange?: Range | null;
+  marketCoverage?: MarketCoverage;
   workday: boolean;
   holiday?: string;
   coverage: "measured" | "allocated" | "estimated" | "unavailable";

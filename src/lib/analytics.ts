@@ -3,9 +3,17 @@ import type {
   ForecastPoint,
   HistoricalMetric,
   Kpi,
+  MarketCoverage,
   MonthlyObservation,
   Range,
 } from "./api/types";
+
+export function marketCoverageLabel(coverage: MarketCoverage) {
+  if (coverage.status === "no-change") return "No modeled emissions change.";
+  return coverage.coveragePct === null
+    ? "Market coverage of modeled energy is unavailable."
+    : `${coverage.coveragePct.toFixed(1)}% of modeled energy covered.`;
+}
 
 export const isAvailable = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 export const percentDifference = (before: number, after: number) =>
@@ -103,16 +111,17 @@ export function aggregateForecast(f: Forecast, interval: 1 | 3 | 6): Forecast {
     const first = bucket[0],
       last = bucket.at(-1);
     if (!first || !last) return;
-    const average = (key: "baseline" | "optimized"): Range => ({
-      low: bucket.reduce((sum, p) => sum + p[key].low, 0) / bucket.length,
-      mid: bucket.reduce((sum, p) => sum + p[key].mid, 0) / bucket.length,
-      high: bucket.reduce((sum, p) => sum + p[key].high, 0) / bucket.length,
+    const average = (values: Range[]): Range => ({
+      low: values.reduce((sum, p) => sum + p.low, 0) / values.length,
+      mid: values.reduce((sum, p) => sum + p.mid, 0) / values.length,
+      high: values.reduce((sum, p) => sum + p.high, 0) / values.length,
     });
     const { observed: _observed, ...metadata } = first;
+    const optimized = bucket.map((p) => p.optimized);
     out.push({
       ...metadata,
-      baseline: average("baseline"),
-      optimized: average("optimized"),
+      baseline: average(bucket.map((p) => p.baseline)),
+      optimized: optimized.every((p) => p !== null) ? average(optimized) : null,
       ...(bucket.every((p) => isAvailable(p.observed))
         ? { observed: bucket.reduce((sum, p) => sum + (p.observed ?? 0), 0) / bucket.length }
         : {}),

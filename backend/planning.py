@@ -1,8 +1,9 @@
 """Conservative policy checks, additional modeled measures and financial timing."""
 from collections import defaultdict
+from accounting import market_reduction, market_relocation, merge_market_effects
 from datetime import timedelta
 
-from greenops import day, inside, key, natural, triplet_sum
+from greenops import day, inside, key, natural
 from bonus_evidence import ci_attribution
 
 
@@ -125,6 +126,8 @@ def additional_candidates(reports):
                                energy_fraction=energy_share)
         if item["chf"] or any(item["kg"]):
             candidates.append(item)
+            return item
+        return None
 
     reports.ci_attribution = ci_attribution(reports)
     by_meter = defaultdict(list)
@@ -141,7 +144,8 @@ def additional_candidates(reports):
         item["chf"] = round(sum(row["recoverable_chf"] or 0 for row in records), 2)
         item["kg"] = [round(sum((row["recoverable_kg"] or [0, 0, 0])[i] for row in records), 5) for i in range(3)]
         item["kwh"] = [round(sum((row["recoverable_kwh"] or [0, 0, 0])[i] for row in records), 5) for i in range(3)]
-        item["kg_market"] = None
+        item["market_effect"] = merge_market_effects([row["market_effect"] for row in records])
+        item["kg_market"] = item["market_effect"]["range"]
         candidates.append(item)
 
     ai = defaultdict(list)
@@ -160,13 +164,25 @@ def additional_candidates(reports):
         subset = [linked[r["ref"]] for r in low_risk if r["ref"] in linked]
         ratio, targets = tariff_routing(a, low_risk, linked, routes) if routed_share else (None, set())
         if ratio is not None:
-            add("Route routine requests to smaller models", rid, subset, routed_share * (1 - ratio), 4,
+            item = add("Route routine requests to smaller models", rid, subset, routed_share * (1 - ratio), 4,
                 "Benchmark approved routine tasks on a smaller model with fallback and quality monitoring.",
                 [r["ref"] for r in subset] + [routing["source"]],
                 f"Routine large-model rows repriced at the small-model tariff ({', '.join(sorted(targets))}) the gateway already bills, "
                 f"for {routed_share:.0%} of the volume; the rest stays on the large model as quality fallback. Energy uses the small/large token factor ratio. "
                 "Requires blind quality and privacy acceptance.",
                 energy_share=routed_share * (1 - small_energy))
+            transfers = {r["ref"] for r in low_risk
+                         if (route := routes.get((key(r.get("provider")), key(r.get("model")))))
+                         and key(route["to_provider"]) != key(r.get("provider"))}
+            if item and transfers:
+                matched = [r | {"kg_market": None, "market_residual_kg": None} if r["ref"] in transfers else r
+                           for r in subset]
+                item["market_effect"] = market_reduction(matched, item["energy_fraction"],
+                                                        "Cross-provider AI routing needs destination hosting and procurement evidence.")
+                item["kg_market"] = item["market_effect"]["range"]
+            if item:
+                item["market_effect"]["coverage"]["assumptions"].append(
+                    "Same-provider AI routing assumes the existing hosting region and procurement scope remain unchanged.")
         else:
             add("Route routine requests to smaller models", rid, subset, .45, 4,
                 "Benchmark approved routine tasks on a smaller model with fallback and quality monitoring.",
@@ -240,17 +256,12 @@ def additional_candidates(reports):
                                [r["ref"] for r in rows], f"Source: {option['source']}. Compare destination and origin factors at unchanged energy. No financial saving assumed without a quote.")
         b = item["baseline"]
         item["kg"] = [round(b["kg"][i] - b["kwh"][i] * factor["values"][i], 5) for i in range(3)]
-        market_grid = a.factors.get("market_grid", {}).get(destination)
-        item["kg_market"] = None if not market_grid or any(r.get("kg_market") is None for r in rows) else [
-            round(v - b["kwh"][i] * market_grid["values"][i], 5)
-            for i, v in enumerate(triplet_sum(rows, "kg_market"))]
+        item["market_effect"] = market_relocation(a, rows, destination, 1, option.get("destination_provider", ""))
+        item["kg_market"] = item["market_effect"]["range"]
         if rate is not None:
             item["chf"] = round(b["chf"] * (1 - rate), 2)
         item["implementation_chf"] += natural(option.get("migration_cost_chf")) or 0
-        # Market and regional ranges can have different ordering for a delta.
         item["kg"].sort()
-        if item["kg_market"]:
-            item["kg_market"].sort()
         if item["kg"][1] > 0:
             candidates.append(item)
     return candidates

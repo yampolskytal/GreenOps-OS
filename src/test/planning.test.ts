@@ -75,9 +75,9 @@ describe("refactor planning integrity", () => {
   it("updates scenario forecasts for the selected plan", async () => {
     const empty = await demoApi.getForecast(q, "cost", 3, []);
     const selected = await demoApi.getForecast(q, "cost", 3, ["M1"]);
-    expect(empty.points.at(-1)?.optimized.mid).toBe(empty.points.at(-1)?.baseline.mid);
-    const a = selected.points.at(-1)?.optimized.mid,
-      b = empty.points.at(-1)?.optimized.mid;
+    expect(empty.points.at(-1)?.optimized?.mid).toBe(empty.points.at(-1)?.baseline.mid);
+    const a = selected.points.at(-1)?.optimized?.mid,
+      b = empty.points.at(-1)?.optimized?.mid;
     if (a == null || b == null) throw new Error("Missing forecast endpoint");
     expect(a).toBeLessThan(b);
   });

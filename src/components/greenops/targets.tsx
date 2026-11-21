@@ -1,7 +1,8 @@
 import { CheckCircle2, ShieldAlert } from "lucide-react";
 import type { SimulationResult } from "@/lib/api/types";
 import { api } from "@/lib/api/client";
-import { chf, pct } from "@/lib/format";
+import { chf, kg, pct } from "@/lib/format";
+import { marketCoverageLabel } from "@/lib/analytics";
 import { TargetProgress } from "./ui";
 import { TARGETS } from "@/lib/optimizer";
 export function TargetPanel({ r, compact = false }: { r: SimulationResult; compact?: boolean }) {
@@ -65,6 +66,18 @@ export function TargetPanel({ r, compact = false }: { r: SimulationResult; compa
           )}
         </div>
       ))}
+      {r.marketCoverage && (
+        <div className={`border-t pt-3 text-sm ${compact ? "md:col-span-2" : ""}`}>
+          <p>Market-based CO₂e savings · {kg(r.savingsCo2KgMarket)}{r.savingsCo2KgMarket != null && " per year"}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {marketCoverageLabel(r.marketCoverage)}{" "}
+            {r.marketCoverage.status === "partial" && "Savings are a covered subtotal."}
+          </p>
+          {r.marketCoverage.missingInputs.map((s) => (
+            <p key={s} className="mt-1 text-xs text-muted-foreground">{s}</p>
+          ))}
+        </div>
+      )}
       <div className={`flex gap-2 border-t pt-3 text-sm ${compact ? "md:col-span-2" : ""}`}>
         {r.feasible ? (
           <CheckCircle2 className="size-4 shrink-0 text-success" />

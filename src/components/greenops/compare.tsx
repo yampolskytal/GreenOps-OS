@@ -123,7 +123,9 @@ export function ComparisonBoard({ finance = false }: { finance?: boolean }) {
                       : effective === "energyKwh"
                         ? d.energyKwh
                         : d.costChf,
-                detail: `Annual cost: ${chf(d.costChf)} · CO₂: ${kg(d.co2Kg)} · energy: ${kwh(d.energyKwh)}. ${data.allocationRule}`,
+                detail: effective === "co2KgMarket" && d.marketCoverage
+                  ? [`Covered activity · ${d.marketCoverage.coveragePct == null ? "coverage unavailable" : `${d.marketCoverage.coveragePct.toFixed(1)}% of modeled kWh`}`, ...d.marketCoverage.missingInputs].join(" · ")
+                  : `Annual cost: ${chf(d.costChf)} · CO₂: ${kg(d.co2Kg)} · energy: ${kwh(d.energyKwh)}. ${data.allocationRule}`,
               }))}
             />
           )}

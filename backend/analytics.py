@@ -2,7 +2,8 @@
 from collections import Counter, defaultdict
 from statistics import mean
 
-from greenops import END, START, day, inside, key, month, natural, number, resource, total, triplet_sum
+from accounting import market_reduction
+from greenops import END, START, day, inside, key, month, natural, number, resource, total
 from planning import additional_candidates, apply_policy, contract_ticket, platform_tickets
 from case_measures import case_candidates
 from verification import evidence_record, required_number
@@ -69,12 +70,12 @@ class Reports:
                 energy_fraction=None):
         baseline = total(rows)
         energy_fraction = fraction if energy_fraction is None else energy_fraction
-        market_rows = [r for r in rows if r.get("kg_market") is not None]
+        market = market_reduction(rows, energy_fraction)
         return {"id": name + ":" + rid, "resource": rid, "name": name, "change": change,
                 "days": days, "implementation_chf": days * 1100, "chf": round(max(0, baseline["chf"]) * fraction, 2),
                 "kwh": [round(x * energy_fraction, 5) for x in baseline["kwh"]],
                 "kg": [round(x * energy_fraction, 5) for x in baseline["kg"]],
-                "kg_market": [round(x * energy_fraction, 5) for x in triplet_sum(market_rows, "kg_market")] if market_rows else None,
+                "kg_market": market["range"], "market_effect": market,
                 "baseline": baseline, "cost_fraction": fraction, "energy_fraction": energy_fraction,
                 "blockers": blocked, "status": "human review" if blocked else "eligible for planning",
                 "approval": self.authority(rid), "evidence": list(dict.fromkeys(evidence)),
