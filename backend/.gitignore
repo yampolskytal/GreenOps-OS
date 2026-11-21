@@ -4,7 +4,6 @@ __pycache__/
 GreenOps-Basel.zip
 GreenOps-Basel-backend.zip
 *.bundle
-inputs/
 state/
 challenge-results/
 challenge-results-followups/
