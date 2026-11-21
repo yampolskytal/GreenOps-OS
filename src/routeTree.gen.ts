@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CeoRouteImport } from './routes/ceo'
 import { Route as CfoRouteImport } from './routes/cfo'
+import { Route as DataRouteImport } from './routes/data'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as FindingsRouteImport } from './routes/findings'
 import { Route as FootprintRouteImport } from './routes/footprint'
 import { Route as ForecastRouteImport } from './routes/forecast'
@@ -33,6 +35,16 @@ const CeoRoute = CeoRouteImport.update({
 const CfoRoute = CfoRouteImport.update({
   id: '/cfo',
   path: '/cfo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataRoute = DataRouteImport.update({
+  id: '/data',
+  path: '/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindingsRoute = FindingsRouteImport.update({
@@ -75,6 +87,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/data': typeof DataRoute
+  '/explore': typeof ExploreRoute
   '/findings': typeof FindingsRoute
   '/footprint': typeof FootprintRoute
   '/forecast': typeof ForecastRoute
@@ -87,6 +101,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/data': typeof DataRoute
+  '/explore': typeof ExploreRoute
   '/findings': typeof FindingsRoute
   '/footprint': typeof FootprintRoute
   '/forecast': typeof ForecastRoute
@@ -100,6 +116,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/ceo': typeof CeoRoute
   '/cfo': typeof CfoRoute
+  '/data': typeof DataRoute
+  '/explore': typeof ExploreRoute
   '/findings': typeof FindingsRoute
   '/footprint': typeof FootprintRoute
   '/forecast': typeof ForecastRoute
@@ -114,6 +132,8 @@ export interface FileRouteTypes {
     | '/'
     | '/ceo'
     | '/cfo'
+    | '/data'
+    | '/explore'
     | '/findings'
     | '/footprint'
     | '/forecast'
@@ -126,6 +146,8 @@ export interface FileRouteTypes {
     | '/'
     | '/ceo'
     | '/cfo'
+    | '/data'
+    | '/explore'
     | '/findings'
     | '/footprint'
     | '/forecast'
@@ -138,6 +160,8 @@ export interface FileRouteTypes {
     | '/'
     | '/ceo'
     | '/cfo'
+    | '/data'
+    | '/explore'
     | '/findings'
     | '/footprint'
     | '/forecast'
@@ -151,6 +175,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CeoRoute: typeof CeoRoute
   CfoRoute: typeof CfoRoute
+  DataRoute: typeof DataRoute
+  ExploreRoute: typeof ExploreRoute
   FindingsRoute: typeof FindingsRoute
   FootprintRoute: typeof FootprintRoute
   ForecastRoute: typeof ForecastRoute
@@ -181,6 +207,20 @@ declare module '@tanstack/react-router' {
       path: '/cfo'
       fullPath: '/cfo'
       preLoaderRoute: typeof CfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data': {
+      id: '/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof DataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/findings': {
@@ -239,6 +279,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CeoRoute: CeoRoute,
   CfoRoute: CfoRoute,
+  DataRoute: DataRoute,
+  ExploreRoute: ExploreRoute,
   FindingsRoute: FindingsRoute,
   FootprintRoute: FootprintRoute,
   ForecastRoute: ForecastRoute,

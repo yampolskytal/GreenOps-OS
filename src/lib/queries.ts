@@ -13,9 +13,9 @@ export const useMeasures = () => { const q = useGlobalQuery(); return useQuery({
 export const useDaily = () => { const q = useGlobalQuery(); return useQuery({ queryKey: k("daily", q), queryFn: () => api.getDailyFootprint(q) }); };
 export const useQuality = () => { const q = useGlobalQuery(); return useQuery({ queryKey: k("quality", q), queryFn: () => api.getDataQuality(q) }); };
 export const useBonus = () => { const q = useGlobalQuery(); return useQuery({ queryKey: k("bonus", q), queryFn: () => api.getBonus(q) }); };
-export const useForecast = (metric: Forecast["metric"], horizon: number) => { const q = useGlobalQuery(); return useQuery({ queryKey: k("forecast", q, [metric, horizon]), queryFn: () => api.getForecast(q, metric, horizon) }); };
+export const useForecast = (metric: Forecast["metric"], horizon: number) => { const q = useGlobalQuery(); const { s } = useApp(); return useQuery({ queryKey: k("forecast", q, [metric, horizon, s.measureIds]), queryFn: () => api.getForecast(q, metric, horizon, s.measureIds) }); };
 /** Simulation of the currently selected package (shared across views). */
 export const useSimulation = () => {
   const q = useGlobalQuery(); const { s } = useApp();
-  return useQuery({ queryKey: k("sim", q, [s.measureIds, s.budgetChf]), queryFn: () => api.simulate(q, { measureIds: s.measureIds, budgetChf: s.budgetChf, chfPerPersonDay: 1100 }), placeholderData: (p) => p });
+  return useQuery({ queryKey: k("sim", q, [s.measureIds, s.budgetChf]), queryFn: () => api.simulate(q, { measureIds: s.measureIds, budgetChf: s.budgetChf, chfPerPersonDay: 1100 }) });
 };

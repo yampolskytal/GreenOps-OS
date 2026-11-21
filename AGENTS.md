@@ -34,5 +34,9 @@ use the editor.
 - Shared cross-view state (role, filters, date range, dataset, plan, budget) lives in `src/lib/store.tsx`, persisted to localStorage — so role switches never reset selections.
 - `src/lib/optimizer.ts` is a demo stand-in for backend optimization; the backend stays authoritative.
 - CSV export headers live only in `src/lib/api/templates.ts` and must match the organisers' templates exactly.
-- Leaflet map is loaded lazily behind `<ClientOnly>` (browser-only library).
+- Explore and Data routes consolidate analytical and report tabs; legacy paths remain reachable without restoring a map, so existing links do not break.
 - No backend and no raw dataset import in this frontend — calculations belong to the separate team backend.
+
+- Imported visualization engines take adapter data only and resolve theme tokens before canvas painting; missing cells stay visibly distinct, so rendering never invents analytical values.
+- Budget and priority changes request debounced suggestions through GreenOpsApi; replacing an existing plan requires confirmation, so recommendations never mutate user selections implicitly.
+- Official exports use the fixed baseline query and cache prepared files against the plan/query context, so display filters and stale files cannot alter a submission.

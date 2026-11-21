@@ -1,48 +1,164 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Check } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
-import { BarList, ChartCard, EvidencePopover, Q, RiskBadge } from "@/components/greenops/ui";
-import { useBreakdowns, useFindings } from "@/lib/queries";
-import type { Breakdowns, Finding } from "@/lib/api/types";
-import { useApp, toggleId } from "@/lib/store";
-import { kchf, kg, kwh } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { Q, RiskBadge } from "@/components/greenops/ui";
+import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
+import { MeasureCard } from "@/components/greenops/measure-card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useFindings, useMeasures } from "@/lib/queries";
+import { chf, kg, kwh } from "@/lib/format";
 import { seo } from "@/lib/seo";
-
 export const Route = createFileRoute("/findings")({
-  head: () => seo("Waste findings — GreenOps OS", "Biggest cost and energy drivers and candidates for review, with evidence and risk."),
+  head: () =>
+    seo(
+      "Waste Findings — GreenOps OS",
+      "Review potential inefficiencies, risk and source evidence before selecting changes.",
+    ),
   component: Findings,
 });
-const DIMS: { id: keyof Omit<Breakdowns, "allocationRule">; label: string }[] = [{ id: "byDepartment", label: "Department" }, { id: "byTool", label: "Tool" }, { id: "byProvider", label: "Provider" }, { id: "byService", label: "Service" }];
-const CATS: { id: Finding["category"] | "all"; label: string }[] = [{ id: "all", label: "All" }, { id: "servers", label: "Servers" }, { id: "data-platform", label: "Data platform" }, { id: "saas", label: "SaaS" }, { id: "ai-models", label: "AI models" }, { id: "ci", label: "Pipelines" }, { id: "logs", label: "Logs" }, { id: "reports", label: "Reports" }, { id: "conflict", label: "Conflicts" }];
-
 function Findings() {
-  const fs = useFindings(); const br = useBreakdowns(); const { s, set } = useApp();
-  const [dim, setDim] = useState<(typeof DIMS)[number]["id"]>("byDepartment"); const [metric, setMetric] = useState<"costChf" | "co2Kg">("co2Kg"); const [cat, setCat] = useState<(typeof CATS)[number]["id"]>("all");
   return (
-    <AppShell kicker="Find" title="Biggest drivers and waste" subtitle="A finding is a candidate for review, not proof that a resource can be removed.">
-      <ChartCard title="Biggest drivers" action={<div className="flex gap-1">{(["co2Kg", "costChf"] as const).map((m) => <button key={m} onClick={() => setMetric(m)} className={cn("rounded-md px-2.5 py-1 text-xs", metric === m ? "bg-primary text-primary-foreground" : "border")}>{m === "co2Kg" ? "CO₂" : "Cost"}</button>)}</div>}>
-        <div className="mb-4 flex flex-wrap gap-1">{DIMS.map((d) => <button key={d.id} onClick={() => setDim(d.id)} className={cn("rounded-full px-3 py-1 text-xs", dim === d.id ? "bg-secondary text-foreground" : "text-muted-foreground")}>{d.label}</button>)}</div>
-        <Q q={br}>{(b) => <BarList items={[...b[dim]].sort((x, y) => y[metric] - x[metric]).map((x) => ({ label: x.label, value: x[metric] }))} format={metric === "co2Kg" ? kg : kchf} color={metric === "co2Kg" ? "bg-success" : "bg-info"} />}</Q>
-      </ChartCard>
-      <div className="mb-4 mt-8 flex flex-wrap gap-1">{CATS.map((c) => <button key={c.id} onClick={() => setCat(c.id)} className={cn("rounded-full border px-3 py-1 text-xs", cat === c.id ? "border-primary text-primary" : "text-muted-foreground")}>{c.label}</button>)}</div>
-      <Q q={fs}>{(all) => <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{all.filter((f) => cat === "all" || f.category === cat).sort((a, b) => b.impactChfYear - a.impactChfYear).map((f) => {
-        const inPlan = !!f.measureId && s.measureIds.includes(f.measureId); const blocked = f.risk === "blocked";
-        return (
-          <article key={f.id} className="card-elevated rise-in flex flex-col p-5">
-            <div className="flex items-center gap-2"><RiskBadge level={f.risk} /><span className="text-[11px] text-muted-foreground">{f.resource}</span></div>
-            <h3 className="mt-2 font-semibold">{f.title}</h3>
-            <p className="mt-1 flex-1 text-sm text-muted-foreground">{f.description}</p>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">{[["CHF/yr", kchf(f.impactChfYear), "text-info"], ["CO₂/yr", kg(f.impactCo2KgYear), "text-success"], ["Energy", kwh(f.impactKwhYear), "text-primary"]].map(([l, v, c]) => <div key={l} className="rounded bg-muted/60 py-1.5"><p className="text-muted-foreground">{l}</p><p className={cn("num", c)}>{v}</p></div>)}</div>
-            <p className="mt-3 text-xs"><span className="text-muted-foreground">Recommended: </span>{f.action}</p>
-            {f.assumptions.length > 0 && <p className="mt-1 text-[11px] text-muted-foreground">Assumes: {f.assumptions.join("; ")}</p>}
-            <div className="mt-3 flex items-center justify-between"><EvidencePopover evidence={f.evidence} />
-              {f.measureId && <button disabled={blocked} onClick={() => set({ measureIds: toggleId(s.measureIds, f.measureId!) })} className={cn("inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs", blocked ? "cursor-not-allowed text-destructive" : inPlan ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary")}>{blocked ? "Blocked" : inPlan ? <><Check className="h-3.5 w-3.5" />In plan</> : <><Plus className="h-3.5 w-3.5" />Add to plan</>}</button>}
-            </div>
-          </article>
-        );
-      })}</div>}</Q>
+    <AppShell kicker="Explore & Findings" title="Waste Findings">
+      <WasteFindings />
     </AppShell>
+  );
+}
+export function WasteFindings() {
+  const fs = useFindings(),
+    ms = useMeasures();
+  const [risk, setRisk] = useState("actionable");
+  const [sort, setSort] = useState("risk");
+  return (
+    <div>
+      <p className="mb-5 text-sm text-muted-foreground">
+        Discover potential inefficiencies, review their impact and identify suitable improvements
+        for your optimization plan.
+      </p>
+      <div className="mb-6 flex flex-wrap gap-3">
+        <Select value={risk} onValueChange={setRisk}>
+          <SelectTrigger className="w-48" aria-label="Finding risk">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[
+              ["actionable", "Actionable opportunities"],
+              ["all", "All risks"],
+              ["low", "Low risk"],
+              ["review", "Review required"],
+              ["blocked", "Blocked"],
+            ].map(([v, l]) => (
+              <SelectItem key={v} value={v ?? ""}>
+                {l}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="w-48" aria-label="Sort findings">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[
+              ["risk", "Lowest risk"],
+              ["cost", "Cost savings"],
+              ["co2", "CO₂ savings"],
+              ["energy", "Energy savings"],
+              ["effort", "Implementation effort"],
+            ].map(([v, l]) => (
+              <SelectItem key={v} value={v ?? ""}>
+                {l}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Q q={fs}>
+        {(all) => (
+          <Q q={ms}>
+            {(measures) => (
+              <div className="space-y-3">
+                {[...all]
+                  .filter(
+                    (f) =>
+                      risk === "all" ||
+                      (risk === "actionable" && f.risk !== "blocked") ||
+                      f.risk === risk,
+                  )
+                  .sort((a, b) =>
+                    sort === "cost"
+                      ? b.impactChfYear - a.impactChfYear
+                      : sort === "co2"
+                        ? b.impactCo2KgYear - a.impactCo2KgYear
+                        : sort === "energy"
+                          ? b.impactKwhYear - a.impactKwhYear
+                          : sort === "effort"
+                            ? (measures.find((m) => m.id === a.measureId)?.effortPersonDays ??
+                                Infinity) -
+                              (measures.find((m) => m.id === b.measureId)?.effortPersonDays ??
+                                Infinity)
+                            : ["low", "review", "blocked"].indexOf(a.risk) -
+                              ["low", "review", "blocked"].indexOf(b.risk),
+                  )
+                  .map((f) => {
+                    const m = measures.find((x) => x.id === f.measureId);
+                    return (
+                      <div id={`finding-${f.id}`} key={f.id}>
+                        {m ? (
+                          <MeasureCard m={m} />
+                        ) : (
+                          <article className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs text-muted-foreground">{f.resource}</p>
+                              <h3 className="mt-1 text-sm font-semibold">{f.title}</h3>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {chf(f.impactChfYear)} · {kg(f.impactCo2KgYear)} CO₂ ·{" "}
+                                {kwh(f.impactKwhYear)}
+                              </p>
+                            </div>
+                            <RiskBadge level={f.risk} />
+                            <DetailDrawer
+                              title={f.title}
+                              trigger={
+                                <Button variant="outline" size="sm">
+                                  Details
+                                </Button>
+                              }
+                            >
+                              <p>{f.description}</p>
+                              <DetailBlock title="Potential action">{f.action}</DetailBlock>
+                              <DetailBlock title="Assumptions">
+                                {f.assumptions.join(" · ") || "Not supplied"}
+                              </DetailBlock>
+                              <DetailBlock title="Evidence">
+                                {f.evidence.map((e) => (
+                                  <p key={e.source + e.detail} className="mb-3">
+                                    <span className="num block text-xs text-info">{e.source}</span>
+                                    {e.detail}
+                                  </p>
+                                ))}
+                              </DetailBlock>
+                              <p className="text-muted-foreground">
+                                No supported measure is linked; this finding cannot be added to the
+                                plan yet.
+                              </p>
+                            </DetailDrawer>
+                          </article>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </Q>
+        )}
+      </Q>
+    </div>
   );
 }

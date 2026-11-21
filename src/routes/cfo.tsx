@@ -1,73 +1,118 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Cell, Pie, PieChart, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis, CartesianGrid } from "recharts";
-import { Coins, Hammer, PiggyBank, Timer } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Coins, PiggyBank, Hammer, ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
-import { BarList, ChartCard, KpiCard, Q } from "@/components/greenops/ui";
-import { BudgetSlider, PortfolioBuilder } from "@/components/greenops/portfolio";
-import { TargetPanel } from "@/components/greenops/targets";
+import { ChartCard, KpiCard, Q } from "@/components/greenops/ui";
+import { ComparisonBoard } from "@/components/greenops/compare";
 import { ForecastChart } from "@/components/greenops/forecast-chart";
-import { useBreakdowns, useForecast, useMeasures, useOverview, useSimulation } from "@/lib/queries";
-import { chf, kchf, kg } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { useForecast, useOverview, useSimulation } from "@/lib/queries";
+import { useApp } from "@/lib/store";
+import { chf, kchf } from "@/lib/format";
 import { seo } from "@/lib/seo";
-
 export const Route = createFileRoute("/cfo")({
-  head: () => seo("Financial Intelligence — GreenOps OS", "Costs by department, provider and service, savings portfolio and budget planning."),
+  head: () =>
+    seo(
+      "Financial Dashboard — GreenOps OS",
+      "Financial snapshot, ranked spending drivers and implementation budget for the shared plan.",
+    ),
   component: Cfo,
 });
-const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--muted-foreground)", "var(--accent-foreground)"];
-const tip = { background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8 };
-
 function Cfo() {
-  const ov = useOverview(); const br = useBreakdowns(); const ms = useMeasures(); const sim = useSimulation(); const fc = useForecast("cost", 3);
-  const r = sim.data;
+  const ov = useOverview(),
+    sim = useSimulation(),
+    fc = useForecast("cost", 3);
+  const { s } = useApp();
   return (
-    <AppShell kicker="CFO · Financial Intelligence" title="Where the money goes" subtitle="All costs converted to CHF. Build a savings portfolio that fits the implementation budget.">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total annual cost" value={ov.data?.cost.value.mid ?? 0} format={kchf} {...(ov.data ? { calc: ov.data.cost.calc } : {})} kind="financial" icon={<Coins className="h-4 w-4" />} sub="Baseline year Sep 25 – Aug 26" />
-        <KpiCard label="Estimated annual savings" value={r?.savingsChf ?? 0} format={kchf} kind="simulated" tone="good" icon={<PiggyBank className="h-4 w-4" />} sub={r ? `−${r.costReductionPct.toFixed(1)}% of costs` : "…"} />
-        <KpiCard label="Implementation cost" value={r?.effortChf ?? 0} format={chf} kind="simulated" tone={r && r.effortChf > 16500 ? "bad" : "default"} icon={<Hammer className="h-4 w-4" />} sub={r ? `${r.effortDays} person-days × CHF 1,100` : "…"} />
-        <KpiCard label="Payback period" value={r?.paybackMonths ?? 0} format={(n) => (r?.paybackMonths == null ? "–" : `${n.toFixed(1)} months`)} kind="simulated" icon={<Timer className="h-4 w-4" />} sub="Implementation cost ÷ monthly savings" />
+    <AppShell
+      kicker="CFO · Dashboard"
+      title="Make spending work harder"
+      subtitle="Annual spending, financial opportunities and the cost of your selected plan."
+    >
+      <div className="grid gap-6 border-b pb-6 md:grid-cols-3">
+        <KpiCard
+          label="Annual digital spending"
+          value={ov.data?.cost.value.mid ?? null}
+          format={kchf}
+          sub={ov.data?.baselinePeriod ?? "Loading reporting period"}
+          {...(ov.data ? { calc: ov.data.cost.calc } : {})}
+          icon={<Coins className="size-4" />}
+        />
+        <KpiCard
+          label="Potential annual savings"
+          value={sim.data?.savingsChf ?? null}
+          format={kchf}
+          sub="Projected · selected plan"
+          tone="good"
+          icon={<PiggyBank className="size-4" />}
+        />
+        <KpiCard
+          label="Implementation budget used"
+          value={sim.data?.effortChf ?? null}
+          format={chf}
+          sub={`${s.measureIds.length} measures selected`}
+          icon={<Hammer className="size-4" />}
+        />
       </div>
-      <Q q={br}>{(b) => (
-        <div className="mt-6 grid gap-6 xl:grid-cols-3">
-          <ChartCard title="Cost by department" subtitle={b.allocationRule}><BarList items={b.byDepartment.map((d) => ({ label: d.label, value: d.costChf }))} format={kchf} /></ChartCard>
-          <ChartCard title="Cost by provider" subtitle="Share of annual cost">
-            <div className="h-56"><ResponsiveContainer><PieChart><Pie data={b.byProvider} dataKey="costChf" nameKey="label" innerRadius={55} outerRadius={85} paddingAngle={2} stroke="none">{b.byProvider.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Pie><Tooltip contentStyle={tip} formatter={(v: number) => chf(v)} /></PieChart></ResponsiveContainer></div>
-            <ul className="grid grid-cols-2 gap-1 text-xs">{b.byProvider.map((p, i) => <li key={p.label} className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />{p.label}<span className="num ml-auto text-muted-foreground">{kchf(p.costChf)}</span></li>)}</ul>
-          </ChartCard>
-          <ChartCard title="Budget allocation by service" subtitle="Cloud, servers, AI, SaaS and data platform"><BarList items={b.byService.map((d) => ({ label: d.label, value: d.costChf, hint: `${kg(d.co2Kg)} CO₂` }))} format={kchf} color="bg-info" /></ChartCard>
-        </div>
-      )}</Q>
-      <div className="mt-6 grid gap-6 xl:grid-cols-5">
-        <ChartCard title="Savings portfolio builder" subtitle="Select measures — your plan is shared with all views" className="xl:col-span-3">
-          <div className="mb-5"><BudgetSlider /></div>
-          <Q q={ms}>{(all) => <PortfolioBuilder measures={all} />}</Q>
+      <div className="mt-6 grid gap-10 xl:grid-cols-[1.35fr_.8fr]">
+        <ChartCard
+          title="Where the money goes"
+          subtitle="Ranked annual spending, one comparison at a time"
+        >
+          <ComparisonBoard finance />
         </ChartCard>
-        <ChartCard title="Does the package work?" className="xl:col-span-2"><Q q={sim}>{(x) => <TargetPanel r={x} />}</Q></ChartCard>
-      </div>
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <ChartCard title="Money vs. CO₂ per measure" subtitle="Top right = saves both. Bubble size = effort.">
-          <Q q={ms}>{(all) => (
-            <div className="h-72"><ResponsiveContainer><ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
-              <CartesianGrid stroke="var(--border)" />
-              <XAxis type="number" dataKey="savingsChf" name="CHF/yr" tickFormatter={kchf} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
-              <YAxis type="number" dataKey="savingsCo2KgLocation" name="CO₂/yr" tickFormatter={kg} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} width={60} />
-              <ZAxis type="number" dataKey="effortPersonDays" range={[60, 400]} />
-              <Tooltip contentStyle={tip} content={({ payload }) => { const p = payload?.[0]?.payload as { title: string; savingsChf: number; savingsCo2KgLocation: number } | undefined; return p ? <div className="rounded-lg border bg-popover p-2 text-xs"><b>{p.title}</b><br />{chf(p.savingsChf)} · {kg(p.savingsCo2KgLocation)}</div> : null; }} />
-              <Scatter data={all.filter((m) => m.risk.level !== "blocked")} fill="var(--primary)" fillOpacity={0.75} />
-              <Scatter data={all.filter((m) => m.risk.level === "blocked")} fill="var(--destructive)" fillOpacity={0.75} />
-            </ScatterChart></ResponsiveContainer></div>
-          )}</Q>
+        <ChartCard title="Budget & optimization">
+          <Q q={sim}>
+            {(r) => (
+              <div className="space-y-5">
+                <div>
+                  <p className="text-xs text-muted-foreground">Selected plan</p>
+                  <p className="mt-1 font-semibold">{s.measureIds.length} proposed measures</p>
+                </div>
+                {[
+                  ["Implementation expenditure", chf(r.effortChf)],
+                  ["Annual savings", chf(r.savingsChf)],
+                  ["Remaining budget", chf(s.budgetChf - r.effortChf)],
+                  [
+                    "Payback period",
+                    r.paybackMonths == null
+                      ? "Unavailable"
+                      : `${r.paybackMonths.toFixed(1)} months`,
+                  ],
+                ].map(([l, v]) => (
+                  <div key={l} className="flex justify-between gap-3 border-b pb-3 text-sm">
+                    <span className="text-muted-foreground">{l}</span>
+                    <span className="num text-right">{v}</span>
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  Budget limit: {chf(s.budgetChf)}. Savings are projected, not realized.
+                </p>
+                <Button asChild>
+                  <Link to="/studio">
+                    Open Optimization Studio
+                    <ArrowRight />
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </Q>
         </ChartCard>
-        <ChartCard title="Cost forecast" subtitle="Forecast with uncertainty range — not observations"><Q q={fc}>{(f) => <><ForecastChart f={f} format={kchf} /><p className="mt-2 text-xs text-muted-foreground">{f.growthAssumption}</p></>}</Q></ChartCard>
       </div>
-      {r && ov.data && (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {[["Before", ov.data.cost.value.mid, ov.data.co2Location.value.mid, "border-border"], ["After package", ov.data.cost.value.mid - r.savingsChf, ov.data.co2Location.value.mid - r.savingsCo2Kg, "border-primary/60 shadow-glow"]].map(([l, c, e, cls]) => (
-            <div key={l as string} className={`card-elevated border p-5 ${cls}`}><p className="text-xs uppercase tracking-wider text-muted-foreground">{l}</p><div className="mt-2 flex gap-8"><div><p className="num text-2xl font-semibold">{kchf(c as number)}</p><p className="text-xs text-muted-foreground">cost per year</p></div><div><p className="num text-2xl font-semibold">{kg(e as number)}</p><p className="text-xs text-muted-foreground">CO₂ per year</p></div></div></div>
-          ))}
-        </div>
-      )}
+      <section className="mt-8 border-t pt-6">
+        <ChartCard
+          title="Financial outlook"
+          action={
+            <Button asChild variant="link">
+              <Link to="/forecast">
+                Full forecasts
+                <ArrowRight />
+              </Link>
+            </Button>
+          }
+        >
+          <Q q={fc}>{(f) => <ForecastChart f={f} format={kchf} height={260} />}</Q>
+        </ChartCard>
+      </section>
     </AppShell>
   );
 }
