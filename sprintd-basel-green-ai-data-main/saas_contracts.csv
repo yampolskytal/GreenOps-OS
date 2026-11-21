@@ -1,0 +1,1332 @@
+﻿month,contract,provider,cost_center,licences_purchased,licences_active_30d,price_per_licence,currency,amount,contract_status,contract_end,notice_period_days,billing
+2024-11-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2024-11-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2024-11-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2024-11-01,Chat tool,Vendor A2,4000,32,19,8.0,USD,256.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,36.81,Draft,2026-12-31,30,monthly
+2024-11-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,121.6,Draft,2026-12-31,30,monthly
+2024-11-01,Design tool,Vendor Z,4300,8,2,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2024-11-01,E-signature,Vendor V,4100,16,4,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2024-11-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2024-11-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2024-11-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2024-11-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2024-11-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.76,Draft,2027-05-31,90,annual
+2024-11-01,Microsoft 365,Microsoft,4000,40,34,12.5,USD,500.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4100,20,17,12.5,USD,250.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2024-11-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,148.69,Draft,2027-06-30,90,annual
+2024-11-01,Note-taking tool,Vendor A9,4000,32,12,8.0,USD,256.0,Final,2026-11-30,30,monthly
+2024-11-01,Password manager,Vendor A8,4000,32,25,4.0,USD,128.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4300,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4500,13,11,4.0,USD,52.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2024-11-01,Password manager,Vendor A8,4500,13,11,4.0,USD,54.09,Draft,2027-09-30,60,annual
+2024-11-01,Project scheduling,Vendor A10,4000,32,18,15.0,EUR,480.0,Final,2027-01-31,60,annual
+2024-11-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2024-11-01,Project management,Vendor Y,4000,32,16,14.0,EUR,448.0,Final,2026-11-30,30,monthly
+2024-11-01,Project management,Vendor Y,4500,13,6,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2024-11-01,Project management,Vendor Y,4500,13,6,14.0,EUR,197.82,Draft,2026-11-30,30,monthly
+2024-11-01,Ticket system,Vendor A6,4000,32,18,20.0,USD,640.0,Final,2026-11-30,30,monthly
+2024-11-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2024-11-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2024-11-01,Video conferencing tool,Vendor A1,4000,32,15,12.0,EUR,384.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4900,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2024-11-01,Video conferencing tool,Vendor A1,4000,32,15,12.0,EUR,365.64,Draft,2027-02-28,30,monthly
+2024-11-01,Knowledge base,Vendor A3,4000,32,14,10.0,USD,320.0,Final,2027-04-30,60,annual
+2024-11-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2024-11-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2024-11-01,Time tracking,Vendor A4,4000,32,26,7.0,CHF,224.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4100,16,14,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,71.62,Draft,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4000,32,26,7.0,CHF,212.65,Draft,2027-08-31,90,annual
+2024-11-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,76.32,Draft,2027-08-31,90,annual
+2024-12-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2024-12-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2024-12-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2024-12-01,Chat tool,Vendor A2,4000,32,21,8.0,USD,256.0,Final,2026-12-31,30,monthly
+2024-12-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2024-12-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2024-12-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2024-12-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2024-12-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2024-12-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2024-12-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2024-12-01,E-signature,Vendor V,4100,16,4,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2024-12-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2024-12-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2024-12-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2024-12-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2024-12-01,Microsoft 365,Microsoft,4000,40,34,12.5,USD,500.0,Final,2027-06-30,90,annual
+2024-12-01,Microsoft 365,Microsoft,4100,20,15,12.5,USD,250.0,Final,2027-06-30,90,annual
+2024-12-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2024-12-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2024-12-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2024-12-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2024-12-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2024-12-01,Note-taking tool,Vendor A9,4000,32,13,8.0,USD,256.0,Final,2026-11-30,30,monthly
+2024-12-01,Password manager,Vendor A8,4000,32,26,4.0,USD,128.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4200,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2024-12-01,Password manager,Vendor A8,4900,5,4,4.0,USD,21.33,Draft,2027-09-30,60,annual
+2024-12-01,Project scheduling,Vendor A10,4000,32,18,15.0,EUR,480.0,Final,2027-01-31,60,annual
+2024-12-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2024-12-01,Project management,Vendor Y,4000,32,15,14.0,EUR,448.0,Final,2026-11-30,30,monthly
+2024-12-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2024-12-01,Ticket system,Vendor A6,4000,32,18,20.0,USD,640.0,Final,2026-11-30,30,monthly
+2024-12-01,Ticket system,Vendor A6,4500,13,7,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2024-12-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2024-12-01,Video conferencing tool,Vendor A1,4000,32,15,12.0,EUR,384.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4500,13,6,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2024-12-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,116.41,Draft,2027-02-28,30,monthly
+2024-12-01,Knowledge base,Vendor A3,4000,32,15,10.0,USD,320.0,Final,2027-04-30,60,annual
+2024-12-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2024-12-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2024-12-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.55,Draft,2027-04-30,60,annual
+2024-12-01,Time tracking,Vendor A4,4000,32,25,7.0,CHF,224.0,Final,2027-08-31,90,annual
+2024-12-01,Time tracking,Vendor A4,4100,16,13,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2024-12-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2024-12-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2024-12-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2024-12-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2024-12-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-01-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-01-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-01-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-01-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,884.31,Draft,2026-12-31,60,annual
+2025-01-01,Chat tool,Vendor A2,4000,32,21,8.0,USD,256.0,Final,2026-12-31,30,monthly
+2025-01-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-01-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-01-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-01-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-01-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-01-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-01-01,Design tool,Vendor Z,4300,8,2,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-01-01,E-signature,Vendor V,4100,16,4,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-01-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-01-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-01-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-01-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-01-01,HR software,Vendor A5,4200,10,8,9.0,CHF,93.31,Draft,2027-05-31,90,annual
+2025-01-01,Microsoft 365,Microsoft,4000,40,31,12.5,USD,500.0,Final,2027-06-30,90,annual
+2025-01-01,Microsoft 365,Microsoft,4100,20,15,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-01-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-01-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-01-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-01-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-01-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-01-01,Note-taking tool,Vendor A9,4000,32,14,8.0,USD,256.0,Final,2026-11-30,30,monthly
+2025-01-01,Password manager,Vendor A8,4000,32,27,4.0,USD,128.0,Final,2027-09-30,60,annual
+2025-01-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-01-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-01-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-01-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-01-01,Password manager,Vendor A8,4500,13,11,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-01-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-01-01,Project scheduling,Vendor A10,4000,32,17,15.0,EUR,480.0,Final,2027-01-31,60,annual
+2025-01-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-01-01,Project management,Vendor Y,4000,32,15,14.0,EUR,448.0,Final,2026-11-30,30,monthly
+2025-01-01,Project management,Vendor Y,4500,13,6,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-01-01,Ticket system,Vendor A6,4000,32,18,20.0,USD,640.0,Final,2026-11-30,30,monthly
+2025-01-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-01-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-01-01,Video conferencing tool,Vendor A1,4000,32,16,12.0,EUR,384.0,Final,2027-02-28,30,monthly
+2025-01-01,Video conferencing tool,Vendor A1,4100,16,7,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-01-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-01-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-01-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-01-01,Video conferencing tool,Vendor A1,4500,13,6,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-01-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-01-01,Knowledge base,Vendor A3,4000,32,14,10.0,USD,320.0,Final,2027-04-30,60,annual
+2025-01-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-01-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-01-01,Time tracking,Vendor A4,4000,32,26,7.0,CHF,224.0,Final,2027-08-31,90,annual
+2025-01-01,Time tracking,Vendor A4,4100,16,12,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-01-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-01-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-01-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-01-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-01-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-02-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-02-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-02-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-02-01,Chat tool,Vendor A2,4000,32,20,8.0,USD,256.0,Final,2026-12-31,30,monthly
+2025-02-01,Chat tool,Vendor A2,4100,16,11,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-02-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-02-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-02-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-02-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-02-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-02-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-02-01,E-signature,Vendor V,4100,16,4,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-02-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-02-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-02-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-02-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-02-01,Microsoft 365,Microsoft,4000,40,31,12.5,USD,500.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4100,20,15,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4200,12,9,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-02-01,Microsoft 365,Microsoft,4100,20,15,12.5,USD,257.6,Draft,2027-06-30,90,annual
+2025-02-01,Note-taking tool,Vendor A9,4000,32,13,8.0,USD,256.0,Final,2026-11-30,30,monthly
+2025-02-01,Password manager,Vendor A8,4000,32,27,4.0,USD,128.0,Final,2027-09-30,60,annual
+2025-02-01,Password manager,Vendor A8,4100,16,15,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-02-01,Password manager,Vendor A8,4200,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-02-01,Password manager,Vendor A8,4300,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-02-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-02-01,Password manager,Vendor A8,4500,13,11,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-02-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-02-01,Project scheduling,Vendor A10,4000,32,18,15.0,EUR,480.0,Final,2027-01-31,60,annual
+2025-02-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-02-01,Project management,Vendor Y,4000,32,16,14.0,EUR,448.0,Final,2026-11-30,30,monthly
+2025-02-01,Project management,Vendor Y,4500,13,6,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-02-01,Project management,Vendor Y,4500,13,6,14.0,EUR,166.51,Draft,2026-11-30,30,monthly
+2025-02-01,Ticket system,Vendor A6,4000,32,18,20.0,USD,640.0,Final,2026-11-30,30,monthly
+2025-02-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-02-01,Ticket system,Vendor A6,4000,32,18,20.0,USD,696.46,Draft,2026-11-30,30,monthly
+2025-02-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,267.69,Draft,2026-11-30,30,monthly
+2025-02-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-02-01,Video conferencing tool,Vendor A1,4000,32,17,12.0,EUR,384.0,Final,2027-02-28,30,monthly
+2025-02-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-02-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-02-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-02-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-02-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-02-01,Video conferencing tool,Vendor A1,4900,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-02-01,Knowledge base,Vendor A3,4000,32,14,10.0,USD,320.0,Final,2027-04-30,60,annual
+2025-02-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-02-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-02-01,Time tracking,Vendor A4,4000,32,26,7.0,CHF,224.0,Final,2027-08-31,90,annual
+2025-02-01,Time tracking,Vendor A4,4100,16,12,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-02-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-02-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-02-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-02-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-02-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-03-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-03-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-03-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-03-01,Chat tool,Vendor A2,4000,32,20,8.0,USD,256.0,Final,2026-12-31,30,monthly
+2025-03-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-03-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-03-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-03-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-03-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-03-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-03-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-03-01,E-signature,Vendor V,4100,16,4,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-03-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-03-01,E-signature,Vendor V,4200,10,3,25.0,CHF,242.66,Draft,2027-01-31,60,annual
+2025-03-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-03-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-03-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-03-01,Microsoft 365,Microsoft,4000,40,31,12.5,USD,500.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4100,20,16,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-03-01,Microsoft 365,Microsoft,4000,40,31,12.5,USD,483.57,Draft,2027-06-30,90,annual
+2025-03-01,Note-taking tool,Vendor A9,4000,32,13,8.0,USD,256.0,Final,2026-11-30,30,monthly
+2025-03-01,Password manager,Vendor A8,4000,32,28,4.0,USD,128.0,Final,2027-09-30,60,annual
+2025-03-01,Password manager,Vendor A8,4100,16,13,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-03-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-03-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-03-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-03-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-03-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-03-01,Project scheduling,Vendor A10,4000,32,17,15.0,EUR,480.0,Final,2027-01-31,60,annual
+2025-03-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-03-01,Project management,Vendor Y,4000,32,16,14.0,EUR,448.0,Final,2026-11-30,30,monthly
+2025-03-01,Project management,Vendor Y,4500,13,6,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-03-01,Ticket system,Vendor A6,4000,32,20,20.0,USD,640.0,Final,2026-11-30,30,monthly
+2025-03-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-03-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-03-01,Video conferencing tool,Vendor A1,4000,32,17,12.0,EUR,384.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4400,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4500,13,6,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-03-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,200.62,Draft,2027-02-28,30,monthly
+2025-03-01,Knowledge base,Vendor A3,4000,32,14,10.0,USD,320.0,Final,2027-04-30,60,annual
+2025-03-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-03-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-03-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,53.63,Draft,2027-04-30,60,annual
+2025-03-01,Time tracking,Vendor A4,4000,32,25,7.0,CHF,224.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4100,16,13,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-03-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,63.2,Draft,2027-08-31,90,annual
+2025-04-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-04-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-04-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-04-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,602.5,Draft,2026-12-31,60,annual
+2025-04-01,Chat tool,Vendor A2,4000,32,21,8.0,USD,256.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-04-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,82.07,Draft,2026-12-31,30,monthly
+2025-04-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-04-01,E-signature,Vendor V,4100,16,5,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-04-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-04-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-04-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-04-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-04-01,Microsoft 365,Microsoft,4000,41,36,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4100,20,17,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-04-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,81.34,Draft,2027-06-30,90,annual
+2025-04-01,Note-taking tool,Vendor A9,4000,32,13,8.0,USD,256.0,Final,2026-11-30,30,monthly
+2025-04-01,Password manager,Vendor A8,4000,32,29,4.0,USD,128.0,Final,2027-09-30,60,annual
+2025-04-01,Password manager,Vendor A8,4100,16,13,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-04-01,Password manager,Vendor A8,4200,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-04-01,Password manager,Vendor A8,4300,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-04-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-04-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-04-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-04-01,Project scheduling,Vendor A10,4000,32,18,15.0,EUR,480.0,Final,2027-01-31,60,annual
+2025-04-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-04-01,Project management,Vendor Y,4000,32,17,14.0,EUR,448.0,Final,2026-11-30,30,monthly
+2025-04-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-04-01,Project management,Vendor Y,4500,13,7,14.0,EUR,193.71,Draft,2026-11-30,30,monthly
+2025-04-01,Ticket system,Vendor A6,4000,32,20,20.0,USD,640.0,Final,2026-11-30,30,monthly
+2025-04-01,Ticket system,Vendor A6,4500,13,7,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-04-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-04-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,290.8,Draft,2026-12-31,60,annual
+2025-04-01,Video conferencing tool,Vendor A1,4000,32,17,12.0,EUR,384.0,Final,2027-02-28,30,monthly
+2025-04-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-04-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-04-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-04-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-04-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-04-01,Video conferencing tool,Vendor A1,4900,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-04-01,Knowledge base,Vendor A3,4000,32,14,10.0,USD,320.0,Final,2027-04-30,60,annual
+2025-04-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-04-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-04-01,Time tracking,Vendor A4,4000,32,26,7.0,CHF,224.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4100,16,12,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-04-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,99.44,Draft,2027-08-31,90,annual
+2025-05-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-05-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-05-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-05-01,Chat tool,Vendor A2,4000,33,20,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4000,33,20,8.0,USD,279.26,Draft,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,74.75,Draft,2026-12-31,30,monthly
+2025-05-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,120.82,Draft,2026-12-31,30,monthly
+2025-05-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-05-01,E-signature,Vendor V,4100,16,4,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-05-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-05-01,E-signature,Vendor V,4200,10,3,25.0,CHF,236.98,Draft,2027-01-31,60,annual
+2025-05-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-05-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-05-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-05-01,HR software,Vendor A5,4400,5,4,9.0,CHF,44.16,Draft,2027-05-31,90,annual
+2025-05-01,Microsoft 365,Microsoft,4000,41,36,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4100,20,17,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4200,12,9,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4500,16,14,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-05-01,Microsoft 365,Microsoft,4100,20,17,12.5,USD,245.53,Draft,2027-06-30,90,annual
+2025-05-01,Note-taking tool,Vendor A9,4000,33,13,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-05-01,Password manager,Vendor A8,4000,33,30,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-05-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-05-01,Password manager,Vendor A8,4200,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-05-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-05-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-05-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-05-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-05-01,Project scheduling,Vendor A10,4000,33,18,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-05-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-05-01,Project management,Vendor Y,4000,33,16,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-05-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-05-01,Project management,Vendor Y,4500,13,7,14.0,EUR,167.91,Draft,2026-11-30,30,monthly
+2025-05-01,Ticket system,Vendor A6,4000,33,21,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-05-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-05-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-05-01,Video conferencing tool,Vendor A1,4000,33,16,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4500,13,6,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-05-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,194.69,Draft,2027-02-28,30,monthly
+2025-05-01,Knowledge base,Vendor A3,4000,33,15,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-05-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-05-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-05-01,Time tracking,Vendor A4,4000,33,26,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4100,16,13,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,33.63,Draft,2027-08-31,90,annual
+2025-05-01,Time tracking,Vendor A4,4000,33,26,7.0,CHF,208.28,Draft,2027-08-31,90,annual
+2025-06-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-06-01,CRM platform,Vendor X,4100,16,8,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-06-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-06-01,Chat tool,Vendor A2,4000,33,22,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-06-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-06-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-06-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-06-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-06-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-06-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-06-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-06-01,E-signature,Vendor V,4100,16,5,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-06-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-06-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-06-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-06-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-06-01,Microsoft 365,Microsoft,4000,41,35,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4100,20,17,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,144.47,Draft,2027-06-30,90,annual
+2025-06-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,198.48,Draft,2027-06-30,90,annual
+2025-06-01,Note-taking tool,Vendor A9,4000,33,14,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-06-01,Password manager,Vendor A8,4000,33,29,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-06-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-06-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-06-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-06-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-06-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-06-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-06-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-06-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-06-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,199.93,Draft,2027-01-31,60,annual
+2025-06-01,Project management,Vendor Y,4000,33,17,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-06-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-06-01,Ticket system,Vendor A6,4000,33,20,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-06-01,Ticket system,Vendor A6,4500,13,7,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-06-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-06-01,Video conferencing tool,Vendor A1,4000,33,16,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4900,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-06-01,Video conferencing tool,Vendor A1,4000,33,16,12.0,EUR,407.32,Draft,2027-02-28,30,monthly
+2025-06-01,Knowledge base,Vendor A3,4000,33,15,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-06-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-06-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-06-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,126.4,Draft,2027-04-30,60,annual
+2025-06-01,Time tracking,Vendor A4,4000,33,28,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4100,16,14,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-06-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,65.94,Draft,2027-08-31,90,annual
+2025-07-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-07-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-07-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-07-01,Chat tool,Vendor A2,4000,33,21,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-07-01,Chat tool,Vendor A2,4100,16,11,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-07-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-07-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-07-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-07-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-07-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-07-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-07-01,Design tool,Vendor Z,4300,8,3,20.0,USD,171.21,Draft,2026-10-31,30,monthly
+2025-07-01,E-signature,Vendor V,4100,16,5,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-07-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-07-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-07-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-07-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-07-01,Microsoft 365,Microsoft,4000,41,35,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-07-01,Microsoft 365,Microsoft,4100,20,17,12.5,USD,250.0,Final,2027-06-30,90,annual
+2025-07-01,Microsoft 365,Microsoft,4200,12,9,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-07-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-07-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-07-01,Microsoft 365,Microsoft,4500,16,13,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-07-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-07-01,Note-taking tool,Vendor A9,4000,33,14,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-07-01,Password manager,Vendor A8,4000,33,29,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-07-01,Password manager,Vendor A8,4100,16,15,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-07-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-07-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-07-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-07-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-07-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-07-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-07-01,Project scheduling,Vendor A10,4500,13,7,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-07-01,Project management,Vendor Y,4000,33,17,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-07-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-07-01,Ticket system,Vendor A6,4000,33,19,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-07-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-07-01,Ticket system,Vendor A6,4000,33,19,20.0,USD,724.01,Draft,2026-11-30,30,monthly
+2025-07-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-07-01,Video conferencing tool,Vendor A1,4000,33,18,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-07-01,Video conferencing tool,Vendor A1,4100,16,9,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-07-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-07-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-07-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-07-01,Video conferencing tool,Vendor A1,4500,13,6,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-07-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-07-01,Knowledge base,Vendor A3,4000,33,15,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-07-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-07-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-07-01,Time tracking,Vendor A4,4000,33,29,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-07-01,Time tracking,Vendor A4,4100,16,14,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-07-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-07-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-07-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-07-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-07-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-08-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-08-01,CRM platform,Vendor X,4100,16,8,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-08-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-08-01,Chat tool,Vendor A2,4000,33,21,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,43.01,Draft,2026-12-31,30,monthly
+2025-08-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,76.04,Draft,2026-12-31,30,monthly
+2025-08-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-08-01,E-signature,Vendor V,4100,16,5,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-08-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-08-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-08-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-08-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-08-01,Microsoft 365,Microsoft,4000,41,34,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-08-01,Microsoft 365,Microsoft,4100,21,17,12.5,USD,262.5,Final,2027-06-30,90,annual
+2025-08-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-08-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-08-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-08-01,Microsoft 365,Microsoft,4500,16,14,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-08-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-08-01,Note-taking tool,Vendor A9,4000,33,15,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-08-01,Password manager,Vendor A8,4000,33,30,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4500,13,11,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-08-01,Password manager,Vendor A8,4500,13,11,4.0,USD,48.19,Draft,2027-09-30,60,annual
+2025-08-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-08-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-08-01,Project management,Vendor Y,4000,33,17,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-08-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-08-01,Ticket system,Vendor A6,4000,33,21,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-08-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-08-01,Ticket system,Vendor A6,4000,33,21,20.0,USD,621.57,Draft,2026-11-30,30,monthly
+2025-08-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-08-01,Video conferencing tool,Vendor A1,4000,33,16,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-08-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-08-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-08-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-08-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-08-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-08-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-08-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-08-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-08-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-08-01,Time tracking,Vendor A4,4000,33,27,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-08-01,Time tracking,Vendor A4,4100,16,13,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-08-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-08-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-08-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-08-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-08-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-09-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-09-01,CRM platform,Vendor X,4100,16,9,55.0,CHF,880.0,Final,2026-12-31,60,annual
+2025-09-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-09-01,Chat tool,Vendor A2,4000,33,22,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,128.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4300,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,85.19,Draft,2026-12-31,30,monthly
+2025-09-01,Chat tool,Vendor A2,4100,16,10,8.0,USD,116.42,Draft,2026-12-31,30,monthly
+2025-09-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-09-01,E-signature,Vendor V,4100,16,5,25.0,CHF,400.0,Final,2027-01-31,60,annual
+2025-09-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-09-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-09-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-09-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-09-01,HR software,Vendor A5,4200,10,8,9.0,CHF,95.47,Draft,2027-05-31,90,annual
+2025-09-01,Microsoft 365,Microsoft,4000,41,37,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4100,21,17,12.5,USD,262.5,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4500,16,14,12.5,USD,200.0,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,80.39,Draft,2027-06-30,90,annual
+2025-09-01,Microsoft 365,Microsoft,4000,41,37,12.5,USD,485.38,Draft,2027-06-30,90,annual
+2025-09-01,Note-taking tool,Vendor A9,4000,33,14,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-09-01,Password manager,Vendor A8,4000,33,28,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4100,16,14,4.0,USD,64.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4500,13,12,4.0,USD,47.44,Draft,2027-09-30,60,annual
+2025-09-01,Password manager,Vendor A8,4400,5,4,4.0,USD,21.13,Draft,2027-09-30,60,annual
+2025-09-01,Project scheduling,Vendor A10,4000,33,18,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-09-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-09-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,196.56,Draft,2027-01-31,60,annual
+2025-09-01,Project management,Vendor Y,4000,33,18,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-09-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-09-01,Ticket system,Vendor A6,4000,33,20,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-09-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-09-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-09-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,304.58,Draft,2026-12-31,60,annual
+2025-09-01,Video conferencing tool,Vendor A1,4000,33,17,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-09-01,Video conferencing tool,Vendor A1,4100,16,8,12.0,EUR,192.0,Final,2027-02-28,30,monthly
+2025-09-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-09-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-09-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-09-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-09-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-09-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-09-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-09-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-09-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,134.77,Draft,2027-04-30,60,annual
+2025-09-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,348.91,Draft,2027-04-30,60,annual
+2025-09-01,Time tracking,Vendor A4,4000,33,27,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4100,16,14,7.0,CHF,112.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4500,13,10,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4100,16,14,7.0,CHF,116.04,Draft,2027-08-31,90,annual
+2025-09-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,33.5,Draft,2027-08-31,90,annual
+2025-10-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-10-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2025-10-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-10-01,Chat tool,Vendor A2,4000,33,23,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-10-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,39.04,Draft,2026-12-31,30,monthly
+2025-10-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-10-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2025-10-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-10-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-10-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-10-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-10-01,Microsoft 365,Microsoft,4000,41,35,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-10-01,Microsoft 365,Microsoft,4100,21,18,12.5,USD,262.5,Final,2027-06-30,90,annual
+2025-10-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-10-01,Microsoft 365,Microsoft,4300,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-10-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-10-01,Microsoft 365,Microsoft,4500,17,14,12.5,USD,212.5,Final,2027-06-30,90,annual
+2025-10-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-10-01,Note-taking tool,Vendor A9,4000,33,13,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-10-01,Password manager,Vendor A8,4000,33,31,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4100,17,16,4.0,USD,68.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4300,10,8,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-10-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.46,Draft,2027-09-30,60,annual
+2025-10-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-10-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-10-01,Project management,Vendor Y,4000,33,18,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-10-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-10-01,Ticket system,Vendor A6,4000,33,19,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-10-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-10-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-10-01,Video conferencing tool,Vendor A1,4000,33,18,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4100,17,8,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-10-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,166.71,Draft,2027-02-28,30,monthly
+2025-10-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-10-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-10-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-10-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,46.66,Draft,2027-04-30,60,annual
+2025-10-01,Time tracking,Vendor A4,4000,33,27,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4400,5,5,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4500,13,12,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-10-01,Time tracking,Vendor A4,4400,5,5,7.0,CHF,37.43,Draft,2027-08-31,90,annual
+2025-11-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-11-01,CRM platform,Vendor X,4100,17,9,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2025-11-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-11-01,Chat tool,Vendor A2,4000,33,22,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4400,5,4,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-11-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,81.48,Draft,2026-12-31,30,monthly
+2025-11-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-11-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2025-11-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-11-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-11-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-11-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-11-01,Microsoft 365,Microsoft,4000,41,35,12.5,USD,512.5,Final,2027-06-30,90,annual
+2025-11-01,Microsoft 365,Microsoft,4100,21,18,12.5,USD,262.5,Final,2027-06-30,90,annual
+2025-11-01,Microsoft 365,Microsoft,4200,12,11,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-11-01,Microsoft 365,Microsoft,4300,12,11,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-11-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-11-01,Microsoft 365,Microsoft,4500,17,14,12.5,USD,212.5,Final,2027-06-30,90,annual
+2025-11-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-11-01,Note-taking tool,Vendor A9,4000,33,15,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-11-01,Password manager,Vendor A8,4000,33,30,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-11-01,Password manager,Vendor A8,4100,17,15,4.0,USD,68.0,Final,2027-09-30,60,annual
+2025-11-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-11-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-11-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-11-01,Password manager,Vendor A8,4500,13,11,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-11-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-11-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-11-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-11-01,Project management,Vendor Y,4000,33,17,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-11-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-11-01,Ticket system,Vendor A6,4000,33,20,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-11-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-11-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-11-01,Video conferencing tool,Vendor A1,4000,33,17,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4400,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-11-01,Video conferencing tool,Vendor A1,4400,5,2,12.0,EUR,65.83,Draft,2027-02-28,30,monthly
+2025-11-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-11-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-11-01,Knowledge base,Vendor A3,4500,13,7,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-11-01,Knowledge base,Vendor A3,4500,13,7,10.0,USD,141.57,Draft,2027-04-30,60,annual
+2025-11-01,Time tracking,Vendor A4,4000,33,28,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-11-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2025-11-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-11-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-11-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-11-01,Time tracking,Vendor A4,4500,13,12,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-11-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-12-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2025-12-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2025-12-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2025-12-01,Chat tool,Vendor A2,4000,33,23,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,93.63,Draft,2026-12-31,30,monthly
+2025-12-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,39.1,Draft,2026-12-31,30,monthly
+2025-12-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2025-12-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2025-12-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2025-12-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2025-12-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-12-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2025-12-01,Microsoft 365,Microsoft,4000,42,36,12.5,USD,525.0,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4100,21,18,12.5,USD,262.5,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4200,12,10,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4300,12,11,12.5,USD,150.0,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4500,17,15,12.5,USD,212.5,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2025-12-01,Microsoft 365,Microsoft,4000,42,36,12.5,USD,564.58,Draft,2027-06-30,90,annual
+2025-12-01,Note-taking tool,Vendor A9,4000,33,14,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2025-12-01,Password manager,Vendor A8,4000,33,31,4.0,USD,132.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4100,17,15,4.0,USD,68.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4500,13,11,4.0,USD,52.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2025-12-01,Password manager,Vendor A8,4200,10,9,4.0,USD,43.38,Draft,2027-09-30,60,annual
+2025-12-01,Project scheduling,Vendor A10,4000,33,20,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2025-12-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2025-12-01,Project management,Vendor Y,4000,33,18,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2025-12-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2025-12-01,Ticket system,Vendor A6,4000,33,20,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2025-12-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2025-12-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2025-12-01,Video conferencing tool,Vendor A1,4000,33,17,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4400,5,2,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2025-12-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,114.24,Draft,2027-02-28,30,monthly
+2025-12-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2025-12-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2025-12-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2025-12-01,Time tracking,Vendor A4,4000,33,27,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2025-12-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2025-12-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-12-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2025-12-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2025-12-01,Time tracking,Vendor A4,4500,13,12,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2025-12-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-01-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-01-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,403.86,Draft,2027-03-31,90,annual
+2026-01-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-01-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-01-01,Chat tool,Vendor A2,4000,33,22,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2026-01-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-01-01,Chat tool,Vendor A2,4200,10,6,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-01-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-01-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-01-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2026-01-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-01-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-01-01,Design tool,Vendor Z,4300,8,3,20.0,USD,146.28,Draft,2026-10-31,30,monthly
+2026-01-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-01-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-01-01,E-signature,Vendor V,4100,17,5,25.0,CHF,462.02,Draft,2027-01-31,60,annual
+2026-01-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-01-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-01-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-01-01,Microsoft 365,Microsoft,4000,42,34,12.5,USD,525.0,Final,2027-06-30,90,annual
+2026-01-01,Microsoft 365,Microsoft,4100,21,17,12.5,USD,262.5,Final,2027-06-30,90,annual
+2026-01-01,Microsoft 365,Microsoft,4200,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-01-01,Microsoft 365,Microsoft,4300,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-01-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-01-01,Microsoft 365,Microsoft,4500,17,15,12.5,USD,212.5,Final,2027-06-30,90,annual
+2026-01-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-01-01,Note-taking tool,Vendor A9,4000,33,15,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2026-01-01,Password manager,Vendor A8,4000,33,31,4.0,USD,132.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4100,17,16,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-01-01,Password manager,Vendor A8,4900,5,4,4.0,USD,21.7,Draft,2027-09-30,60,annual
+2026-01-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2026-01-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2026-01-01,Project management,Vendor Y,4000,33,17,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2026-01-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2026-01-01,Ticket system,Vendor A6,4000,33,19,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2026-01-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2026-01-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-01-01,Video conferencing tool,Vendor A1,4000,33,18,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4100,17,8,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,127.58,Draft,2027-02-28,30,monthly
+2026-01-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,61.11,Draft,2027-02-28,30,monthly
+2026-01-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2026-01-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-01-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2026-01-01,Time tracking,Vendor A4,4000,33,27,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-01-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,32.77,Draft,2027-08-31,90,annual
+2026-02-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-02-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-02-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-02-01,Chat tool,Vendor A2,4000,33,21,8.0,USD,264.0,Final,2026-12-31,30,monthly
+2026-02-01,Chat tool,Vendor A2,4100,17,11,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-02-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-02-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-02-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-02-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2026-02-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-02-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-02-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-02-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-02-01,E-signature,Vendor V,4100,17,5,25.0,CHF,384.15,Draft,2027-01-31,60,annual
+2026-02-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-02-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-02-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-02-01,Microsoft 365,Microsoft,4000,42,38,12.5,USD,525.0,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4100,21,19,12.5,USD,262.5,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4200,13,11,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4300,13,11,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4500,17,14,12.5,USD,212.5,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-02-01,Microsoft 365,Microsoft,4100,21,19,12.5,USD,277.58,Draft,2027-06-30,90,annual
+2026-02-01,Note-taking tool,Vendor A9,4000,33,14,8.0,USD,264.0,Final,2026-11-30,30,monthly
+2026-02-01,Password manager,Vendor A8,4000,33,31,4.0,USD,132.0,Final,2027-09-30,60,annual
+2026-02-01,Password manager,Vendor A8,4100,17,15,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-02-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-02-01,Password manager,Vendor A8,4300,10,10,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-02-01,Password manager,Vendor A8,4400,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-02-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2026-02-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-02-01,Project scheduling,Vendor A10,4000,33,19,15.0,EUR,495.0,Final,2027-01-31,60,annual
+2026-02-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2026-02-01,Project management,Vendor Y,4000,33,17,14.0,EUR,462.0,Final,2026-11-30,30,monthly
+2026-02-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2026-02-01,Ticket system,Vendor A6,4000,33,21,20.0,USD,660.0,Final,2026-11-30,30,monthly
+2026-02-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2026-02-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-02-01,Video conferencing tool,Vendor A1,4000,33,18,12.0,EUR,396.0,Final,2027-02-28,30,monthly
+2026-02-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-02-01,Video conferencing tool,Vendor A1,4200,10,6,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-02-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-02-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-02-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2026-02-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-02-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,330.0,Final,2027-04-30,60,annual
+2026-02-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-02-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2026-02-01,Knowledge base,Vendor A3,4000,33,16,10.0,USD,348.39,Draft,2027-04-30,60,annual
+2026-02-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,52.94,Draft,2027-04-30,60,annual
+2026-02-01,Time tracking,Vendor A4,4000,33,27,7.0,CHF,231.0,Final,2027-08-31,90,annual
+2026-02-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-02-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-02-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-02-01,Time tracking,Vendor A4,4400,5,5,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-02-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2026-02-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-03-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-03-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-03-01,CRM platform,Vendor X,4300,10,5,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-03-01,Chat tool,Vendor A2,4000,34,22,8.0,USD,272.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4500,13,8,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-03-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,84.22,Draft,2026-12-31,30,monthly
+2026-03-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-03-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-03-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-03-01,E-signature,Vendor V,4200,10,3,25.0,CHF,260.5,Draft,2027-01-31,60,annual
+2026-03-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-03-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-03-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-03-01,Microsoft 365,Microsoft,4000,42,38,12.5,USD,525.0,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4100,21,19,12.5,USD,262.5,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4200,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4300,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4500,17,16,12.5,USD,212.5,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-03-01,Microsoft 365,Microsoft,4500,17,16,12.5,USD,228.02,Draft,2027-06-30,90,annual
+2026-03-01,Note-taking tool,Vendor A9,4000,34,16,8.0,USD,272.0,Final,2026-11-30,30,monthly
+2026-03-01,Password manager,Vendor A8,4000,34,30,4.0,USD,136.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4100,17,15,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4500,13,13,4.0,USD,52.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-03-01,Password manager,Vendor A8,4100,17,15,4.0,USD,64.36,Draft,2027-09-30,60,annual
+2026-03-01,Project scheduling,Vendor A10,4000,34,20,15.0,EUR,510.0,Final,2027-01-31,60,annual
+2026-03-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2026-03-01,Project scheduling,Vendor A10,4000,34,20,15.0,EUR,486.38,Draft,2027-01-31,60,annual
+2026-03-01,Project management,Vendor Y,4000,34,19,14.0,EUR,476.0,Final,2026-11-30,30,monthly
+2026-03-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2026-03-01,Ticket system,Vendor A6,4000,34,22,20.0,USD,680.0,Final,2026-11-30,30,monthly
+2026-03-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2026-03-01,Survey tool,Vendor A7,4300,10,2,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-03-01,Video conferencing tool,Vendor A1,4000,34,18,12.0,EUR,408.0,Final,2027-02-28,30,monthly
+2026-03-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-03-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-03-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-03-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-03-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2026-03-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-03-01,Knowledge base,Vendor A3,4000,34,17,10.0,USD,340.0,Final,2027-04-30,60,annual
+2026-03-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-03-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2026-03-01,Knowledge base,Vendor A3,4000,34,17,10.0,USD,324.88,Draft,2027-04-30,60,annual
+2026-03-01,Time tracking,Vendor A4,4000,34,31,7.0,CHF,238.0,Final,2027-08-31,90,annual
+2026-03-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-03-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-03-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-03-01,Time tracking,Vendor A4,4400,5,5,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-03-01,Time tracking,Vendor A4,4500,13,12,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2026-03-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-04-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-04-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,373.62,Draft,2027-03-31,90,annual
+2026-04-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-04-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-04-01,Chat tool,Vendor A2,4000,34,23,8.0,USD,272.0,Final,2026-12-31,30,monthly
+2026-04-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-04-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-04-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-04-01,Chat tool,Vendor A2,4400,5,4,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-04-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2026-04-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-04-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-04-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-04-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-04-01,HR software,Vendor A5,4200,10,9,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-04-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-04-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-04-01,Microsoft 365,Microsoft,4000,42,35,12.5,USD,525.0,Final,2027-06-30,90,annual
+2026-04-01,Microsoft 365,Microsoft,4100,21,18,12.5,USD,262.5,Final,2027-06-30,90,annual
+2026-04-01,Microsoft 365,Microsoft,4200,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-04-01,Microsoft 365,Microsoft,4300,13,11,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-04-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-04-01,Microsoft 365,Microsoft,4500,17,15,12.5,USD,212.5,Final,2027-06-30,90,annual
+2026-04-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-04-01,Note-taking tool,Vendor A9,4000,34,15,8.0,USD,272.0,Final,2026-11-30,30,monthly
+2026-04-01,Password manager,Vendor A8,4000,34,31,4.0,USD,136.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4100,17,15,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4200,10,10,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-04-01,Password manager,Vendor A8,4500,13,12,4.0,USD,57.0,Draft,2027-09-30,60,annual
+2026-04-01,Project scheduling,Vendor A10,4000,34,20,15.0,EUR,510.0,Final,2027-01-31,60,annual
+2026-04-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2026-04-01,Project management,Vendor Y,4000,34,18,14.0,EUR,476.0,Final,2026-11-30,30,monthly
+2026-04-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2026-04-01,Ticket system,Vendor A6,4000,34,22,20.0,USD,680.0,Final,2026-11-30,30,monthly
+2026-04-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2026-04-01,Ticket system,Vendor A6,4000,34,22,20.0,USD,622.82,Draft,2026-11-30,30,monthly
+2026-04-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-04-01,Video conferencing tool,Vendor A1,4000,34,17,12.0,EUR,408.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4300,10,6,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4000,34,17,12.0,EUR,428.4,Draft,2027-02-28,30,monthly
+2026-04-01,Video conferencing tool,Vendor A1,4300,10,6,12.0,EUR,129.07,Draft,2027-02-28,30,monthly
+2026-04-01,Knowledge base,Vendor A3,4000,34,16,10.0,USD,340.0,Final,2027-04-30,60,annual
+2026-04-01,Knowledge base,Vendor A3,4400,5,3,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-04-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2026-04-01,Time tracking,Vendor A4,4000,34,32,7.0,CHF,238.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-04-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,67.99,Draft,2027-08-31,90,annual
+2026-05-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-05-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-05-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-05-01,Chat tool,Vendor A2,4000,34,24,8.0,USD,272.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,104.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-05-01,Chat tool,Vendor A2,4500,13,9,8.0,USD,97.79,Draft,2026-12-31,30,monthly
+2026-05-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-05-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-05-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-05-01,HR software,Vendor A5,4200,10,9,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-05-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-05-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-05-01,HR software,Vendor A5,4900,5,4,9.0,CHF,44.5,Draft,2027-05-31,90,annual
+2026-05-01,Microsoft 365,Microsoft,4000,42,37,12.5,USD,525.0,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4100,21,19,12.5,USD,262.5,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4200,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4300,13,11,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4500,17,16,12.5,USD,212.5,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-05-01,Microsoft 365,Microsoft,4500,17,16,12.5,USD,197.44,Draft,2027-06-30,90,annual
+2026-05-01,Note-taking tool,Vendor A9,4000,34,15,8.0,USD,272.0,Final,2026-11-30,30,monthly
+2026-05-01,Password manager,Vendor A8,4000,34,30,4.0,USD,136.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4100,17,16,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4500,13,12,4.0,USD,52.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4900,5,4,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-05-01,Password manager,Vendor A8,4000,34,30,4.0,USD,137.13,Draft,2027-09-30,60,annual
+2026-05-01,Project scheduling,Vendor A10,4000,34,19,15.0,EUR,510.0,Final,2027-01-31,60,annual
+2026-05-01,Project scheduling,Vendor A10,4500,13,8,15.0,EUR,195.0,Final,2027-01-31,60,annual
+2026-05-01,Project management,Vendor Y,4000,34,19,14.0,EUR,476.0,Final,2026-11-30,30,monthly
+2026-05-01,Project management,Vendor Y,4500,13,7,14.0,EUR,182.0,Final,2026-11-30,30,monthly
+2026-05-01,Ticket system,Vendor A6,4000,34,21,20.0,USD,680.0,Final,2026-11-30,30,monthly
+2026-05-01,Ticket system,Vendor A6,4500,13,8,20.0,USD,260.0,Final,2026-11-30,30,monthly
+2026-05-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-05-01,Video conferencing tool,Vendor A1,4000,34,18,12.0,EUR,408.0,Final,2027-02-28,30,monthly
+2026-05-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-05-01,Video conferencing tool,Vendor A1,4200,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-05-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-05-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-05-01,Video conferencing tool,Vendor A1,4500,13,7,12.0,EUR,156.0,Final,2027-02-28,30,monthly
+2026-05-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-05-01,Knowledge base,Vendor A3,4000,34,16,10.0,USD,340.0,Final,2027-04-30,60,annual
+2026-05-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-05-01,Knowledge base,Vendor A3,4500,13,6,10.0,USD,130.0,Final,2027-04-30,60,annual
+2026-05-01,Time tracking,Vendor A4,4000,34,29,7.0,CHF,238.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4300,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,91.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-05-01,Time tracking,Vendor A4,4500,13,11,7.0,CHF,93.48,Draft,2027-08-31,90,annual
+2026-06-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-06-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-06-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-06-01,Chat tool,Vendor A2,4000,34,24,8.0,USD,272.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4400,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4500,14,9,8.0,USD,112.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-06-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,76.3,Draft,2026-12-31,30,monthly
+2026-06-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-06-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-06-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-06-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-06-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-06-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-06-01,Microsoft 365,Microsoft,4000,42,36,12.5,USD,525.0,Final,2027-06-30,90,annual
+2026-06-01,Microsoft 365,Microsoft,4100,21,19,12.5,USD,262.5,Final,2027-06-30,90,annual
+2026-06-01,Microsoft 365,Microsoft,4200,13,11,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-06-01,Microsoft 365,Microsoft,4300,13,12,12.5,USD,162.5,Final,2027-06-30,90,annual
+2026-06-01,Microsoft 365,Microsoft,4400,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-06-01,Microsoft 365,Microsoft,4500,17,15,12.5,USD,212.5,Final,2027-06-30,90,annual
+2026-06-01,Microsoft 365,Microsoft,4900,6,5,12.5,USD,75.0,Final,2027-06-30,90,annual
+2026-06-01,Note-taking tool,Vendor A9,4000,34,15,8.0,USD,272.0,Final,2026-11-30,30,monthly
+2026-06-01,Password manager,Vendor A8,4000,34,33,4.0,USD,136.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4100,17,15,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4500,14,13,4.0,USD,56.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-06-01,Password manager,Vendor A8,4300,10,9,4.0,USD,36.87,Draft,2027-09-30,60,annual
+2026-06-01,Project scheduling,Vendor A10,4000,34,21,15.0,EUR,510.0,Final,2027-01-31,60,annual
+2026-06-01,Project scheduling,Vendor A10,4500,14,9,15.0,EUR,210.0,Final,2027-01-31,60,annual
+2026-06-01,Project management,Vendor Y,4000,34,18,14.0,EUR,476.0,Final,2026-11-30,30,monthly
+2026-06-01,Project management,Vendor Y,4500,14,7,14.0,EUR,196.0,Final,2026-11-30,30,monthly
+2026-06-01,Ticket system,Vendor A6,4000,34,23,20.0,USD,680.0,Final,2026-11-30,30,monthly
+2026-06-01,Ticket system,Vendor A6,4500,14,9,20.0,USD,280.0,Final,2026-11-30,30,monthly
+2026-06-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-06-01,Video conferencing tool,Vendor A1,4000,34,17,12.0,EUR,408.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4200,10,6,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4500,14,8,12.0,EUR,168.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4200,10,6,12.0,EUR,110.16,Draft,2027-02-28,30,monthly
+2026-06-01,Video conferencing tool,Vendor A1,4000,34,17,12.0,EUR,384.5,Draft,2027-02-28,30,monthly
+2026-06-01,Knowledge base,Vendor A3,4000,34,17,10.0,USD,340.0,Final,2027-04-30,60,annual
+2026-06-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-06-01,Knowledge base,Vendor A3,4500,14,7,10.0,USD,140.0,Final,2027-04-30,60,annual
+2026-06-01,Time tracking,Vendor A4,4000,34,29,7.0,CHF,238.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4500,14,12,7.0,CHF,98.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,36.37,Draft,2027-08-31,90,annual
+2026-06-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,65.45,Draft,2027-08-31,90,annual
+2026-07-01,Accounting software,Vendor W,4200,10,9,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-07-01,CRM platform,Vendor X,4100,17,11,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-07-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-07-01,Chat tool,Vendor A2,4000,34,24,8.0,USD,272.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4400,5,4,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4500,14,10,8.0,USD,112.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4900,5,3,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-07-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,135.99,Draft,2026-12-31,30,monthly
+2026-07-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-07-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-07-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-07-01,E-signature,Vendor V,4200,10,3,25.0,CHF,236.2,Draft,2027-01-31,60,annual
+2026-07-01,HR software,Vendor A5,4200,10,8,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-07-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-07-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-07-01,Microsoft 365,Microsoft,4000,42,39,14.0,USD,588.0,Final,2027-06-30,90,annual
+2026-07-01,Microsoft 365,Microsoft,4100,21,19,14.0,USD,294.0,Final,2027-06-30,90,annual
+2026-07-01,Microsoft 365,Microsoft,4200,13,11,14.0,USD,182.0,Final,2027-06-30,90,annual
+2026-07-01,Microsoft 365,Microsoft,4300,13,11,14.0,USD,182.0,Final,2027-06-30,90,annual
+2026-07-01,Microsoft 365,Microsoft,4400,6,5,14.0,USD,84.0,Final,2027-06-30,90,annual
+2026-07-01,Microsoft 365,Microsoft,4500,17,16,14.0,USD,238.0,Final,2027-06-30,90,annual
+2026-07-01,Microsoft 365,Microsoft,4900,6,5,14.0,USD,84.0,Final,2027-06-30,90,annual
+2026-07-01,Note-taking tool,Vendor A9,4000,34,16,8.0,USD,272.0,Final,2026-11-30,30,monthly
+2026-07-01,Password manager,Vendor A8,4000,34,31,4.0,USD,136.0,Final,2027-09-30,60,annual
+2026-07-01,Password manager,Vendor A8,4100,17,16,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-07-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-07-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-07-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-07-01,Password manager,Vendor A8,4500,14,13,4.0,USD,56.0,Final,2027-09-30,60,annual
+2026-07-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-07-01,Project scheduling,Vendor A10,4000,34,19,15.0,EUR,510.0,Final,2027-01-31,60,annual
+2026-07-01,Project scheduling,Vendor A10,4500,14,8,15.0,EUR,210.0,Final,2027-01-31,60,annual
+2026-07-01,Project management,Vendor Y,4000,34,19,14.0,EUR,476.0,Final,2026-11-30,30,monthly
+2026-07-01,Project management,Vendor Y,4500,14,8,14.0,EUR,196.0,Final,2026-11-30,30,monthly
+2026-07-01,Ticket system,Vendor A6,4000,34,22,20.0,USD,680.0,Final,2026-11-30,30,monthly
+2026-07-01,Ticket system,Vendor A6,4500,14,9,20.0,USD,280.0,Final,2026-11-30,30,monthly
+2026-07-01,Survey tool,Vendor A7,4300,10,2,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-07-01,Video conferencing tool,Vendor A1,4000,34,19,12.0,EUR,408.0,Final,2027-02-28,30,monthly
+2026-07-01,Video conferencing tool,Vendor A1,4100,17,9,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-07-01,Video conferencing tool,Vendor A1,4200,10,6,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-07-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-07-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-07-01,Video conferencing tool,Vendor A1,4500,14,7,12.0,EUR,168.0,Final,2027-02-28,30,monthly
+2026-07-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-07-01,Knowledge base,Vendor A3,4000,34,17,10.0,USD,340.0,Final,2027-04-30,60,annual
+2026-07-01,Knowledge base,Vendor A3,4400,5,2,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-07-01,Knowledge base,Vendor A3,4500,14,7,10.0,USD,140.0,Final,2027-04-30,60,annual
+2026-07-01,Time tracking,Vendor A4,4000,34,31,7.0,CHF,238.0,Final,2027-08-31,90,annual
+2026-07-01,Time tracking,Vendor A4,4100,17,16,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-07-01,Time tracking,Vendor A4,4200,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-07-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-07-01,Time tracking,Vendor A4,4400,5,5,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-07-01,Time tracking,Vendor A4,4500,14,13,7.0,CHF,98.0,Final,2027-08-31,90,annual
+2026-07-01,Time tracking,Vendor A4,4900,5,5,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-08-01,Accounting software,Vendor W,4200,10,8,38.0,CHF,380.0,Final,2027-03-31,90,annual
+2026-08-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,935.0,Final,2026-12-31,60,annual
+2026-08-01,CRM platform,Vendor X,4300,10,6,55.0,CHF,550.0,Final,2026-12-31,60,annual
+2026-08-01,CRM platform,Vendor X,4100,17,10,55.0,CHF,958.01,Draft,2026-12-31,60,annual
+2026-08-01,Chat tool,Vendor A2,4000,34,24,8.0,USD,272.0,Final,2026-12-31,30,monthly
+2026-08-01,Chat tool,Vendor A2,4100,17,12,8.0,USD,136.0,Final,2026-12-31,30,monthly
+2026-08-01,Chat tool,Vendor A2,4200,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-08-01,Chat tool,Vendor A2,4300,10,7,8.0,USD,80.0,Final,2026-12-31,30,monthly
+2026-08-01,Chat tool,Vendor A2,4400,5,4,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-08-01,Chat tool,Vendor A2,4500,14,10,8.0,USD,112.0,Final,2026-12-31,30,monthly
+2026-08-01,Chat tool,Vendor A2,4900,5,4,8.0,USD,40.0,Final,2026-12-31,30,monthly
+2026-08-01,Design tool,Vendor Z,4300,8,3,20.0,USD,160.0,Final,2026-10-31,30,monthly
+2026-08-01,E-signature,Vendor V,4100,17,5,25.0,CHF,425.0,Final,2027-01-31,60,annual
+2026-08-01,E-signature,Vendor V,4200,10,3,25.0,CHF,250.0,Final,2027-01-31,60,annual
+2026-08-01,HR software,Vendor A5,4200,10,9,9.0,CHF,90.0,Final,2027-05-31,90,annual
+2026-08-01,HR software,Vendor A5,4400,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-08-01,HR software,Vendor A5,4900,5,4,9.0,CHF,45.0,Final,2027-05-31,90,annual
+2026-08-01,HR software,Vendor A5,4900,5,4,9.0,CHF,48.17,Draft,2027-05-31,90,annual
+2026-08-01,HR software,Vendor A5,4200,10,9,9.0,CHF,88.42,Draft,2027-05-31,90,annual
+2026-08-01,Microsoft 365,Microsoft,4000,43,37,14.0,USD,602.0,Final,2027-06-30,90,annual
+2026-08-01,Microsoft 365,Microsoft,4100,21,19,14.0,USD,294.0,Final,2027-06-30,90,annual
+2026-08-01,Microsoft 365,Microsoft,4200,13,11,14.0,USD,182.0,Final,2027-06-30,90,annual
+2026-08-01,Microsoft 365,Microsoft,4300,13,12,14.0,USD,182.0,Final,2027-06-30,90,annual
+2026-08-01,Microsoft 365,Microsoft,4400,6,6,14.0,USD,84.0,Final,2027-06-30,90,annual
+2026-08-01,Microsoft 365,Microsoft,4500,17,15,14.0,USD,238.0,Final,2027-06-30,90,annual
+2026-08-01,Microsoft 365,Microsoft,4900,6,6,14.0,USD,84.0,Final,2027-06-30,90,annual
+2026-08-01,Note-taking tool,Vendor A9,4000,34,16,8.0,USD,272.0,Final,2026-11-30,30,monthly
+2026-08-01,Password manager,Vendor A8,4000,34,32,4.0,USD,136.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4100,17,16,4.0,USD,68.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4200,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4300,10,9,4.0,USD,40.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4400,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4500,14,12,4.0,USD,56.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4900,5,5,4.0,USD,20.0,Final,2027-09-30,60,annual
+2026-08-01,Password manager,Vendor A8,4100,17,16,4.0,USD,64.08,Draft,2027-09-30,60,annual
+2026-08-01,Project scheduling,Vendor A10,4000,34,20,15.0,EUR,510.0,Final,2027-01-31,60,annual
+2026-08-01,Project scheduling,Vendor A10,4500,14,8,15.0,EUR,210.0,Final,2027-01-31,60,annual
+2026-08-01,Project management,Vendor Y,4000,34,18,14.0,EUR,476.0,Final,2026-11-30,30,monthly
+2026-08-01,Project management,Vendor Y,4500,14,8,14.0,EUR,196.0,Final,2026-11-30,30,monthly
+2026-08-01,Ticket system,Vendor A6,4000,34,23,20.0,USD,680.0,Final,2026-11-30,30,monthly
+2026-08-01,Ticket system,Vendor A6,4500,14,9,20.0,USD,280.0,Final,2026-11-30,30,monthly
+2026-08-01,Survey tool,Vendor A7,4300,10,1,30.0,EUR,300.0,Final,2026-12-31,60,annual
+2026-08-01,Video conferencing tool,Vendor A1,4000,34,18,12.0,EUR,408.0,Final,2027-02-28,30,monthly
+2026-08-01,Video conferencing tool,Vendor A1,4100,17,10,12.0,EUR,204.0,Final,2027-02-28,30,monthly
+2026-08-01,Video conferencing tool,Vendor A1,4200,10,6,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-08-01,Video conferencing tool,Vendor A1,4300,10,5,12.0,EUR,120.0,Final,2027-02-28,30,monthly
+2026-08-01,Video conferencing tool,Vendor A1,4400,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-08-01,Video conferencing tool,Vendor A1,4500,14,8,12.0,EUR,168.0,Final,2027-02-28,30,monthly
+2026-08-01,Video conferencing tool,Vendor A1,4900,5,3,12.0,EUR,60.0,Final,2027-02-28,30,monthly
+2026-08-01,Knowledge base,Vendor A3,4000,34,17,10.0,USD,340.0,Final,2027-04-30,60,annual
+2026-08-01,Knowledge base,Vendor A3,4400,5,3,10.0,USD,50.0,Final,2027-04-30,60,annual
+2026-08-01,Knowledge base,Vendor A3,4500,14,7,10.0,USD,140.0,Final,2027-04-30,60,annual
+2026-08-01,Knowledge base,Vendor A3,4500,14,7,10.0,USD,152.23,Draft,2027-04-30,60,annual
+2026-08-01,Time tracking,Vendor A4,4000,34,32,7.0,CHF,238.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4100,17,15,7.0,CHF,119.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4200,10,8,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,70.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4400,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4500,14,12,7.0,CHF,98.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4900,5,4,7.0,CHF,35.0,Final,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4000,34,32,7.0,CHF,235.02,Draft,2027-08-31,90,annual
+2026-08-01,Time tracking,Vendor A4,4300,10,9,7.0,CHF,68.48,Draft,2027-08-31,90,annual

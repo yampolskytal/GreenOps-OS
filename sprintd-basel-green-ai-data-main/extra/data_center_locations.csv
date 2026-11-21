@@ -1,0 +1,14 @@
+﻿provider,region,location,used_by_sme
+Azure,Switzerland (Zurich),Zurich,yes
+Azure,Switzerland (Geneva),Geneva,no
+Azure,Germany (Frankfurt),Frankfurt,yes
+Azure,Netherlands (Amsterdam),Amsterdam,no
+Azure,France (Paris),Paris,no
+AWS,Ireland (Dublin),Dublin,yes
+AWS,Germany (Frankfurt),Frankfurt,no
+AWS,Switzerland (Zurich),Zurich,no
+AWS,Sweden (Stockholm),Stockholm,no
+Swiss Hoster,Switzerland (Zurich),Zurich,yes
+Swiss Hoster,Switzerland (Lausanne),Lausanne,no
+AI provider (API),EU (mixed),not specified,yes
+AI provider (API),USA (mixed),not specified,no

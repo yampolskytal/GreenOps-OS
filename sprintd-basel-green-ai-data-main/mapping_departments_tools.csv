@@ -1,0 +1,91 @@
+﻿resource_id,tool,department,cost_center,responsible_role,environment,criticality,default_project,rechargeable
+vm-app,App server,IT,4500,Head of IT,prod,high,,no
+vm-test,Test environments,IT,4500,Head of IT,test,low,P-001,no
+db-fin,Finance database,Finance,4200,Head of Finance,prod,,p-015,no
+st-proj,Project file storage,Consulting,4000,Head of Consulting,prod,medium,P-005,partly
+st-archive,Legacy project archive,Sales,4100,Head of Sales,prod,medium,P-015,no
+st-backup,Backup archive,IT,4500,Head of IT,prod,high,P-015,no
+dp-prod,Data platform production,Consulting,4000,Head of Consulting,prod,high,P-003,
+dp-dev,Data platform development,IT,4500,Head of IT,dev,low,P-003,no
+net-egress,Data egress,IT,4500,Head of IT,prod,medium,p-002,no
+pbi-kap,Power BI capacity,IT,4500,Head of IT,prod,medium,P-015,partly
+ai-assistant,Office AI assistant,Overhead,9000,Head of IT,,,P-015,no
+ai-quote,Quote generator,Sales,4100,Head of Sales,,,P-013,no
+ai-marketing,Marketing text analysis,Marketing,4300,Head of Marketing,,,,no
+ai-chatbot,Knowledge chatbot,HR,4400,Head of HR,,,p-001,no
+support,Cloud support,IT,4500,Head of IT,,medium,P-015,
+sandbox,Test account,,9100,Head of IT,dev,low,P-004,no
+web-cdn,Web hosting and CDN,Marketing,4300,Head of Marketing,prod,medium,P-002,
+cicd,CI/CD pipelines,IT,4500,Head of IT,dev,,,no
+logs,Logging and monitoring,IT,4500,Head of IT,prod,,P-001,no
+dp-storage,Data platform storage,Consulting,4000,Head of Consulting,prod,,P-003,
+ai-agent,Support-Agent,Consulting,4000,Head of Consulting,,,P015,
+ai-report,Report-Agent,Finance,4200,Head of Finance,,,P-015,no
+ai-agent2,Other agents,Sales,4100,Head of Sales,,,P-005,no
+gpu-ml,AI compute server (GPU),Consulting,4000,Head of Consulting,dev,,P-004,no
+pbi-01,Report: Revenue cockpit,Sales,4100,Head of Sales,prod,medium,,
+pbi-02,Report: Project controlling,Consulting,4000,Head of Consulting,prod,,,
+pbi-03,Report: HR key figures,HR,4400,Head of HR,prod,medium,,
+pbi-04,Report: Liquidity planning,Finance,4200,Head of Finance,prod,medium,,
+pbi-05,Report: Management dashboard,Management,4900,Head of Management,prod,,,
+pbi-06,Report: Marketing campaigns 2024,Marketing,4300,Head of Marketing,prod,low,,
+pbi-07,Report: Legacy report receivables,Finance,4200,Head of Finance,prod,high,,
+pbi-08,Report: Test report AI pilot,IT,4500,Head of IT,prod,low,,
+pbi-09,Report: Customer survey 2024,Marketing,4300,Head of Marketing,prod,medium,,
+pbi-10,Report: Sales pipeline (old),Sales,4100,Head of Sales,prod,low,,
+pbi-11,Report: Staff IT 11,IT,4500,Head of IT,prod,medium,,
+pbi-12,Report: Expenses Sales 12,Sales,4100,Head of Sales,prod,low,,
+pbi-13,Report: IT operations Management 13 (copy),Management,4900,Head of Management,prod,low,,
+pbi-14,Report: Budget Management 14,Management,4900,Head of Management,prod,low,,
+pbi-15,Report: Invoices Finance 15,Finance,4200,Head of Finance,prod,low,,
+pbi-16,Report: Offers Finance 16,Finance,4200,Head of Finance,prod,low,,
+pbi-17,Report: Quality Consulting 17,Consulting,4000,Head of Consulting,prod,medium,,
+pbi-18,Report: Staff IT 18,IT,4500,Head of IT,prod,,,
+pbi-19,Report: Campaigns Finance 19,Finance,4200,Head of Finance,prod,low,,
+pbi-20,Report: Customers Marketing 20,Marketing,4300,Head of Marketing,prod,medium,,
+pbi-21,Report: Absences IT 21 (quarterly),IT,4500,Head of IT,prod,medium,,
+pbi-22,Report: Offers IT 22,IT,4500,Head of IT,prod,medium,,
+pbi-23,Report: Customers Consulting 23,Consulting,4000,Head of Consulting,prod,low,,
+pbi-24,Report: IT operations Consulting 24,Consulting,4000,Head of Consulting,prod,,,
+pbi-25,Report: Offers Management 25,Management,4900,Head of Management,prod,low,,
+pbi-26,Report: Budget Finance 26 (quarterly),Finance,4200,Head of Finance,prod,medium,,
+pbi-27,Report: Margin IT 27,IT,4500,Head of IT,prod,,,
+pbi-28,Report: Invoices Consulting 28,Consulting,4000,Head of Consulting,prod,low,,
+pbi-29,Report: Margin Finance 29,Finance,4200,Head of Finance,prod,medium,,
+pbi-30,Report: Liquidity HR 30 (copy),HR,4400,Head of HR,prod,medium,,
+pbi-31,Report: Margin Management 31 (copy),Management,4900,Head of Management,prod,low,,
+pbi-32,Report: Revenue IT 32,IT,4500,Head of IT,prod,medium,,
+pbi-33,Report: Offers Finance 33,Finance,4200,Head of Finance,prod,,,
+pbi-34,Report: Tickets Management 34,Management,4900,Head of Management,prod,medium,,
+pbi-35,Report: Campaigns Consulting 35,Consulting,4000,Head of Consulting,prod,,,
+pbi-36,Report: Expenses Management 36,Management,4900,Head of Management,prod,low,,
+pbi-37,Report: Utilisation Management 37,Management,4900,Head of Management,prod,low,,
+pbi-38,Report: Liquidity Marketing 38 (quarterly),Marketing,4300,Head of Marketing,prod,,,
+pbi-39,Report: IT operations Marketing 39,Marketing,4300,Head of Marketing,prod,low,,
+pbi-40,Report: Absences Sales 40,Sales,4100,Head of Sales,prod,low,,
+pbi-41,Report: Budget IT 41,IT,4500,Head of IT,prod,medium,,
+pbi-42,Report: Training Consulting 42,Consulting,4000,Head of Consulting,prod,medium,,
+pbi-43,Report: Suppliers Marketing 43,Marketing,4300,Head of Marketing,prod,medium,,
+pbi-44,Report: Campaigns IT 44,IT,4500,Head of IT,prod,,,
+pbi-45,Report: Staff HR 45,HR,4400,Head of HR,prod,low,,
+pbi-46,Report: Projects Consulting 46,Consulting,4000,Head of Consulting,prod,low,,
+pbi-47,Report: Campaigns HR 47,HR,4400,Head of HR,prod,,,
+pbi-48,Report: Suppliers Marketing 48,Marketing,4300,Head of Marketing,prod,,,
+pbi-49,Report: Expenses Consulting 49,Consulting,4000,Head of Consulting,prod,low,,
+pbi-50,Report: Pipeline Management 50,Management,4900,Head of Management,prod,medium,,
+pbi-51,Report: Offers Marketing 51 (quarterly),Marketing,4300,Head of Marketing,prod,medium,,
+pbi-52,Report: Training IT 52,IT,4500,Head of IT,prod,low,,
+pbi-53,Report: Training Consulting 53 (copy),Consulting,4000,Head of Consulting,prod,low,,
+pbi-54,Report: Projects IT 54,IT,4500,Head of IT,prod,low,,
+pbi-55,Report: Margin Management 55,Management,4900,Head of Management,prod,,,
+pbi-56,Report: Revenue Sales 56,Sales,4100,Head of Sales,prod,medium,,
+pbi-57,Report: Utilisation HR 57,HR,4400,Head of HR,prod,medium,,
+pbi-58,Report: Expenses IT 58,IT,4500,Head of IT,prod,low,,
+pbi-59,Report: Margin Consulting 59,Consulting,4000,Head of Consulting,prod,medium,,
+pbi-60,Report: Tickets Finance 60,Finance,4200,Head of Finance,prod,medium,,
+saas-m365,Microsoft 365 (licences),Overhead,9000,Head of Finance,,,,
+saas-other,Other SaaS contracts,Overhead,9000,Head of Finance,,,,
+m365-usage,"Microsoft 365 (usage: mail, storage, Teams)",Overhead,9000,Head of Finance,,,,
+sub-copilot,Microsoft Copilot (subscription),Overhead,9000,Head of Finance,,,,
+sub-claude,Claude Team (subscription),Overhead,9000,Head of Finance,,,,
+sub-chatgpt,ChatGPT Team (subscription),Overhead,9000,Head of Finance,,,,

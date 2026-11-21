@@ -1,0 +1,501 @@
+﻿table,schema,size_gb,rows,last_read,last_written,owner_cost_center,project_id,data_class,retention_required
+marketing_mart_000_backup_old,mart,130.69,156826143,2024-05-20,2023-12-07,4500,P-004,confidential,
+campaign_hist_001,mart,39.49,47387233,2024-03-31,2023-09-27,4000,P-008,personal data,no
+marketing_hist_002,raw,7.3,8758790,2026-08-14,2026-03-12,4000,P-007,confidential,
+campaign_clean_003_copy,core,42.32,50784797,2024-12-27,2024-12-10,4000,P-008,personal data,no
+marketing_mart_004,raw,40.55,48665451,2025-01-28,2024-09-14,4200,P-003,internal,
+hr_agg_005,mart,61.82,74184532,2024-12-25,2024-11-28,4300,P-004,internal,no
+marketing_agg_006,mart,6.77,8124933,2026-08-14,2026-06-03,4300,P-003,confidential,
+campaign_raw_007,core,9.71,11654914,2025-10-28,2025-09-01,4200,,internal,no
+customer_clean_008,tmp,19.79,23750825,2024-09-07,2024-08-21,4500,P-005,personal data,
+rev_stock_clean_009,raw,9.28,11137444,2025-02-15,2024-12-09,4200,P-010,internal,yes
+projects_raw_010,mart,67.05,80460537,2024-05-24,2024-02-13,4300,P015,personal data,no
+customer_raw_011,raw,6.59,7905555,2026-08-17,2026-02-15,4200,,internal,
+projects_hist_012,raw,6.41,7688806,2025-05-31,2024-12-03,4100,P-010,confidential,
+projects_mart_013,tmp,27.29,32748793,2026-08-29,2026-08-26,4000,,internal,
+customer_mart_014_v2_final,mart,5.55,6665285,2025-02-20,2024-09-15,4200,P008,personal data,
+stock_raw_015,raw,53.51,64212458,2025-12-03,2025-10-10,4500,P-010,confidential,
+customer_clean_016_tmp_2025,raw,27.82,33379271,2024-08-26,2024-03-18,4300,P-006,internal,no
+projects_agg_017,core,32.66,39194815,,2025-01-11,4100,P-004,internal,no
+hr_mart_018,raw,29.84,35802759,2026-08-12,2026-08-08,4100,,personal data,no
+customer_mart_019_copy,raw,54.05,64855905,2025-07-15,2025-04-15,4500,P-008,internal,no
+projects_raw_020,core,139.25,167098059,2026-08-17,2026-03-14,4000,P-007,internal,
+fact_raw_021,raw,6.63,7956512,2026-01-07,2025-10-18,4100,,internal,no
+campaign_hist_022_tmp_2025,mart,6.78,8140923,2024-11-23,2024-09-03,4500,P-004,internal,no
+customer_raw_023,core,185.32,222382337,2026-08-16,2026-03-05,4000,,internal,
+rev_revenue_mart_024,core,1.74,2092406,2024-12-10,2024-06-21,4500,p-003,confidential,yes
+time_agg_025_tmp_2025,core,9.06,10874569,2024-04-24,2024-01-25,4300,,confidential,no
+crm_mart_026,mart,68.72,82459236,2024-10-26,2024-08-04,4200,P003,confidential,no
+campaign_agg_027,tmp,6.71,8050155,2025-03-01,2025-02-11,4300,P-008,internal,no
+customer_hist_028,core,37.58,45097071,2025-10-24,2025-07-29,4500,,internal,no
+fact_agg_029,mart,21.34,25610979,2026-02-04,2025-08-15,4200,P-006,internal,no
+campaign_clean_030,tmp,13.3,15958561,2024-07-05,2024-01-05,4500,P-015,confidential,no
+crm_raw_031,mart,41.73,50073449,2025-07-31,2025-06-20,4500,P-015,personal data,
+campaign_hist_032,core,81.05,97262075,2026-08-16,2026-02-03,4000,,internal,no
+fact_agg_033,mart,91.23,109471960,2026-08-16,2026-06-04,4300,P-010,internal,
+customer_raw_034,raw,5.61,6737732,2025-01-29,2024-12-14,4300,,confidential,no
+projects_hist_035,raw,13.18,15818728,2025-12-21,2025-08-13,4300,P-007,internal,no
+rev_revenue_hist_036,core,10.36,12432549,2023-12-13,2023-09-28,4200,P003,confidential,yes
+fact_agg_037,mart,8.37,10041063,2026-08-29,2026-06-25,4200,P005,confidential,no
+fact_raw_038,tmp,1145.21,1374252677,2026-09-03,2026-08-22,4300,P-015,internal,no
+marketing_hist_039_copy,mart,24.93,29912781,2025-04-09,2024-12-07,4000,,internal,no
+revenue_agg_040,raw,1.07,1289212,2026-09-03,2026-05-07,4000,P-015,confidential,
+crm_hist_041,core,16.12,19338141,2026-03-11,2026-03-03,4200,P-007,internal,no
+hr_mart_042,core,72.02,86425256,2026-02-20,2025-09-01,4300,P-010,internal,
+marketing_agg_043,mart,181.75,218104323,,2026-05-13,4500,P-005,internal,no
+fact_mart_044,core,90.96,109150908,,2025-09-05,4100,P005,internal,no
+marketing_raw_045,mart,26.63,31954761,2026-08-31,2026-05-19,4300,P-015,internal,
+fact_mart_046,mart,39.65,47583141,2025-06-19,2025-02-25,4200,P-015,confidential,no
+projects_hist_047_copy,mart,105.97,127167382,2025-01-12,2025-01-04,4000,P015,confidential,no
+time_raw_048,mart,132.16,158595821,,2024-07-09,4100,,confidential,
+hr_hist_049,mart,18.61,22330778,2026-04-29,2025-12-13,4500,P-010,confidential,
+rev_stock_clean_050,raw,75.73,90878258,2024-08-01,2024-03-15,4200,,personal data,yes
+marketing_agg_051,raw,7.4,8883173,2026-08-26,2026-07-28,4200,,internal,
+customer_raw_052,tmp,33.68,40418323,,2024-03-12,4300,P008,internal,no
+campaign_agg_053,tmp,70.19,84226834,2026-03-01,2025-12-13,4000,P-005,internal,no
+revenue_agg_054,core,9.59,11512430,2024-09-06,2024-03-09,4000,P-007,confidential,no
+fact_raw_055,raw,71.57,85883590,2026-08-28,2026-02-27,4000,P-007,confidential,no
+projects_raw_056,tmp,37.26,44716024,2025-09-12,2025-05-10,4200,P-010,internal,no
+fact_mart_057,core,38.25,45902544,2024-10-12,2024-08-09,4300,P-004,internal,no
+fact_agg_058,mart,19.22,23059392,2026-08-29,2026-04-09,4300,,internal,
+revenue_raw_059,core,18.45,22145961,2026-08-12,2026-03-27,4000,P-003,internal,no
+hr_hist_060,mart,109.24,131082080,2025-10-24,2025-06-22,4100,P-007,internal,
+campaign_hist_061_v2_final,mart,41.17,49400936,2025-01-01,2024-08-21,4500,P-008,internal,no
+marketing_mart_062,raw,298.8,358556330,2025-12-03,2025-06-04,4300,,personal data,
+marketing_raw_063_tmp_2025,core,27.72,33266221,2024-12-08,2024-11-22,4300,P-006,internal,no
+marketing_raw_064,core,1130.51,1356609247,2026-08-30,2026-04-14,4200,P010,internal,no
+rev_campaign_clean_065,mart,16.37,19648252,2024-12-07,2024-08-18,4200,P007,internal,yes
+marketing_agg_066,raw,81.57,97879965,2026-08-28,2026-02-17,4500,P-007,internal,no
+time_clean_067,mart,50.55,60664647,2026-04-17,2026-02-18,4300,P-005,internal,no
+fact_clean_068,mart,20.66,24787574,2026-09-02,2026-05-18,4100,p-006,confidential,no
+customer_raw_069,raw,71.85,86222167,2026-01-09,2025-07-28,4000,P006,confidential,no
+revenue_raw_070,mart,25.56,30670981,2024-06-01,2023-12-26,4100,P003,internal,no
+marketing_raw_071,raw,52.41,62896132,2024-06-03,2024-01-07,4100,,confidential,no
+customer_hist_072,core,53.77,64529339,2026-08-18,2026-05-16,4500,,internal,
+hr_hist_073,raw,4.64,5568674,2025-11-22,2025-10-07,4200,P-005,personal data,
+crm_mart_074,mart,48.01,57607694,2026-09-04,2026-08-13,4000,P015,internal,no
+campaign_clean_075,raw,22.02,26428513,2026-04-04,2025-11-09,4500,P-010,internal,no
+customer_hist_076,raw,9.96,11957209,2026-09-03,2026-06-24,4500,P006,internal,no
+revenue_raw_077,core,28.01,33608665,2026-08-08,2026-07-22,4000,P-003,internal,no
+crm_hist_078,raw,142.24,170690642,2024-08-21,2024-04-07,4200,P-010,internal,
+customer_agg_079_v2_final,tmp,136.68,164019478,2024-07-08,2024-06-28,4000,,confidential,
+crm_raw_080,tmp,5.31,6366568,,2026-05-18,4300,P-006,internal,
+marketing_clean_081,tmp,11.95,14341843,2026-08-12,2026-02-17,4100,P-005,confidential,no
+projects_mart_082,tmp,14.01,16815072,2025-12-06,2025-06-20,4300,P-005,personal data,no
+hr_raw_083,mart,23.4,28076924,2026-04-13,2025-10-28,4200,P-015,internal,no
+revenue_raw_084,core,60.97,73161175,2026-08-19,2026-02-11,4500,P-015,confidential,
+hr_hist_085_copy,core,7.39,8870206,2025-01-28,2024-10-28,4200,,internal,no
+customer_hist_086,mart,74.73,89673194,2026-08-08,2026-04-19,4500,P-003,internal,no
+time_mart_087,mart,45.29,54344572,,2026-06-10,4100,P-007,internal,no
+customer_hist_088,core,37.52,45026596,2025-11-16,2025-08-30,4200,P010,internal,no
+time_hist_089,core,10.15,12179323,2026-08-26,2026-08-26,4000,P-015,internal,no
+rev_crm_hist_090,raw,4.1,4916419,2024-01-30,2023-12-14,4500,P-005,internal,yes
+marketing_clean_091,mart,76.44,91725094,2026-08-25,2026-06-04,4100,,confidential,no
+campaign_agg_092,core,32.65,39174938,2026-09-05,2026-07-26,4000,P015,confidential,no
+crm_hist_093,tmp,24.89,29870049,2026-08-11,2026-05-07,4000,,personal data,no
+hr_agg_094,core,25.14,30173852,2026-08-10,2026-03-28,4000,P-015,internal,no
+campaign_agg_095_copy,mart,11.15,13380945,2024-12-28,2024-07-21,4500,P-004,internal,no
+fact_mart_096,raw,7.16,8595011,2025-01-19,2024-11-02,4300,P-008,confidential,
+revenue_agg_097,mart,23.06,27677903,2026-09-04,2026-06-14,4300,P-006,personal data,no
+rev_customer_agg_098,tmp,11.57,13887294,2025-01-21,2024-11-25,4300,,internal,yes
+crm_hist_099,mart,9.99,11992039,2026-09-01,2026-04-08,4300,P-010,internal,no
+fact_clean_100,raw,20.99,25189351,,2026-04-23,4100,P010,confidential,no
+stock_mart_101,tmp,48.03,57637763,2024-05-28,2024-03-28,4300,P-015,internal,no
+hr_hist_102,mart,6.89,8268790,2024-11-25,2024-06-13,4300,P-007,internal,no
+crm_mart_103,tmp,72.53,87034722,2024-07-12,2024-04-15,4200,P-010,internal,no
+fact_raw_104,tmp,91.52,109827117,2026-01-30,2025-12-10,4200,P-005,internal,no
+marketing_raw_105,mart,14.35,17221997,2026-09-01,2026-02-22,4100,P003,confidential,no
+crm_agg_106,raw,15.44,18529306,2026-05-24,2026-05-06,4100,p-015,internal,no
+hr_agg_107,raw,48.26,57914609,2025-06-24,2025-05-10,4200,,internal,no
+time_agg_108,raw,86.36,103632043,2026-05-24,2026-03-01,4300,P-015,confidential,
+time_hist_109,core,118.51,142212774,2024-04-06,2024-02-01,4500,P-003,confidential,no
+stock_raw_110,raw,67.97,81566774,2025-01-27,2024-11-03,4200,P-004,personal data,no
+campaign_raw_111,mart,3.94,4725105,2026-08-21,2026-05-22,4300,P-007,internal,no
+hr_clean_112_copy,core,1.49,1788467,2025-06-08,2024-11-21,4000,P-008,confidential,no
+hr_agg_113,core,83.47,100166820,2026-08-10,2026-06-06,4300,P-006,internal,no
+stock_hist_114_tmp_2025,mart,3.58,4297762,2025-07-28,2025-05-21,4100,,internal,
+marketing_hist_115,core,6.58,7899413,2026-08-13,2026-04-28,4000,P-015,internal,
+hr_agg_116,mart,10.74,12893319,2024-07-16,2024-04-17,4200,P-007,internal,no
+campaign_clean_117,mart,6.74,8090787,2025-06-24,2025-05-09,4000,P-007,internal,
+hr_hist_118,core,417.66,501192524,2025-11-30,2025-08-04,4300,,internal,
+rev_stock_hist_119,mart,4.56,5475092,2024-01-11,2023-10-21,4000,P-003,internal,yes
+rev_marketing_hist_120,mart,13.56,16274324,2025-04-14,2025-01-26,4300,P-006,internal,yes
+hr_agg_121,core,56.03,67230239,2025-02-10,2024-11-04,4500,P-004,internal,
+crm_clean_122,core,84.26,101116883,2026-08-09,2026-02-28,4100,,internal,no
+customer_mart_123,core,6.32,7583425,2026-08-17,2026-07-04,4100,P-010,confidential,no
+hr_clean_124,mart,33.41,40086263,2025-07-06,2025-01-22,4000,P-015,internal,no
+hr_clean_125,core,77.87,93439738,2026-03-12,2025-10-23,4500,P-006,internal,no
+customer_hist_126_v2_final,mart,81.56,97866410,2025-03-08,2024-09-15,4100,P-008,confidential,no
+projects_raw_127,mart,40.79,48944351,2025-07-23,2025-02-03,4100,,personal data,no
+projects_raw_128,mart,66.86,80232877,2026-08-21,2026-08-14,4100,P-005,internal,no
+hr_agg_129,core,45.68,54811152,2025-01-17,2024-09-10,4500,P-004,personal data,
+projects_mart_130,core,61.81,74176878,2026-09-01,2026-06-05,4000,,internal,no
+marketing_hist_131,core,400.78,480934741,2026-02-08,2025-11-19,4000,P-010,personal data,
+fact_agg_132,raw,351.03,421234124,2026-08-12,2026-05-06,4500,P-015,internal,no
+stock_mart_133,raw,17.33,20801591,2026-08-30,2026-03-23,4100,P010,internal,no
+crm_mart_134_backup_old,core,28.88,34660683,2024-06-28,2024-05-11,4500,P-015,confidential,no
+campaign_raw_135_tmp_2025,core,411.24,493492705,2024-06-21,2024-04-26,4100,,internal,no
+customer_agg_136,mart,7.15,8576705,2025-10-02,2025-04-30,4500,P-006,internal,no
+projects_raw_137,core,18.17,21803941,,2025-06-22,4200,P-010,internal,no
+crm_clean_138_backup_old,raw,11.57,13884008,2024-10-21,2024-04-18,4100,p-007,confidential,
+time_hist_139,mart,12.83,15393935,2024-05-05,2024-04-18,4100,P-003,internal,
+rev_hr_mart_140,raw,94.6,113522551,2024-06-07,2023-11-25,4000,P-010,internal,yes
+projects_clean_141,core,22.24,26690680,2025-05-05,2024-11-24,4100,P-004,internal,no
+rev_projects_raw_142,mart,34.7,41644523,2024-03-06,2023-10-27,4500,P006,internal,yes
+projects_raw_143_copy,raw,11.25,13494830,,2024-03-20,4200,P-004,internal,
+hr_clean_144_backup_old,mart,8.34,10009844,2024-10-17,2024-09-19,4300,P-008,confidential,no
+projects_raw_145_backup_old,core,126.21,151453994,2025-04-16,2025-02-04,4000,P-015,personal data,
+hr_raw_146,mart,9.24,11086129,2025-02-15,2024-10-30,4000,P-015,internal,
+crm_mart_147,mart,17.96,21556506,2025-05-30,2025-01-06,4300,P015,internal,
+stock_agg_148,tmp,20.25,24298678,2025-11-18,2025-05-22,4000,P007,internal,no
+time_raw_149,mart,5.79,6945499,2026-05-18,2026-03-09,4200,P-005,personal data,
+stock_raw_150_backup_old,core,5.74,6887410,2025-03-02,2024-10-22,4200,P-004,internal,no
+campaign_hist_151,mart,58.94,70733103,2026-02-03,2025-11-20,4200,,internal,no
+fact_hist_152,mart,46.85,56214944,2026-08-21,2026-02-27,4300,P-005,internal,no
+marketing_hist_153,tmp,11.71,14048148,2024-07-23,2024-07-05,4000,P-005,confidential,no
+crm_agg_154_backup_old,raw,35.82,42979894,2024-04-17,2023-12-24,4100,P-008,confidential,no
+time_agg_155_v2_final,raw,6.49,7791613,2024-04-15,2023-11-20,4000,p-008,confidential,no
+marketing_mart_156_backup_old,mart,8.49,10186362,2025-04-16,2025-01-14,4000,P007,internal,no
+time_agg_157,core,110.93,133112463,2026-08-13,2026-07-30,4200,P-010,personal data,no
+hr_raw_158,mart,35.93,43118561,2025-05-25,2025-01-09,4500,P-008,internal,
+crm_mart_159_tmp_2025,raw,218.69,262426317,2024-10-04,2024-09-16,4100,P015,confidential,no
+hr_raw_160_v2_final,core,46.47,55761617,2025-06-12,2024-12-12,4000,P-008,internal,no
+crm_raw_161_tmp_2025,core,14.82,17781344,2025-04-07,2024-09-26,4200,P-008,internal,no
+time_mart_162,raw,28.98,34776237,2025-09-15,2025-07-10,4500,P-006,internal,no
+fact_mart_163,raw,8.61,10327291,2026-08-11,2026-02-14,4200,,personal data,
+campaign_agg_164,raw,13.46,16155309,2025-06-12,2025-01-03,4000,P-010,personal data,no
+rev_projects_mart_165,raw,4.19,5029464,2024-02-02,2023-12-05,4100,,personal data,yes
+crm_hist_166,mart,90.06,108071590,2024-07-17,2024-02-29,4200,,internal,
+customer_agg_167,raw,63.82,76582193,2026-05-28,2026-03-07,4000,P-010,internal,
+stock_mart_168,raw,487.13,584557375,2026-08-14,2026-04-24,4000,P-005,confidential,
+crm_raw_169,mart,3.17,3800110,2025-12-20,2025-09-10,4100,,internal,no
+customer_hist_170,raw,12.6,15121161,2024-06-27,2024-04-13,4300,P006,internal,no
+projects_raw_171,raw,18.65,22378550,2025-12-13,2025-08-20,4200,p-003,internal,
+rev_campaign_raw_172,raw,11.94,14333534,2024-09-11,2024-07-11,4200,P-010,internal,yes
+projects_raw_173,raw,54.94,65929875,2026-08-31,2026-08-07,4200,P-010,internal,no
+stock_agg_174,core,8.66,10392289,2026-08-22,2026-05-18,4100,P-007,internal,no
+fact_agg_175,mart,28.33,33996036,2025-03-23,2025-03-09,4000,P004,internal,no
+crm_raw_176,raw,14.07,16885975,2026-08-12,2026-07-27,4000,,internal,no
+time_raw_177,mart,116.66,139992476,2026-08-15,2026-02-27,4300,P-006,confidential,
+campaign_raw_178,tmp,18.33,21994989,2026-08-18,2026-05-31,4200,P-015,internal,
+marketing_clean_179,mart,42.44,50932898,2024-09-02,2024-03-07,4000,P008,internal,no
+marketing_raw_180,raw,12.22,14667068,2025-11-26,2025-09-02,4500,P003,confidential,
+crm_agg_181,tmp,164.8,197755292,,2024-11-05,4000,,confidential,no
+campaign_clean_182,raw,34.49,41392995,2026-09-03,2026-08-28,4300,P-003,confidential,
+projects_mart_183,core,53.19,63826817,2026-09-05,2026-02-22,4300,,personal data,
+hr_raw_184_copy,core,63.51,76208280,2025-02-15,2024-11-29,4500,P015,confidential,no
+revenue_agg_185,mart,37.85,45419915,2024-08-17,2024-02-15,4300,,personal data,
+campaign_raw_186,raw,12.62,15144197,2026-09-01,2026-02-27,4500,P-005,internal,
+marketing_raw_187,raw,22.69,27230055,2026-08-15,2026-05-18,4100,,personal data,no
+time_agg_188,core,89.25,107101682,2026-05-30,2026-03-13,4500,P007,internal,no
+projects_hist_189,mart,47.27,56722505,2025-09-17,2025-05-05,4300,,internal,no
+marketing_agg_190,core,27.7,33241963,2025-01-17,2024-09-19,4300,P-006,confidential,
+crm_raw_191,tmp,7.1,8515053,2026-01-17,2025-08-25,4300,P-006,personal data,
+fact_mart_192,raw,5.4,6476303,2026-08-26,2026-05-13,4200,P-003,internal,
+fact_raw_193,mart,31.69,38032397,2025-01-27,2024-10-05,4300,p-005,confidential,
+campaign_raw_194,mart,141.84,170203236,2026-08-19,2026-07-23,4000,P-005,internal,no
+hr_mart_195,tmp,87.22,104668039,2026-08-25,2026-07-02,4100,P-015,personal data,no
+fact_hist_196,core,92.09,110506519,2026-09-04,2026-06-25,4100,P-007,personal data,
+campaign_clean_197,raw,25.27,30325069,2025-12-03,2025-08-13,4000,P-003,internal,no
+stock_hist_198,core,29.83,35795592,2024-07-05,2024-05-08,4500,P-008,internal,
+hr_raw_199_copy,core,14.47,17368541,2025-01-07,2024-11-04,4500,,internal,no
+campaign_agg_200,raw,7.99,9589735,2025-12-10,2025-09-20,4200,P-003,confidential,
+revenue_mart_201,mart,40.72,48860337,2026-08-26,2026-08-16,4300,P-007,confidential,no
+time_clean_202_v2_final,tmp,30.1,36121963,2024-07-18,2024-07-10,4100,,internal,
+crm_raw_203,core,77.89,93473928,2025-09-30,2025-08-20,4100,,personal data,
+hr_raw_204,mart,61.75,74099700,2026-03-04,2025-09-06,4200,,internal,no
+rev_crm_clean_205,core,6.82,8180705,2024-09-10,2024-07-10,4000,,internal,yes
+campaign_hist_206,raw,13.3,15963635,2025-06-28,2025-06-28,4000,,internal,
+marketing_raw_207,core,46.54,55846505,2025-05-24,2025-05-12,4200,P-010,confidential,no
+projects_mart_208,core,5.01,6011305,2024-07-11,2024-05-14,4200,,internal,
+hr_hist_209_copy,core,6.82,8185910,2024-08-17,2024-08-02,4500,,internal,no
+projects_agg_210,raw,14.55,17459137,2026-02-23,2026-01-09,4000,P005,confidential,no
+rev_stock_clean_211,mart,20.94,25129516,2025-02-09,2024-12-26,4000,,confidential,yes
+marketing_hist_212,raw,26.2,31442703,2026-08-20,2026-02-06,4200,P-010,internal,
+projects_mart_213,raw,29.93,35914649,2025-09-24,2025-08-29,4300,P-006,internal,no
+marketing_clean_214,core,1.96,2348045,2024-07-08,2024-03-21,4300,P-007,internal,
+time_mart_215_backup_old,raw,38.66,46395416,2025-04-14,2024-11-25,4300,P-004,internal,no
+rev_marketing_hist_216,mart,105.07,126089531,2024-04-11,2023-10-22,4100,P-010,internal,yes
+hr_clean_217,core,14.48,17370576,2026-08-15,2026-04-16,4000,,internal,
+campaign_raw_218,raw,29.99,35991659,2026-08-21,2026-08-07,4300,P-006,confidential,
+time_raw_219,tmp,33.77,40527785,2026-08-18,2026-02-15,4200,P-015,confidential,
+projects_hist_220,raw,18.52,22227048,2026-08-13,2026-02-06,4500,P-007,internal,no
+customer_raw_221,raw,640.06,768076345,2024-06-19,2024-01-06,4000,P015,confidential,
+stock_agg_222,mart,93.8,112565154,2026-04-01,2026-03-10,4500,,confidential,no
+marketing_clean_223,raw,7.47,8962326,2025-11-28,2025-05-13,4200,,confidential,no
+rev_stock_agg_224,raw,32.0,38396881,2024-11-16,2024-08-23,4200,P-003,internal,yes
+fact_mart_225,mart,5.78,6934286,2026-09-01,2026-04-19,4000,P-015,internal,
+time_agg_226,raw,25.9,31079639,2026-09-06,2026-03-12,4100,P-015,confidential,no
+customer_agg_227,raw,5.24,6286338,2025-06-16,2025-01-27,4300,p-007,internal,no
+hr_agg_228,mart,18.77,22529865,2026-08-11,2026-04-16,4000,P-010,internal,no
+stock_hist_229,mart,35.56,42673001,2026-08-24,2026-08-04,4100,,internal,no
+fact_agg_230,raw,11.12,13348972,2026-08-23,2026-02-06,4000,,personal data,no
+hr_mart_231,raw,4.18,5020403,2024-04-24,2024-03-01,4500,,personal data,no
+campaign_agg_232,raw,53.58,64293619,2026-08-18,2026-02-06,4100,,internal,no
+hr_mart_233,raw,18.44,22125866,2026-08-19,2026-03-13,4200,P-010,internal,
+campaign_agg_234_copy,mart,35.94,43127273,2025-02-16,2024-11-16,4300,P-015,internal,no
+projects_raw_235,raw,61.36,73629722,2026-08-09,2026-03-27,4500,P-003,confidential,no
+projects_hist_236,core,25.79,30951947,2025-05-05,2025-03-15,4500,P-008,internal,
+rev_revenue_agg_237,core,5.62,6746846,2024-01-31,2023-09-25,4500,,internal,yes
+time_hist_238,raw,24.9,29877737,2024-03-27,2023-11-19,4000,P003,internal,
+revenue_agg_239,mart,2.86,3437816,2026-08-22,2026-02-28,4500,P-003,internal,no
+hr_hist_240_copy,raw,198.93,238717495,2024-03-30,2023-12-15,4500,P-008,confidential,no
+projects_raw_241,core,2.9,3483731,2024-04-28,2024-03-04,4100,P-007,internal,
+campaign_clean_242,raw,31.64,37971517,2026-08-19,2026-08-12,4500,,internal,
+rev_time_mart_243,mart,45.75,54897867,2025-03-08,2024-08-28,4500,P-015,personal data,yes
+rev_crm_raw_244,mart,2.4,2882298,2023-12-14,2023-10-06,4000,P-007,internal,yes
+rev_stock_mart_245,core,43.94,52731736,2025-04-19,2025-03-06,4000,P-006,internal,
+rev_marketing_hist_246,mart,2.91,3492481,2024-02-11,2023-09-10,4200,P-005,confidential,yes
+projects_agg_247_tmp_2025,mart,8.35,10024996,2025-06-10,2025-03-03,4200,P-004,confidential,
+stock_hist_248,raw,39.51,47415573,2025-11-19,2025-10-24,4200,P-010,internal,no
+fact_clean_249,mart,4.73,5675209,2026-01-16,2025-11-26,4500,P005,confidential,no
+campaign_hist_250,raw,90.22,108264024,2025-03-05,2024-08-30,4200,,internal,no
+stock_mart_251,core,6.74,8093251,2026-08-31,2026-06-03,4200,P-007,internal,
+customer_clean_252,raw,4.16,4988259,2024-12-10,2024-06-06,4300,P-006,personal data,
+projects_raw_253,core,32.54,39045343,2024-07-21,2024-04-20,4500,,confidential,no
+crm_raw_254,core,13.39,16072942,2026-01-03,2025-12-01,4100,P-007,internal,no
+projects_raw_255,raw,77.69,93223182,2026-08-27,2026-05-24,4000,,personal data,no
+revenue_clean_256_tmp_2025,mart,18.69,22427650,2024-07-17,2024-02-29,4000,,confidential,no
+time_hist_257,raw,40.39,48470454,2025-10-02,2025-05-09,4000,P-007,internal,no
+fact_mart_258,raw,1.43,1719143,2026-09-06,2026-04-29,4100,P-003,internal,
+crm_agg_259,raw,191.76,230113292,2024-10-06,2024-04-27,4200,,confidential,no
+crm_agg_260_tmp_2025,mart,13.87,16648706,2024-04-22,2023-12-23,4300,P-015,confidential,no
+projects_raw_261,mart,23.48,28173473,2024-12-09,2024-11-22,4100,,personal data,no
+crm_raw_262,mart,71.69,86030659,2026-03-23,2025-09-16,4000,P-015,internal,no
+fact_raw_263_tmp_2025,mart,35.65,42777942,2024-04-18,2024-01-11,4500,,internal,no
+time_agg_264,mart,44.24,53090695,2026-08-31,2026-02-20,4000,P-010,internal,no
+rev_marketing_clean_265,tmp,7.61,9133200,2024-07-27,2024-02-22,4100,P-006,confidential,
+hr_agg_266,tmp,8.19,9822513,2026-08-22,2026-06-14,4200,,internal,no
+hr_agg_267,core,10.63,12760567,2026-09-01,2026-03-19,4300,P-010,personal data,no
+time_raw_268,core,136.3,163555534,2025-09-29,2025-04-19,4000,P-003,internal,
+crm_agg_269_copy,raw,26.59,31908712,,2024-01-26,4500,P-015,internal,no
+stock_raw_270,tmp,13.79,16550659,,2025-08-19,4300,,personal data,no
+campaign_mart_271,core,40.57,48687268,2025-09-18,2025-04-17,4500,P-006,confidential,
+stock_hist_272,core,226.97,272361141,2026-08-09,2026-02-09,4100,,internal,no
+customer_hist_273,mart,38.93,46716951,2026-09-03,2026-08-06,4200,P-006,personal data,no
+campaign_clean_274,raw,3.43,4110031,2026-03-13,2025-10-02,4300,P-006,internal,no
+fact_agg_275,mart,15.12,18138070,2024-04-23,2024-02-02,4500,P-005,internal,
+rev_marketing_raw_276,raw,12.5,15001822,2023-12-20,2023-10-14,4100,P005,confidential,yes
+stock_mart_277,mart,63.38,76056769,2025-03-30,2024-09-16,4000,P-015,confidential,no
+fact_hist_278_backup_old,mart,69.41,83291473,2024-03-31,2023-10-17,4500,,internal,no
+revenue_mart_279_v2_final,tmp,95.28,114338310,2024-10-01,2024-05-28,4000,,internal,no
+fact_raw_280,mart,60.57,72681872,2024-12-10,2024-10-05,4000,P-007,internal,no
+projects_mart_281,tmp,174.51,209411881,2026-08-15,2026-05-24,4500,P003,confidential,no
+customer_agg_282,core,69.9,83884855,2026-08-08,2026-07-12,4100,P-010,internal,no
+time_mart_283,mart,72.66,87189809,2024-06-25,2024-05-09,4000,,internal,no
+fact_clean_284,mart,18.89,22671198,,2024-08-18,4000,,confidential,
+campaign_agg_285_backup_old,mart,1.9,2280503,2024-05-09,2024-01-07,4000,P007,confidential,
+marketing_hist_286,raw,49.3,59160562,2024-09-02,2024-04-17,4000,,internal,no
+customer_raw_287_tmp_2025,raw,68.16,81794262,2024-06-19,2024-05-21,4200,p-008,confidential,no
+customer_raw_288,core,20.6,24716192,2025-07-26,2025-01-26,4500,,internal,
+hr_clean_289,mart,22.81,27377449,2025-02-07,2024-11-18,4500,P-010,internal,
+campaign_hist_290,mart,47.86,57427430,2025-12-01,2025-06-07,4100,P-007,confidential,no
+projects_mart_291,core,14.52,17420286,2025-02-03,2025-01-07,4500,,internal,no
+stock_hist_292,raw,8.95,10744800,2026-09-02,2026-05-15,4500,P-006,personal data,no
+fact_raw_293_v2_final,raw,27.8,33362571,2025-01-07,2024-11-27,4200,,internal,no
+fact_hist_294,tmp,4.21,5056748,2026-08-22,2026-03-17,4200,P-003,internal,no
+campaign_agg_295,tmp,144.89,173868641,2026-04-24,2025-12-13,4300,P-010,internal,no
+time_hist_296,raw,9.32,11180149,,2025-10-23,4100,,internal,no
+campaign_agg_297,tmp,8.65,10381845,2026-01-22,2025-07-08,4100,,internal,no
+marketing_mart_298,mart,47.88,57458819,2026-08-19,2026-02-13,4500,P007,internal,no
+hr_raw_299,raw,22.3,26758352,2025-11-04,2025-09-13,4300,,internal,
+stock_hist_300,tmp,44.6,53517755,2026-08-24,2026-04-06,4200,P-015,internal,no
+stock_agg_301,mart,15.96,19155519,2026-08-22,2026-02-22,4000,,confidential,no
+stock_mart_302,core,4.16,4987360,2026-08-23,2026-03-18,4200,P-007,confidential,no
+stock_agg_303,mart,23.89,28666749,2026-08-14,2026-06-14,4100,P-006,internal,no
+hr_mart_304,core,56.08,67301319,2026-08-14,2026-01-27,4500,P-015,confidential,no
+hr_hist_305,tmp,58.44,70130098,2024-08-17,2024-03-13,4200,,personal data,
+rev_stock_agg_306,raw,139.62,167540343,2024-04-29,2024-01-24,4000,P-010,personal data,yes
+revenue_clean_307,mart,142.35,170821150,2024-10-29,2024-05-23,4200,P-004,internal,no
+hr_mart_308,core,2.69,3226449,2026-08-25,2026-07-27,4200,P-010,internal,no
+time_agg_309_copy,mart,4.34,5209236,2024-09-16,2024-08-29,4000,,internal,no
+customer_mart_310,mart,30.61,36731732,2026-09-01,2026-04-08,4100,P007,internal,
+campaign_agg_311,mart,10.0,12000285,2025-06-01,2025-01-04,4500,P-008,internal,no
+crm_raw_312,core,145.58,174701286,2026-08-23,2026-05-13,4200,P005,confidential,no
+marketing_hist_313_tmp_2025,raw,26.55,31859707,2024-09-19,2024-07-25,4500,P-015,confidential,no
+projects_clean_314,raw,339.49,407383324,,2026-08-03,4500,P-003,internal,no
+projects_clean_315,core,29.19,35031725,2026-09-06,2026-06-22,4000,P-005,confidential,no
+rev_marketing_clean_316,mart,7.91,9493868,2025-03-03,2025-01-16,4200,P-003,internal,yes
+time_raw_317,core,18.81,22566273,2026-05-21,2026-01-21,4500,P-015,internal,no
+time_hist_318,core,52.53,63037519,2026-03-23,2026-02-21,4500,P-010,confidential,no
+crm_raw_319,mart,62.68,75220761,2026-08-21,2026-02-25,4300,p-005,personal data,no
+crm_raw_320,core,15.66,18787532,2024-09-02,2024-02-21,4000,,internal,no
+crm_agg_321_copy,raw,4.28,5141086,2024-09-05,2024-05-17,4500,P-008,internal,no
+campaign_raw_322,mart,16.73,20072858,2026-08-17,2026-05-07,4300,,internal,no
+fact_hist_323,core,29.12,34940704,2024-11-03,2024-06-28,4000,P-008,confidential,no
+revenue_agg_324,mart,10.56,12672604,2026-08-18,2026-03-04,4100,P-005,internal,no
+customer_mart_325,core,11.81,14168297,2026-08-30,2026-05-23,4200,,personal data,no
+customer_clean_326_tmp_2025,raw,68.56,82274615,2024-05-03,2024-01-05,4000,,internal,
+fact_raw_327,mart,27.68,33221591,2026-08-12,2026-04-14,4000,P-015,internal,no
+campaign_raw_328,mart,9.86,11828185,2026-08-23,2026-03-10,4300,P-003,personal data,
+fact_hist_329,mart,11.51,13809964,2026-01-20,2025-10-28,4000,,internal,no
+crm_agg_330_v2_final,mart,59.71,71653699,2025-06-12,2025-03-10,4300,,internal,
+customer_raw_331_copy,tmp,11.41,13687349,2025-07-04,2025-05-24,4000,P-007,confidential,no
+projects_clean_332_v2_final,raw,191.97,230366622,2025-02-12,2024-12-18,4100,P-004,internal,
+crm_raw_333_tmp_2025,raw,309.28,371137586,2025-04-15,2025-02-02,4200,P-004,internal,no
+stock_hist_334,mart,16.15,19382318,2026-08-13,2026-02-15,4100,,internal,
+time_raw_335,tmp,45.37,54446443,2026-08-13,2026-03-21,4200,P-007,internal,
+campaign_hist_336,mart,75.57,90684465,2026-05-24,2025-11-07,4100,P-003,confidential,
+marketing_hist_337,raw,50.63,60755578,2026-08-11,2026-06-10,4200,P-007,internal,no
+time_clean_338,core,805.44,966526751,2026-09-01,2026-05-04,4300,P-015,confidential,no
+time_raw_339,mart,3.75,4503184,2024-07-27,2024-02-09,4000,P-004,internal,no
+hr_raw_340_copy,mart,17.18,20621043,2024-03-31,2024-02-28,4000,P-005,personal data,
+customer_hist_341,core,12.73,15273703,2025-05-22,2024-12-29,4100,P-015,internal,no
+customer_raw_342,raw,131.65,157980110,2026-08-21,2026-05-19,4100,P-015,personal data,no
+projects_agg_343,core,18.55,22255795,2024-05-31,2024-04-08,4200,P-015,internal,no
+marketing_hist_344,mart,12.42,14906179,2026-08-25,2026-08-11,4300,P-003,confidential,no
+marketing_agg_345,core,4.32,5183972,2026-08-16,2026-02-17,4500,,internal,
+time_hist_346,mart,44.33,53191019,2026-08-20,2026-05-09,4500,P-007,confidential,
+hr_mart_347_tmp_2025,core,119.31,143166099,2025-05-10,2025-02-01,4000,P-008,internal,no
+revenue_raw_348,mart,124.41,149294869,2026-08-15,2026-07-02,4000,P-015,confidential,no
+marketing_mart_349,raw,2.74,3291302,2024-09-07,2024-07-22,4100,P-015,internal,no
+stock_mart_350,raw,53.97,64765080,2026-08-10,2026-03-22,4000,P-005,internal,no
+time_mart_351,raw,52.08,62497247,2024-04-01,2023-10-14,4000,P-010,confidential,no
+revenue_clean_352,raw,65.34,78405942,2024-05-18,2024-04-22,4200,P-008,internal,no
+stock_clean_353,core,27.35,32821210,2024-04-20,2023-12-26,4200,P-008,confidential,no
+time_hist_354,raw,49.24,59084366,2024-10-08,2024-08-15,4000,,internal,
+campaign_agg_355,core,7.57,9080782,2024-12-12,2024-06-29,4000,P004,internal,
+marketing_clean_356,core,9.9,11874590,2024-05-04,2024-02-26,4500,,internal,
+projects_agg_357,mart,10.88,13050945,2026-08-09,2026-03-27,4100,P-007,confidential,no
+crm_agg_358,tmp,9.91,11893417,2026-08-31,2026-05-22,4500,,personal data,no
+hr_clean_359,mart,26.74,32088418,2025-02-16,2024-08-29,4500,P-007,confidential,no
+time_hist_360,core,63.99,76787947,2026-08-19,2026-07-15,4300,P-005,personal data,
+crm_mart_361_backup_old,core,26.89,32268271,2024-06-19,2024-05-07,4100,P-008,internal,no
+hr_mart_362,mart,16.29,19550282,2024-06-08,2024-01-25,4100,P-010,confidential,no
+customer_mart_363,core,53.56,64272612,2025-01-31,2024-08-15,4200,,confidential,no
+projects_mart_364,raw,11.77,14120746,2026-09-04,2026-06-18,4200,P-006,internal,
+hr_hist_365,raw,2.54,3048050,2025-05-26,2024-11-16,4000,P-003,internal,no
+projects_mart_366,core,50.6,60721291,2026-08-16,2026-03-10,4200,,internal,no
+marketing_hist_367,raw,41.45,49745993,2026-08-24,2026-05-26,4200,P-010,internal,no
+crm_clean_368_tmp_2025,tmp,56.4,67684060,2025-06-20,2025-01-19,4000,P-007,internal,no
+crm_clean_369,raw,26.65,31975812,2024-11-09,2024-07-12,4200,P-015,confidential,no
+customer_clean_370,core,3.84,4602292,2026-08-15,2026-03-08,4100,P-005,internal,no
+revenue_clean_371_backup_old,core,2.1,2517362,2024-12-19,2024-07-29,4000,P-015,internal,no
+fact_hist_372,raw,24.22,29063406,2026-08-16,2026-07-20,4100,P-015,confidential,
+campaign_clean_373_tmp_2025,core,49.21,59047449,,2023-11-25,4300,P-008,internal,no
+projects_raw_374,raw,20.67,24807170,2026-08-29,2026-02-27,4000,P-006,confidential,no
+hr_mart_375,raw,17.32,20785015,2024-04-11,2024-03-04,4000,P-015,internal,no
+stock_hist_376,tmp,38.85,46624110,2026-08-09,2026-02-05,4000,P-005,confidential,no
+revenue_hist_377_v2_final,mart,62.08,74501944,2025-03-05,2024-12-23,4100,P-010,internal,no
+stock_hist_378,core,35.78,42938001,2026-08-18,2026-05-14,4100,P-006,internal,no
+stock_agg_379,core,12.28,14731567,2026-02-03,2025-12-31,4200,P-005,internal,no
+campaign_raw_380,mart,62.12,74540084,2026-08-13,2026-04-30,4500,P-006,internal,no
+rev_crm_hist_381,raw,4.92,5906636,2024-02-20,2023-12-21,4200,P-003,internal,no
+crm_raw_382,raw,41.17,49398236,2026-09-02,2026-02-23,4500,P-007,internal,no
+marketing_hist_383,mart,17.36,20831804,2026-09-06,2026-02-25,4200,,internal,no
+fact_agg_384,raw,17.09,20508551,2025-05-02,2025-04-30,4500,P-008,confidential,no
+fact_hist_385,raw,2.84,3409311,2024-05-16,2024-03-20,4500,P-004,internal,no
+marketing_clean_386,mart,12.0,14403078,2026-09-03,2026-05-15,4500,P-003,personal data,
+stock_clean_387,raw,50.91,61088450,2026-08-30,2026-08-04,4200,P-003,personal data,no
+projects_hist_388,mart,6.95,8339387,2025-12-13,2025-06-14,4500,P-015,internal,no
+marketing_clean_389,raw,22.11,26529626,2024-04-18,2024-04-02,4300,P-007,internal,no
+campaign_mart_390,tmp,60.58,72692511,2026-08-25,2026-03-26,4300,,internal,no
+revenue_hist_391,core,276.95,332340349,2025-05-18,2025-02-04,4500,P-004,internal,
+stock_clean_392,raw,9.65,11582725,2024-04-30,2023-11-05,4200,P-010,internal,no
+fact_agg_393,core,15.93,19118080,2024-07-25,2024-02-07,4000,P-015,confidential,no
+rev_fact_clean_394,raw,31.67,38002185,2025-03-16,2024-11-11,4000,P-010,confidential,yes
+crm_raw_395,mart,37.47,44963549,2026-08-19,2026-05-31,4500,P007,internal,no
+stock_clean_396,raw,75.94,91131403,2026-08-29,2026-03-08,4100,,confidential,no
+time_agg_397,core,3.46,4155141,2026-08-13,2026-07-06,4200,P-007,personal data,no
+revenue_clean_398,mart,5.6,6720544,2024-12-23,2024-10-15,4300,P-008,confidential,no
+crm_clean_399_copy,tmp,27.69,33233021,2024-04-13,2024-02-17,4500,,internal,
+hr_mart_400_copy,core,26.49,31790564,2025-07-27,2025-07-07,4000,P-015,internal,no
+campaign_hist_401,core,20.14,24173018,2026-08-13,2026-08-10,4300,P-010,personal data,
+customer_hist_402,mart,16.09,19308197,2026-08-13,2026-07-14,4100,,confidential,
+rev_customer_agg_403,core,12.37,14839290,2025-01-27,2025-01-06,4300,P-007,confidential,yes
+rev_hr_mart_404,mart,28.57,34279138,2024-09-30,2024-06-01,4300,P-007,internal,yes
+projects_mart_405,core,76.43,91720864,2026-08-29,2026-05-27,4300,P-006,internal,
+time_agg_406,mart,17.23,20671785,2026-06-06,2026-01-23,4500,P-007,confidential,no
+hr_agg_407,raw,24.24,29088092,2025-03-10,2024-11-18,4100,P-015,personal data,no
+rev_fact_mart_408,core,34.43,41316734,2024-12-27,2024-10-22,4300,,confidential,yes
+crm_agg_409,core,13.69,16433496,2024-04-05,2023-10-08,4000,P010,personal data,no
+crm_mart_410,mart,15.93,19110776,2026-05-20,2025-11-11,4200,,internal,no
+rev_marketing_raw_411,mart,44.79,53744344,2024-04-18,2024-03-28,4300,,internal,yes
+hr_hist_412,core,31.75,38098429,2024-06-14,2024-03-08,4200,,internal,no
+time_raw_413,mart,8.86,10626314,2024-04-27,2023-11-27,4000,,internal,no
+marketing_raw_414_tmp_2025,mart,93.58,112290668,2024-10-27,2024-09-07,4000,P-004,personal data,no
+hr_hist_415,core,37.8,45364830,,2026-02-25,4200,P-006,personal data,
+customer_agg_416,mart,48.55,58255861,2026-08-08,2026-06-14,4200,P-003,internal,
+campaign_clean_417,raw,19.86,23833134,2026-08-15,2026-05-20,4200,,internal,
+time_agg_418,raw,7.52,9027521,2026-09-03,2026-05-09,4200,P-003,internal,
+projects_raw_419,core,43.13,51750839,2026-08-10,2026-02-04,4300,P-003,confidential,
+rev_customer_hist_420,raw,2.54,3045576,2024-02-24,2023-12-10,4500,,internal,yes
+campaign_agg_421,mart,64.09,76913954,2026-08-21,2026-05-14,4000,P-010,confidential,no
+rev_campaign_agg_422,mart,73.97,88764181,2024-01-31,2023-09-14,4100,,confidential,yes
+projects_agg_423_backup_old,raw,3.3,3964110,,2024-04-23,4200,,internal,no
+time_agg_424_backup_old,tmp,8.65,10376651,2025-03-12,2024-09-07,4000,,internal,
+fact_hist_425,mart,20.24,24290961,2025-10-18,2025-10-15,4500,P007,confidential,no
+rev_projects_agg_426,core,1.63,1955029,2025-01-26,2024-11-10,4500,P003,internal,
+hr_mart_427,core,19.35,23217659,2026-08-15,2026-06-15,4500,P-003,internal,no
+crm_mart_428,mart,12.61,15137999,2026-01-08,2025-10-11,4500,P-006,internal,
+fact_mart_429,raw,133.18,159816452,2026-09-02,2026-07-22,4200,P-003,internal,
+hr_mart_430,mart,197.44,236922332,2026-08-11,2026-07-25,4300,P-006,internal,no
+marketing_raw_431,core,16.25,19500533,2026-04-28,2026-01-14,4200,,internal,
+stock_agg_432,mart,109.61,131531689,2026-08-22,2026-04-10,4300,P-003,personal data,
+revenue_mart_433,core,33.94,40724933,,2026-04-03,4100,P-005,internal,no
+crm_raw_434,raw,14.46,17355138,2026-09-03,2026-06-24,4500,P-005,internal,no
+hr_agg_435,core,23.22,27869140,2026-02-17,2026-01-07,4100,P-006,internal,
+campaign_agg_436,core,47.26,56717031,2025-11-04,2025-08-11,4100,P-015,internal,
+customer_clean_437,raw,94.0,112801219,2026-09-05,2026-06-14,4500,P-005,internal,
+fact_mart_438,mart,22.15,26578739,,2024-09-19,4500,P-010,internal,no
+campaign_mart_439,raw,45.11,54137245,2024-10-03,2024-08-10,4000,P-015,internal,
+time_mart_440,tmp,21.7,26039816,2026-08-11,2026-05-02,4500,P-007,confidential,no
+revenue_hist_441,tmp,6.48,7781720,2026-08-13,2026-07-21,4000,P-007,internal,
+revenue_mart_442,mart,314.37,377248871,2026-08-31,2026-03-18,4100,,internal,no
+hr_hist_443_backup_old,raw,151.44,181732851,2025-04-15,2025-02-15,4000,P-008,internal,no
+fact_hist_444,raw,14.23,17079138,2026-03-25,2025-11-30,4200,,internal,no
+hr_mart_445,mart,22.91,27496078,2026-08-29,2026-08-23,4300,P-015,internal,
+stock_agg_446,raw,56.22,67467124,2026-02-24,2026-02-13,4500,P-007,internal,
+stock_mart_447,mart,48.41,58091852,2026-08-16,2026-06-12,4000,P-006,internal,
+fact_clean_448_v2_final,tmp,22.57,27087943,2024-11-13,2024-09-22,4500,P-015,internal,
+rev_projects_agg_449,raw,98.81,118572879,2024-12-01,2024-09-16,4300,P-007,confidential,yes
+revenue_raw_450,core,10.56,12670013,2026-08-24,2026-02-17,4100,P010,confidential,no
+crm_raw_451_backup_old,tmp,65.41,78489912,2025-04-06,2024-10-18,4500,P-010,internal,no
+time_mart_452,raw,15.14,18169221,2024-06-23,2024-04-01,4300,P-015,internal,
+marketing_clean_453,tmp,10.15,12178287,2026-04-06,2025-11-20,4100,,confidential,
+customer_hist_454,core,17.23,20676284,2026-08-30,2026-04-30,4300,,internal,no
+marketing_clean_455,tmp,14.66,17596175,2025-11-05,2025-10-27,4000,,internal,no
+crm_raw_456,tmp,9.6,11521602,2024-12-27,2024-09-15,4300,,internal,
+rev_projects_hist_457,tmp,20.98,25175125,2024-10-02,2024-06-17,4300,p-015,personal data,yes
+revenue_mart_458,core,6.88,8257579,2024-03-31,2024-03-20,4100,P-006,internal,
+rev_stock_agg_459,mart,10.3,12360485,2025-04-10,2024-11-20,4000,P-005,internal,no
+projects_hist_460,mart,177.78,213333010,2026-08-19,2026-02-01,4200,P-005,internal,no
+fact_agg_461,raw,24.31,29174179,2025-09-23,2025-06-14,4300,P-007,internal,
+hr_hist_462,raw,7.66,9194332,2026-01-20,2025-12-15,4300,P-006,confidential,no
+rev_stock_agg_463,core,79.92,95906522,2025-02-17,2024-11-17,4000,,confidential,yes
+revenue_mart_464,mart,65.01,78009849,,2024-04-13,4200,P-008,internal,
+campaign_agg_465,mart,22.02,26425571,,2026-02-26,4500,,personal data,
+time_mart_466_tmp_2025,core,21.46,25746499,2024-09-20,2024-06-12,4500,,internal,no
+campaign_mart_467,tmp,61.45,73738905,2026-08-11,2026-04-04,4200,P003,internal,no
+revenue_raw_468,tmp,19.41,23295285,2026-09-06,2026-06-11,4200,,internal,
+marketing_hist_469_v2_final,raw,37.26,44712368,2024-07-02,2023-12-27,4300,,internal,no
+customer_agg_470,core,32.66,39189155,2026-09-01,2026-06-15,4300,P003,personal data,no
+fact_mart_471,mart,128.24,153893699,2024-05-22,2024-01-06,4300,P-003,internal,
+crm_agg_472_v2_final,mart,45.91,55096087,2024-09-07,2024-08-29,4100,P-004,internal,no
+fact_raw_473,raw,224.16,268986999,2026-08-21,2026-02-19,4200,P-005,personal data,no
+stock_raw_474,tmp,36.96,44357257,2026-08-19,2026-03-02,4200,,internal,no
+time_hist_475,raw,558.58,670292062,2025-03-09,2024-08-28,4300,P-008,personal data,
+fact_raw_476,core,14.37,17246381,2026-03-19,2025-12-12,4300,P-015,internal,no
+customer_raw_477_tmp_2025,core,16.2,19434538,2024-08-11,2024-03-19,4500,P-015,internal,
+marketing_clean_478,tmp,38.41,46091012,2026-08-12,2026-02-07,4500,P-007,internal,no
+campaign_mart_479,raw,73.38,88054086,2026-01-20,2025-11-16,4000,P-006,internal,
+revenue_clean_480_backup_old,raw,48.26,57909002,2024-06-12,2024-04-05,4000,,internal,no
+stock_clean_481,core,5.65,6782778,2025-03-19,2025-03-10,4200,,internal,no
+time_raw_482,mart,308.58,370295803,2026-08-17,2026-07-10,4500,P-015,personal data,no
+projects_clean_483,raw,94.08,112891936,2026-08-13,2026-06-08,4000,P015,personal data,
+stock_raw_484,mart,37.3,44760996,,2025-08-13,4300,P-015,internal,no
+stock_raw_485,tmp,57.08,68491087,2024-07-02,2024-06-16,4000,,internal,no
+fact_mart_486,core,27.51,33015928,2026-05-15,2026-01-24,4000,,confidential,
+hr_agg_487,raw,22.6,27124740,2026-01-21,2025-07-20,4000,P010,internal,no
+marketing_hist_488,core,22.03,26431202,2024-11-10,2024-07-29,4300,P008,internal,
+rev_hr_clean_489,mart,13.02,15623057,2024-06-24,2024-03-16,4200,P-015,confidential,yes
+revenue_mart_490,raw,20.71,24853211,2026-08-11,2026-03-06,4000,P-003,confidential,no
+customer_mart_491,core,42.5,51000243,2026-08-10,2026-02-19,4200,,confidential,no
+projects_clean_492_backup_old,raw,14.01,16814732,2024-07-22,2024-06-21,4100,P015,internal,no
+campaign_clean_493,mart,20.84,25009600,2026-08-25,2026-06-29,4200,P-003,internal,no
+revenue_agg_494,mart,8.72,10467843,2026-08-17,2026-07-03,4500,P-005,internal,
+rev_crm_raw_495,raw,23.35,28024546,2025-02-20,2025-01-14,4100,P-015,confidential,yes
+stock_agg_496,tmp,477.55,573055400,2026-08-09,2026-04-25,4100,P-003,internal,no
+fact_agg_497,core,61.55,73863296,2025-07-10,2025-06-11,4300,P-008,personal data,
+customer_raw_498,raw,12.78,15333378,2026-08-24,2026-08-19,4300,P-006,internal,no
+marketing_raw_499,core,6.14,7364769,2026-08-19,2026-06-11,4100,,internal,

@@ -1,0 +1,16 @@
+﻿project_id,project_name,type,customer,cost_center,start,end,rechargeable,status
+P-001,Customer portal,internal,,4500,2023-05-01,,no,ongoing
+P-002,Webshop,internal,,4300,2024-01-15,,no,ongoing
+P-003,Data platform,internal,,4000,2023-09-01,,no,ongoing
+P-004,Internal AI pilot,internal,,4500,2024-10-01,2025-06-30,no,completed
+P-005,Customer Alpha: data strategy,customer,Customer Alpha,4000,2024-09-01,2026-12-31,partly,ongoing
+P-006,Customer Beta: reporting setup,customer,Customer Beta,4000,2025-01-10,2026-06-30,yes,completed
+P-007,Customer Gamma: AI assistant,customer,Customer Gamma,4000,2025-03-01,2026-10-31,yes,ongoing
+P-008,Customer Delta: migration,customer,Customer Delta,4000,2024-06-01,2025-09-30,yes,completed
+P-009,Customer portal relaunch,internal,,4500,2025-09-01,2026-03-31,no,completed
+P-010,Customer Epsilon: process analysis,customer,Customer Epsilon,4000,2026-02-01,2026-12-31,yes,ongoing
+P-011,Marketing campaigns,internal,,4300,2024-11-01,,no,ongoing
+P-012,Recruiting,internal,,4400,2024-11-01,,no,ongoing
+P-013,Pre-sales and quotes,internal,,4100,2024-11-01,,no,ongoing
+P-014,Training,internal,,4400,2024-11-01,,no,ongoing
+P-015,General operations,internal,,9000,2023-01-01,,no,ongoing

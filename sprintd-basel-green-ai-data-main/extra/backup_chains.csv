@@ -1,0 +1,79 @@
+﻿source,category,backup_tool,size_gb,frequency,retention_days,last_restore_test,second_site,criticality,data_class,cost_center
+Finance database,DB,Backup-Tool A,685.4,daily,3650,2026-01-30,yes,high,confidential,4200
+Finance database,DB,Backup-Tool B,599.7,daily,3650,2025-03-23,no,high,confidential,4200
+Finance database,DB,Backup-Tool C,428.3,weekly,3650,2024-12-31,no,high,confidential,4200
+CRM database,DB,Backup-Tool A,662.3,daily,3650,2025-12-05,yes,high,confidential,4100
+CRM database,DB,Backup-Tool B,579.5,daily,3650,2025-09-19,no,high,confidential,4100
+CRM database,DB,Backup-Tool C,413.9,weekly,3650,2024-12-02,no,high,confidential,4100
+ERP database,DB,Backup-Tool A,587.3,daily,3650,,yes,high,confidential,4500
+ERP database,DB,Backup-Tool B,513.9,daily,3650,2025-02-03,no,high,confidential,4500
+ERP database,DB,Backup-Tool C,367.1,daily,3650,2025-10-20,no,high,confidential,4500
+Project database,DB,Backup-Tool A,698.0,daily,3650,2025-09-04,no,high,confidential,4000
+HR database,DB,Backup-Tool A,434.0,weekly,3650,2026-06-27,yes,high,confidential,4400
+HR database,DB,Backup-Tool B,379.8,daily,3650,2026-07-22,no,high,confidential,4400
+HR database,DB,Backup-Tool C,271.3,daily,3650,2026-05-02,no,high,confidential,4400
+Reporting-DWH,DB,Backup-Tool A,705.8,weekly,3650,,no,high,confidential,4500
+Project file storage,File share,Backup-Tool A,677.7,weekly,365,,no,medium,confidential,4000
+Office file server,File share,Backup-Tool A,65.1,daily,365,,yes,medium,confidential,4500
+Office file server,File share,Backup-Tool B,57.0,daily,365,2025-05-07,no,medium,confidential,4500
+Office file server,File share,Backup-Tool C,40.7,weekly,365,2026-03-10,no,medium,confidential,4500
+Marketing file share,File share,Backup-Tool A,507.7,daily,365,2024-11-25,no,medium,confidential,4500
+Sales file share,File share,Backup-Tool A,4949.5,weekly,365,2026-04-11,yes,medium,confidential,4100
+HR file share,File share,Backup-Tool A,897.4,daily,365,,yes,medium,confidential,4400
+HR file share,File share,Backup-Tool B,785.3,weekly,365,2025-07-12,no,medium,confidential,4400
+HR file share,File share,Backup-Tool C,560.9,weekly,365,2026-05-31,no,medium,confidential,4400
+Finance file share,File share,Backup-Tool A,4335.9,weekly,3650,,yes,medium,confidential,4200
+Archive share,File share,Backup-Tool A,2999.8,daily,365,,yes,medium,confidential,4500
+Archive share,File share,Backup-Tool B,2624.9,daily,365,2025-08-01,no,medium,confidential,4500
+Archive share,File share,Backup-Tool C,1874.9,weekly,365,,no,medium,confidential,4500
+Scans,File share,Backup-Tool A,1371.3,daily,365,,yes,medium,confidential,4500
+Scans,File share,Backup-Tool B,1199.9,weekly,365,2025-05-02,no,medium,confidential,4500
+Scans,File share,Backup-Tool C,857.0,daily,365,2025-05-19,no,medium,confidential,4500
+app-01-image,VM-Image,Backup-Tool A,478.7,weekly,365,2025-05-24,yes,medium,internal,4500
+app-01-image,VM-Image,Backup-Tool B,418.9,daily,365,2025-11-03,no,medium,internal,4500
+app-01-image,VM-Image,Backup-Tool C,299.2,weekly,365,,no,medium,internal,4500
+app-02-image,VM-Image,Backup-Tool A,408.0,weekly,365,,yes,medium,internal,4500
+app-02-image,VM-Image,Backup-Tool B,357.0,weekly,365,2024-12-13,no,medium,internal,4500
+app-02-image,VM-Image,Backup-Tool C,255.0,weekly,365,2025-12-07,no,medium,internal,4500
+app-03-image,VM-Image,Backup-Tool A,198.6,daily,365,,yes,medium,internal,4500
+app-03-image,VM-Image,Backup-Tool B,173.8,daily,365,2025-03-12,no,medium,internal,4500
+app-03-image,VM-Image,Backup-Tool C,124.1,weekly,365,2024-10-23,no,medium,internal,4500
+app-04-image,VM-Image,Backup-Tool A,2714.0,daily,365,,yes,medium,internal,4500
+app-05-image,VM-Image,Backup-Tool A,4752.9,weekly,365,,yes,medium,internal,4500
+app-06-image,VM-Image,Backup-Tool A,975.1,daily,365,2026-07-05,yes,medium,internal,4500
+app-06-image,VM-Image,Backup-Tool B,853.2,weekly,365,2026-07-10,no,medium,internal,4500
+app-06-image,VM-Image,Backup-Tool C,609.4,daily,365,2026-06-11,no,medium,internal,4500
+test-01-image,VM-Image,Backup-Tool A,254.3,weekly,365,2025-02-14,yes,medium,internal,4500
+test-01-image,VM-Image,Backup-Tool B,222.5,weekly,365,2025-11-29,no,medium,internal,4500
+test-01-image,VM-Image,Backup-Tool C,158.9,weekly,365,,no,medium,internal,4500
+test-02-image,VM-Image,Backup-Tool A,5024.5,daily,365,2026-05-22,yes,medium,internal,4500
+uat-portal-image,VM-Image,Backup-Tool A,487.6,weekly,365,,no,medium,internal,4500
+dr-failover-image,VM-Image,Backup-Tool A,767.5,weekly,365,,yes,high,internal,4500
+Mail archive central,Mail archive,Backup-Tool A,1645.9,daily,3650,2026-07-31,no,high,personal data,4500
+Mail archive management,Mail archive,Backup-Tool A,2599.6,weekly,3650,2025-04-11,yes,high,personal data,4500
+Mail archive management,Mail archive,Backup-Tool B,2274.6,daily,3650,2025-05-29,no,high,personal data,4500
+Mail archive management,Mail archive,Backup-Tool C,1624.7,weekly,3650,,no,high,personal data,4500
+Mail archive finance,Mail archive,Backup-Tool A,2116.6,daily,3650,,yes,high,personal data,4200
+Mail archive sales,Mail archive,Backup-Tool A,546.9,daily,3650,,yes,high,personal data,4100
+Mail archive sales,Mail archive,Backup-Tool B,478.5,daily,3650,2024-12-24,no,high,personal data,4100
+Mail archive sales,Mail archive,Backup-Tool C,341.8,daily,3650,,no,high,personal data,4100
+CRM export,SaaS-Export,Backup-Tool A,1617.9,weekly,365,,yes,low,internal,4100
+Accounting export,SaaS-Export,Backup-Tool A,431.1,daily,365,2025-01-21,yes,low,internal,4200
+Accounting export,SaaS-Export,Backup-Tool B,377.2,daily,365,2026-06-26,no,low,internal,4200
+Accounting export,SaaS-Export,Backup-Tool C,269.4,daily,365,,no,low,internal,4200
+Project export,SaaS-Export,Backup-Tool A,630.7,weekly,365,2026-07-26,yes,low,internal,4000
+Project export,SaaS-Export,Backup-Tool B,551.8,weekly,365,,no,low,internal,4000
+Project export,SaaS-Export,Backup-Tool C,394.2,weekly,365,2026-06-26,no,low,internal,4000
+Ticket export,SaaS-Export,Backup-Tool A,345.0,daily,365,2025-08-31,no,low,internal,4500
+HR export,SaaS-Export,Backup-Tool A,241.0,daily,365,2026-06-29,yes,low,internal,4400
+HR export,SaaS-Export,Backup-Tool B,210.9,weekly,365,2025-11-16,no,low,internal,4400
+HR export,SaaS-Export,Backup-Tool C,150.6,weekly,365,,no,low,internal,4400
+Design export,SaaS-Export,Backup-Tool A,343.0,daily,365,2025-05-30,yes,low,internal,4500
+Design export,SaaS-Export,Backup-Tool B,300.1,daily,365,2024-10-27,no,low,internal,4500
+Design export,SaaS-Export,Backup-Tool C,214.4,weekly,365,,no,low,internal,4500
+Wiki export,SaaS-Export,Backup-Tool A,1201.6,daily,365,2026-05-21,yes,low,internal,4500
+Wiki export,SaaS-Export,Backup-Tool B,1051.4,daily,365,,no,low,internal,4500
+Wiki export,SaaS-Export,Backup-Tool C,751.0,daily,365,2025-12-16,no,low,internal,4500
+Chat export,SaaS-Export,Backup-Tool A,2238.4,weekly,365,,yes,low,internal,4500
+Chat export,SaaS-Export,Backup-Tool B,1958.6,weekly,365,2026-05-18,no,low,internal,4500
+Chat export,SaaS-Export,Backup-Tool C,1399.0,daily,365,,no,low,internal,4500
