@@ -1,0 +1,2 @@
+﻿table,schema,size_gb,last_read,retention_required,data_class
+historic_orders,raw,300,2025-12-01,yes,personal data

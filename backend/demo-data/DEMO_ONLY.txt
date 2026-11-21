@@ -1,0 +1,1 @@
+Fictional GreenOps demonstration, including FX, usage, invoices and hourly grid factors.

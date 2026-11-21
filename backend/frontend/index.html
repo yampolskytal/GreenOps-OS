@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GreenOps | Basel</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <header class="top"><div class="shell head"><a class="brand" href="/">Green<span>Ops</span></a><span id="mode" class="mode">Loading dataset</span></div></header>
+  <main class="shell">
+    <section class="intro"><div><h1>Digital footprint</h1><p id="period"></p></div><nav aria-label="Submission downloads">
+      <a class="button" href="/downloads/template_baseline_and_assumptions.csv">Baseline CSV</a>
+      <a class="button" href="/downloads/template_measures_package.csv">Measures CSV</a>
+    </nav></section>
+    <section id="stats" class="stats" aria-label="Baseline metrics"></section>
+    <p id="coverage" class="coverage"></p>
+    <nav class="tabs" aria-label="Dashboard views">
+      <button data-view="summary" aria-pressed="true">Drivers</button>
+      <button data-view="package" aria-pressed="false">Measures</button>
+      <button data-view="questions" aria-pressed="false">Example questions</button>
+      <button data-view="ask" aria-pressed="false">Ask GreenOps</button>
+      <button data-view="forecast" aria-pressed="false">Forecast</button>
+      <button data-view="diagnostics" aria-pressed="false">Diagnostics</button>
+      <button data-view="reconciliation" aria-pressed="false">Data quality</button>
+      <button data-view="settings" aria-pressed="false">Workspace</button>
+    </nav>
+    <section class="panel" id="content" aria-live="polite"><p>Loading baseline…</p></section>
+  </main>
+  <footer class="shell">GreenOps · sprintd Basel 2026</footer>
+</body>
+</html>

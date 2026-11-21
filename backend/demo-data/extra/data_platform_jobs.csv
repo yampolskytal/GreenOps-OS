@@ -1,0 +1,107 @@
+﻿date,job_name,resource_id,start_time,duration_h,status,triggered_by,time_window
+2025-09-01,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-09-01,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-09-08,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-09-08,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-09-15,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-09-15,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-09-22,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-09-22,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-09-29,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-09-29,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-10-06,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-10-06,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-10-13,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-10-13,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-10-20,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-10-20,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-10-27,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-10-27,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-11-03,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-11-03,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-11-10,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-11-10,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-11-17,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-11-17,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-11-24,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-11-24,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-12-01,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-12-01,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-12-08,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-12-08,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-12-15,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-12-15,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-12-22,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-12-22,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2025-12-29,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2025-12-29,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-01-05,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-01-05,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-01-12,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-01-12,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-01-19,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-01-19,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-01-26,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-01-26,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-02-02,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-02-02,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-02-09,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-02-09,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-02-16,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-02-16,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-02-23,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-02-23,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-03-02,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-03-02,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-03-09,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-03-09,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-03-16,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-03-16,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-03-23,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-03-23,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-03-30,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-03-30,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-04-06,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-04-06,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-04-13,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-04-13,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-04-20,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-04-20,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-04-27,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-04-27,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-05-04,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-05-04,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-05-11,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-05-11,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-05-18,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-05-18,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-05-25,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-05-25,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-06-01,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-06-01,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-06-08,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-06-08,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-06-15,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-06-15,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-06-22,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-06-22,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-06-29,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-06-29,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-07-06,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-07-06,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-07-13,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-07-13,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-07-20,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-07-20,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-07-27,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-07-27,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-08-03,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-08-03,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-08-10,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-08-10,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-08-17,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-08-17,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-08-24,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-08-24,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30
+2026-08-31,Development refresh,dp-dev,08:00,1.25,ok,schedule,flexible: 08:00–15:00
+2026-08-31,Nightly ETL,dp-prod,01:00,3.5,ok,schedule,fixed: finished by 04:30

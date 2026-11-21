@@ -1,0 +1,3 @@
+﻿measure_id,description,resource_or_source,change,effort_person_days,savings_cost_chf_per_year,savings_energy_kwh_per_year,savings_co2_kg_location_based,savings_co2_kg_market_based,risks_and_exceptions,assumptions_and_sources
+Example-1,Description of the measure in one sentence,resource_id or source,"What exactly is changed, and when (for example schedule, size, cancellation)",1.0,1000,0,0,0,"Risks, protection windows and exceptions you have taken into account","Assumptions, calculation and sources"
+Example-2,(delete or overwrite this row),,,,,,,,,

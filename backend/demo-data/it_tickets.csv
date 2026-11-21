@@ -1,0 +1,3 @@
+﻿ticket_id,date,resource_id,type,title,description,status
+DEMO-1,2026-08-14,dp-prod,Change,Production availability,"Nightly ETL 01:00–04:30, Saturday reconciliation 06:00–08:00. Preserve emergency recovery access.",approved
+DEMO-2,2026-08-18,gpu-lab,Note,GPU readiness,Model validation workload can begin on short notice. Owner to approve pre-warm and request queue.,closed

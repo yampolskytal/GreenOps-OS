@@ -1,0 +1,10 @@
+.git
+state
+inputs
+submission
+challenge-results
+*.zip
+*.bundle
+.test-*
+__pycache__
+tmp*

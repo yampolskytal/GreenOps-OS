@@ -1,4 +1,33 @@
-# GreenOps OS V4 backend handoff
+# GreenOps OS V4 backend integration
+
+The team backend now lives in `backend/` (merged from `sprintd`). Run it with `npm run backend` and set `VITE_API_BASE_URL=/api/v2`; Vite proxies `/api` to `http://127.0.0.1:8765`.
+
+## Implemented contract (`/api/v2`, `backend/frontend_api.py`)
+
+| Frontend method | Route | Backend source |
+| --- | --- | --- |
+| getOverview | GET overview | summary figures, ledger by month (filtered), package risks |
+| getBreakdowns | GET breakdowns | ledger grouped by department/provider/category/tool |
+| getResources | GET resources | server inventory, weekly metrics, measure savings |
+| getLocations | GET locations | ledger by region, grid factors |
+| getFindings | GET findings | measure catalog + contradiction register |
+| getMeasures | GET measures | measure catalog (`Reports.measures`) |
+| simulate | POST simulation | catalog sums with scope/exclusive/requires/hard-blocker checks vs 25 % / 40 % / CHF / 15 PD |
+| optimize | POST optimize | `Workspace.package` branch-and-bound (balanced→midpoint, cost→first-year, co2→conservative) |
+| getForecast | GET forecast | `bonus.forecast` 3-year scenarios (annual; market forecast unsupported) |
+| getDailyFootprint | GET metrics/daily | ledger by day; monthly invoices spread over the month, weekly metrics over 7 days (`allocated`) |
+| getDataQuality | GET data-quality | sources, coverage, audit events, contradictions |
+| getBonus | GET bonus | carbon replay, CI diagnostics, workload clusters, AI usage, unused seats |
+| chat | POST chat | `assistant_router.route_question` (local rules, optional Apertus/OpenAI); follow-up context round-trips in `ChatMessage.context` |
+| exportBaseline / exportMeasures | GET exports/baseline, POST exports/measures | `templates.tables` with the organizer templates |
+| importFiles | POST imports | not supported over HTTP — restart backend with `--data` |
+
+Known gaps: market-based monthly/daily/forecast values (backend market coverage is partial), monthly forecast granularity, backend plan persistence for the frontend's Current Plan.
+
+---
+
+## Original handoff notes
+
 
 No actual backend contract or base URL has been supplied. All currently visible company numbers remain DEMO. No independent backend, new endpoint or raw dataset import was added.
 

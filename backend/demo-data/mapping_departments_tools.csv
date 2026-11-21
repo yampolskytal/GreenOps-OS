@@ -1,0 +1,7 @@
+﻿resource_id,tool,department,cost_center,environment,criticality,responsible_role,default_project,rechargeable
+dp-dev,Development platform,IT,4500,dev,low,Platform service owner,P-001,no
+dp-prod,Production platform,Consulting,4000,prod,high,Platform service owner,P-001,no
+gpu-lab,GPU lab,IT,4500,dev,low,Platform service owner,P-001,no
+vm-stage,Staging VM,IT,4500,test,low,Platform service owner,P-001,no
+vm-live,Customer portal,Sales,4100,prod,high,Platform service owner,P-001,no
+host-logs,Managed logs,IT,4500,prod,high,Platform service owner,P-001,no

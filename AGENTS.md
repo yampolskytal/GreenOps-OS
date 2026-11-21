@@ -31,12 +31,12 @@ use the editor.
 
 ## Project rules
 
-- All data flows through the `GreenOpsApi` interface (`src/lib/api/types.ts`); `client.ts` uses the demo adapter unless `VITE_API_BASE_URL` is set — so the teammates' backend replaces demo data without touching UI.
+- All data flows through the `GreenOpsApi` interface (`src/lib/api/types.ts`); `client.ts` uses the demo adapter unless `VITE_API_BASE_URL` is set (`/api/v2` for the bundled backend, proxied by Vite) — so the backend replaces demo data without touching UI.
 - Shared cross-view state (role, filters, date range, dataset, plan, budget) lives in `src/lib/store.tsx`, persisted to localStorage — so role switches never reset selections.
 - `src/lib/optimizer.ts` is a demo stand-in for backend optimization; the backend stays authoritative.
 - CSV export headers live only in `src/lib/api/templates.ts` and must match the organisers' templates exactly.
 - Explore and Data routes consolidate analytical and report tabs; legacy paths remain reachable without restoring a map, so existing links do not break.
-- No backend and no raw dataset import in this frontend — calculations belong to the separate team backend.
+- Calculations live in the Python backend under `backend/`; the TypeScript frontend never imports raw datasets. `backend/frontend_api.py` is the only place that maps backend structures to `types.ts` — change field mapping there, not in UI components.
 
 - Imported visualization engines take adapter data only and resolve theme tokens before canvas painting; missing cells stay visibly distinct, so rendering never invents analytical values.
 - Studio settings and manual selections remain a temporary debounced GreenOpsApi preview; only validated explicit commits persist the shared plan, so experiments never mutate saved selections.

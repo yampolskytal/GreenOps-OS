@@ -1,0 +1,362 @@
+{
+  "ai_subscriptions": {
+    "columns": [
+      "month",
+      "product",
+      "provider",
+      "cost_center",
+      "licences_purchased",
+      "licences_active_30d",
+      "messages_30d",
+      "price_per_seat",
+      "currency",
+      "amount",
+      "contract_status",
+      "contract_end",
+      "notice_period_days",
+      "billing"
+    ]
+  },
+  "ai_usage": {
+    "columns": [
+      "date",
+      "resource_id",
+      "tool",
+      "department",
+      "task_type",
+      "model_class",
+      "provider",
+      "model",
+      "requests",
+      "tokens_in",
+      "tokens_in_cache",
+      "tokens_out",
+      "cost_chf",
+      "project_id"
+    ]
+  },
+  "aws_costs": {
+    "columns": [
+      "line_item_usage_start_date",
+      "line_item_resource_id",
+      "product_servicecode",
+      "product_region",
+      "line_item_usage_amount",
+      "pricing_unit",
+      "line_item_unblended_cost",
+      "line_item_currency_code",
+      "line_item_line_item_type",
+      "resource_tags_user_department",
+      "resource_tags_user_tool",
+      "resource_tags_user_project",
+      "resource_tags_user_environment",
+      "avg_cpu_utilization",
+      "object_requests",
+      "line_item_description"
+    ]
+  },
+  "azure_costs": {
+    "columns": [
+      "Date",
+      "ResourceId",
+      "ServiceName",
+      "ResourceLocation",
+      "Quantity",
+      "UnitOfMeasure",
+      "CostInBillingCurrency",
+      "BillingCurrency",
+      "ChargeType",
+      "Tags",
+      "AvgCpuPercent",
+      "Notes"
+    ]
+  },
+  "business_calendar": {
+    "columns": [
+      "date",
+      "weekday",
+      "workday",
+      "public_holiday",
+      "company_holidays"
+    ]
+  },
+  "data_platform_usage": {
+    "columns": [
+      "date",
+      "resource_id",
+      "cluster",
+      "region",
+      "node_count",
+      "runtime_h",
+      "active_use_h",
+      "query_count"
+    ]
+  },
+  "exchange_rates": {
+    "columns": [
+      "month",
+      "eur_chf",
+      "usd_chf"
+    ]
+  },
+  "ai_agent_runs": {
+    "record_fields": [
+      "agent",
+      "department",
+      "duration_s",
+      "model",
+      "outcome",
+      "project_id",
+      "retries",
+      "run_id",
+      "start",
+      "steps",
+      "tool_calls",
+      "trigger",
+      "usage"
+    ]
+  },
+  "ai_invoice_monthly": {
+    "columns": [
+      "month",
+      "provider",
+      "model_class",
+      "tokens_in",
+      "tokens_out",
+      "currency",
+      "amount"
+    ]
+  },
+  "backup_chains": {
+    "columns": [
+      "source",
+      "category",
+      "backup_tool",
+      "size_gb",
+      "frequency",
+      "retention_days",
+      "last_restore_test",
+      "second_site",
+      "criticality",
+      "data_class",
+      "cost_center"
+    ]
+  },
+  "ci_pipeline_runs": {
+    "record_fields": [
+      "metrics",
+      "pipeline",
+      "project_id",
+      "repo",
+      "runner",
+      "started_at",
+      "status",
+      "team",
+      "trigger"
+    ]
+  },
+  "data_catalog_tables": {
+    "columns": [
+      "table",
+      "schema",
+      "size_gb",
+      "rows",
+      "last_read",
+      "last_written",
+      "owner_cost_center",
+      "project_id",
+      "data_class",
+      "retention_required"
+    ]
+  },
+  "data_center_locations": {
+    "columns": [
+      "provider",
+      "region",
+      "location",
+      "used_by_sme"
+    ]
+  },
+  "data_platform_jobs": {
+    "columns": [
+      "date",
+      "job_name",
+      "resource_id",
+      "start_time",
+      "duration_h",
+      "status",
+      "triggered_by",
+      "time_window"
+    ]
+  },
+  "headcount": {
+    "columns": [
+      "month",
+      "department",
+      "fte"
+    ]
+  },
+  "log_volume": {
+    "columns": [
+      "date",
+      "service",
+      "log_gb",
+      "unit",
+      "retention_days",
+      "project_id",
+      "owner_cost_center"
+    ]
+  },
+  "m365_usage": {
+    "columns": [
+      "week_start",
+      "department",
+      "cost_center",
+      "active_users",
+      "storage",
+      "teams_video_minutes",
+      "mails_sent",
+      "storage_unit"
+    ]
+  },
+  "powerbi_usage": {
+    "columns": [
+      "date",
+      "resource_id",
+      "report",
+      "department",
+      "refresh_count",
+      "refresh_duration_min",
+      "view_count",
+      "active_user_count",
+      "report_type"
+    ]
+  },
+  "project_hours_monthly": {
+    "columns": [
+      "month",
+      "project_id",
+      "department",
+      "hours"
+    ]
+  },
+  "projects": {
+    "columns": [
+      "project_id",
+      "project_name",
+      "type",
+      "customer",
+      "cost_center",
+      "start",
+      "end",
+      "rechargeable",
+      "status"
+    ]
+  },
+  "provider_monthly_report": {
+    "columns": [
+      "month",
+      "total_cost_chf",
+      "label"
+    ]
+  },
+  "web_traffic": {
+    "columns": [
+      "time_utc",
+      "requests",
+      "gb_out",
+      "bot_share_pct",
+      "sample_rate",
+      "status_5xx"
+    ]
+  },
+  "hoster_invoice": {
+    "columns": [
+      "Date",
+      "Item",
+      "Service",
+      "Quantity",
+      "Unit",
+      "Amount_CHF",
+      "CostCenter",
+      "ProjectNumber",
+      "Accesses",
+      "Remark"
+    ]
+  },
+  "it_tickets": {
+    "columns": [
+      "ticket_id",
+      "date",
+      "type",
+      "resource_id",
+      "title",
+      "description",
+      "status"
+    ]
+  },
+  "mapping_departments_tools": {
+    "columns": [
+      "resource_id",
+      "tool",
+      "department",
+      "cost_center",
+      "responsible_role",
+      "environment",
+      "criticality",
+      "default_project",
+      "rechargeable"
+    ]
+  },
+  "saas_contracts": {
+    "columns": [
+      "month",
+      "contract",
+      "provider",
+      "cost_center",
+      "licences_purchased",
+      "licences_active_30d",
+      "price_per_licence",
+      "currency",
+      "amount",
+      "contract_status",
+      "contract_end",
+      "notice_period_days",
+      "billing"
+    ]
+  },
+  "server_inventory": {
+    "columns": [
+      "server_id",
+      "provider",
+      "region",
+      "vcpu",
+      "ram_gb",
+      "type",
+      "owner_cost_center",
+      "created",
+      "last_login",
+      "cpu_utilisation_30d_pct",
+      "ram_utilisation_30d_pct",
+      "runtime_h_30d",
+      "tags",
+      "operating_system",
+      "patch_level",
+      "project_id",
+      "environment",
+      "criticality"
+    ]
+  },
+  "server_metrics_weekly": {
+    "columns": [
+      "week_start",
+      "server_id",
+      "cpu_avg_pct",
+      "cpu_max_pct",
+      "ram_avg_pct",
+      "network_gb",
+      "uptime_h",
+      "gpu_avg_pct"
+    ]
+  }
+}

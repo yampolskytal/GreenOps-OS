@@ -292,6 +292,8 @@ export interface ChatMessage {
   calculation?: string;
   actions?: ChatAction[];
   demo?: boolean;
+  /** Opaque follow-up context returned by the backend assistant; sent back with the history. */
+  context?: unknown;
 }
 
 export interface ExportFile {

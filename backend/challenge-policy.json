@@ -1,0 +1,359 @@
+{
+ "resource_aliases": {
+  "gpu-ml-01": "gpu-ml"
+ },
+ "protection_register": [
+  {
+   "id": "quarterly-training",
+   "resources": [
+    "dp-dev",
+    "gpu-ml"
+   ],
+   "calendar": "days 1–3 of January, April, July and October, uninterrupted",
+   "months": [
+    1,
+    4,
+    7,
+    10
+   ],
+   "days": [
+    1,
+    2,
+    3
+   ],
+   "source": "it_tickets.csv T-1053 and T-1101",
+   "dependencies": [
+    "dp-dev",
+    "gpu-ml"
+   ]
+  },
+  {
+   "id": "production-availability",
+   "resources": [
+    "dp-prod"
+   ],
+   "always_on": true,
+   "source": "it_tickets.csv T-1029; fixed production jobs in extra/data_platform_jobs.csv",
+   "calendar": "Last three working days of each month through approximately 04:00, plus fixed production jobs",
+   "last_workdays": 3,
+   "through_time": "04:00"
+  },
+  {
+   "id": "disaster-recovery",
+   "resources": [
+    "dr-failover"
+   ],
+   "always_on": true,
+   "source": "it_tickets.csv T-1094",
+   "calendar": "Continuous emergency fallback, even at zero utilization"
+  },
+  {
+   "id": "retain-backups",
+   "resources": [
+    "st-backup"
+   ],
+   "retention_lock": true,
+   "source": "it_tickets.csv T-1039 and T-1195",
+   "retention_years": 10
+  },
+  {
+   "id": "receivables-audit",
+   "resources": [
+    "pbi-07"
+   ],
+   "always_on": true,
+   "source": "it_tickets.csv T-1167",
+   "calendar": "Must remain available for audit in closing month"
+  },
+  {
+   "id": "test-acceptance-freeze",
+   "resources": [
+    "vm-test",
+    "test-01",
+    "test-02",
+    "test-03",
+    "test-04",
+    "test-05",
+    "test-06",
+    "test-07",
+    "test-08",
+    "qa-regression-01",
+    "qa-regression-02",
+    "uat-portal",
+    "uat-shop"
+   ],
+   "from": "2026-03-01",
+   "through": "2026-03-31",
+   "calendar": "Continuous availability during the release freeze",
+   "source": "it_tickets.csv T-1204"
+  },
+  {
+   "id": "sunday-patch",
+   "resources": [],
+   "global_patch": true,
+   "calendar": "Sunday patch times unspecified; preserve full Sundays in fleet schedule",
+   "source": "it_tickets.csv T-1082, T-1127, T-1155, T-1272, T-1277"
+  }
+ ],
+ "ai_prices": [
+  {
+   "provider": "Anthropic",
+   "model": "Claude Sonnet 4.6",
+   "from": "2025-09-01",
+   "through": "2026-08-31",
+   "currency": "USD",
+   "input_per_million": 3,
+   "cache_per_million": 0.3,
+   "output_per_million": 15,
+   "source": "Challenge README, quoted list tariff. Comparison sensitivity."
+  },
+  {
+   "provider": "OpenAI",
+   "model": "GPT-5.4",
+   "from": "2025-09-01",
+   "through": "2026-08-31",
+   "currency": "USD",
+   "input_per_million": 2.5,
+   "cache_per_million": 0.25,
+   "output_per_million": 15,
+   "source": "Challenge README, quoted list tariff. Comparison sensitivity."
+  },
+  {
+   "provider": "OpenAI",
+   "model": "GPT-5.4 mini",
+   "from": "2025-09-01",
+   "through": "2026-08-31",
+   "currency": "USD",
+   "input_per_million": 0.75,
+   "cache_per_million": 0.075,
+   "output_per_million": 4.5,
+   "source": "Fitted from ai_usage.csv: cost_chf = (uncached input x input + cached x cache + output x output) / 1e6 x usd_chf over 20,335 GPT-5.4 mini rows, max relative error 4% from rounding. The same fit reproduces the README list prices for Claude Sonnet 4.6 and GPT-5.4 exactly."
+  },
+  {
+   "provider": "Azure OpenAI",
+   "model": "Azure OpenAI GPT-5.4 mini",
+   "from": "2025-09-01",
+   "through": "2026-08-31",
+   "currency": "USD",
+   "input_per_million": 0.75,
+   "cache_per_million": 0.075,
+   "output_per_million": 4.5,
+   "source": "Fitted from ai_usage.csv: cost_chf = (uncached input x input + cached x cache + output x output) / 1e6 x usd_chf over 20,335 GPT-5.4 mini rows, max relative error 4% from rounding. The same fit reproduces the README list prices for Claude Sonnet 4.6 and GPT-5.4 exactly."
+  }
+ ],
+ "forecast": {
+  "node_capacity_changes": [
+   {
+    "resource": "dp-prod",
+    "effective_date": "2026-10-01",
+    "from_nodes": 20,
+    "to_nodes": 24,
+    "rate_month": "2026-08",
+    "source": "it_tickets.csv T-1261"
+   }
+  ],
+  "known_changes": [
+   {
+    "year": 1,
+    "delta_chf": 0,
+    "delta_kwh": 0,
+    "delta_kg": 0,
+    "note": "24 production nodes planned from 1 October 2026; no cost step added without metered rate.",
+    "source": "T-1261"
+   }
+  ]
+ },
+ "region_options": [
+  {
+   "resource": "dp-dev",
+   "destination": "ch",
+   "days": 5,
+   "source": "it_tickets.csv T-1074 states a Swiss move is technically possible. Effort is an engineering scenario; no destination quote."
+  }
+ ],
+ "measure_rules": {
+  "Move noncritical workloads to a lower-carbon region:dp-dev": {
+   "phase": "After a joint development and GPU dependency rehearsal and a Swiss quote"
+  },
+  "Schedule GPU on demand:gpu-ml": {
+   "phase": "After joint training failover and startup test"
+  },
+  "Reduce cluster idle runtime:dp-dev": {
+   "phase": "After joint training failover and startup test"
+  },
+  "Consolidate duplicate subscriptions:subscriptions": {
+   "requires": [
+    "Clean up unused SaaS and AI seats:licences"
+   ],
+   "phase": "At each contract's notice date, after the seat clean-up review"
+  }
+ },
+ "case_measures": {
+  "production_autoscale": true,
+  "shutdown_groups": {
+   "vm-test": {
+    "members": [
+     "test-01",
+     "test-02",
+     "test-03",
+     "test-04",
+     "test-05",
+     "test-06",
+     "test-07",
+     "test-08",
+     "qa-regression-01",
+     "qa-regression-02",
+     "uat-portal",
+     "uat-shop"
+    ],
+    "pool": "vm-test",
+    "schedule": true,
+    "days": 2,
+    "name": "Schedule 12 Dublin test servers",
+    "change": "Keep weekday 08:00–18:00, March 2026 acceptance testing, and Sunday patch windows. Retain emergency wake-up.",
+    "method": "Eligible daily billed compute × monitored cohort vCPU-hours share capped at 100% × proposed off-window hours fraction. March and Sundays excluded. Pooled allocation requires confirmation."
+   },
+   "orphan-vms": {
+    "members": [
+     "poc-ki-2024",
+     "migration-alt",
+     "build-agent-old"
+    ],
+    "stale_days": 180,
+    "days": 1.5,
+    "name": "Retire three abandoned VMs",
+    "change": "Confirm ownership and dependency checks, snapshot and stop first, then retire after a reversible observation period.",
+    "method": "Count only attributable metered or monitored compute. Unlinked bills imply zero modeled CHF savings."
+   },
+   "stale-sandboxes": {
+    "prefix": "sbx-",
+    "pool": "sandbox",
+    "stale_days": 120,
+    "days": 0.5,
+    "name": "Retire stale development sandboxes",
+    "change": "Review stale sandboxes with the platform owner and remove unused allocations after rollback checks.",
+    "method": "Unused cohort weekly vCPU-hours divided by pooled billed daily vCPU-hours, capped at 100%. Use telemetry on unmetered days and claim CHF only on allocated billing."
+   }
+  },
+  "subscription_consolidation": {
+   "name": "Consolidate duplicate subscriptions",
+   "days": 1,
+   "change": "Cancel tools whose function the existing Microsoft 365, Copilot or project scheduling licences already provide at their next notice date, export their data, and move the remaining monthly AI plan to annual billing.",
+   "method": "Per contract: 12 x August CHF minus the saving already counted by the seat clean-up. Moved users who need seats on the retained tool are charged at its August per-seat rate. Annual billing = retained seats x (1 - annual / monthly list price). Notice periods are checked against the as-of date. No energy change is booked. Effort: one person-day on top of the two-day seat clean-up review, because notices go out in the same renewal workflow and Teams video is already in use. The target is met only at this estimate; 1.5 days or more misses the cost target.",
+   "approval": "Head of Finance, Head of IT and the affected tool owners",
+   "checks": [
+    "Tool owners confirm feature parity, data export and that no customer or contract requires the cancelled tool."
+   ],
+   "contracts": [
+    {
+     "product": "Video conferencing tool",
+     "action": "cancel",
+     "replacement_product": "Microsoft 365",
+     "replacement_included": true,
+     "evidence": [
+      "saas_contracts.csv Microsoft 365 Business Standard (includes Teams, OneNote and Forms)",
+      "extra/m365_usage.csv teams_video_minutes shows Teams video use in every department"
+     ]
+    },
+    {
+     "product": "Chat tool",
+     "action": "cancel",
+     "replacement_product": "Microsoft 365",
+     "replacement_included": true,
+     "evidence": [
+      "saas_contracts.csv Microsoft 365 Business Standard (includes Teams, OneNote and Forms)"
+     ]
+    },
+    {
+     "product": "Note-taking tool",
+     "action": "cancel",
+     "replacement_product": "Microsoft 365",
+     "replacement_included": true,
+     "evidence": [
+      "saas_contracts.csv Microsoft 365 Business Standard (includes Teams, OneNote and Forms)"
+     ]
+    },
+    {
+     "product": "Survey tool",
+     "action": "cancel",
+     "replacement_product": "Microsoft 365",
+     "replacement_included": true,
+     "evidence": [
+      "saas_contracts.csv Microsoft 365 Business Standard (includes Teams, OneNote and Forms)"
+     ]
+    },
+    {
+     "product": "Project management",
+     "action": "cancel",
+     "replacement_product": "Project scheduling",
+     "evidence": [
+      "saas_contracts.csv: Project management and Project scheduling are licensed to the same cost centres 4000 and 4500 with equal seat counts"
+     ]
+    },
+    {
+     "product": "ChatGPT Team",
+     "action": "cancel",
+     "replacement_product": "Microsoft Copilot",
+     "evidence": [
+      "it_tickets.csv T-1090, T-1107, T-1118, T-1131, T-1136, T-1151, T-1164, T-1173: ChatGPT Team seats rejected because a subscription with the same benefit already exists"
+     ]
+    },
+    {
+     "product": "Claude Team",
+     "action": "annual_billing",
+     "monthly_price": 25,
+     "annual_price": 20,
+     "evidence": [
+      "Dataset README: Claude Team Standard USD 25 monthly, USD 20 with annual billing (claude.com/pricing, as of 12.11.2026)"
+     ]
+    }
+   ]
+  }
+ },
+ "small_model_routing": {
+  "routed_share": 0.8,
+  "source": "ai_usage.csv: the Office AI assistant already runs Summarise and Translate on GPT-5.4 mini; ai-chatbot already uses OpenAI GPT-5.4 mini.",
+  "routes": [
+   {
+    "from_provider": "Azure OpenAI",
+    "from_model": "Azure OpenAI GPT-5.4",
+    "to_provider": "Azure OpenAI",
+    "to_model": "Azure OpenAI GPT-5.4 mini"
+   },
+   {
+    "from_provider": "OpenAI",
+    "from_model": "GPT-5.4",
+    "to_provider": "OpenAI",
+    "to_model": "GPT-5.4 mini"
+   },
+   {
+    "from_provider": "Anthropic",
+    "from_model": "Claude Sonnet 4.6",
+    "to_provider": "OpenAI",
+    "to_model": "GPT-5.4 mini"
+   }
+  ]
+ },
+ "log_retention": {
+  "days": 2,
+  "change": "Shorten retention for operational application logs to 90 days and database logs to 180 days, keeping audit and authentication logs at 365 days. Export a compressed archive before the purge where an owner asks for it.",
+  "targets": {
+   "app-portal": 90,
+   "app-api": 90,
+   "app-batch": 90,
+   "db-main": 180,
+   "db-replica": 180
+  },
+  "protected_services": [
+   "db-audit",
+   "auth"
+  ],
+  "checks": [
+   "Head of IT and service owners confirm that no contract, incident review or security requirement needs more than the new retention."
+  ],
+  "evidence": [
+   "extra/log_volume.csv retention_days per service",
+   "it_tickets.csv: the only retention obligation (T-1039) covers backups, not application logs"
+  ]
+ }
+}

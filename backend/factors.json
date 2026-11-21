@@ -1,0 +1,330 @@
+{
+  "regions": {
+    "ch": [
+      "ch",
+      "zurich",
+      "switzerland",
+      "switzerlandnorth",
+      "switzerlandwest",
+      "eucentral2",
+      "basel",
+      "switzerlandzurich",
+      "switzerlandgeneva",
+      "switzerlandlausanne"
+    ],
+    "de": [
+      "de",
+      "germany",
+      "frankfurt",
+      "germanywestcentral",
+      "germanynorth",
+      "eucentral1",
+      "germanyfrankfurt"
+    ],
+    "ie": [
+      "ie",
+      "dublin",
+      "ireland",
+      "euwest1",
+      "northeurope",
+      "irelanddublin"
+    ],
+    "eu": [
+      "eu",
+      "eumix",
+      "eumixed",
+      "europemixed",
+      "europe"
+    ]
+  },
+  "grid": {
+    "ch": {
+      "values": [
+        0.035,
+        0.0894,
+        0.2
+      ],
+      "source": "https://pubdb.bfe.admin.ch/de/publication/download/12051",
+      "note": "Swiss Federal Office of Energy consumer mix direct emissions 89.4 g CO2e/kWh. Sensitivity bounds allow imports and seasonality. Proxy for case year."
+    },
+    "de": {
+      "values": [
+        0.24,
+        0.374,
+        0.48
+      ],
+      "source": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=intcom%3AC%282025%294674)",
+      "note": "2023 JRC generated/net-imported electricity value 103.8 g/MJ × 3.6 / 1000. Analyst sensitivity bounds."
+    },
+    "ie": {
+      "values": [
+        0.2,
+        0.308,
+        0.43
+      ],
+      "source": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=intcom%3AC%282025%294674)",
+      "note": "2023 JRC value 85.6 g/MJ × 3.6 / 1000. Analyst sensitivity bounds."
+    },
+    "eu": {
+      "values": [
+        0.1,
+        0.25,
+        0.45
+      ],
+      "source": "https://assets.rte-france.com/analyse-et-donnees/2025-11/RTE%20-%20Annual%20electricity%20review%202024%20-%20Full%20report.pdf",
+      "note": "Rounded EU mixed-geography proxy informed by national variation, with scenario bounds."
+    },
+    "unknown": {
+      "values": [
+        0.05,
+        0.3,
+        0.65
+      ],
+      "source": "https://assets.rte-france.com/analyse-et-donnees/2025-11/RTE%20-%20Annual%20electricity%20review%202024%20-%20Full%20report.pdf",
+      "note": "Broad analyst proxy for unresolved hosting geography."
+    }
+  },
+  "pue": {
+    "values": [
+      1.1,
+      1.25,
+      1.6
+    ],
+    "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+    "note": "Analyst data center scenarios using Cloud Carbon Footprint PUE methodology. Applied to IT-side factors only."
+  },
+  "energy": {
+    "vcpu-hour": {
+      "values": [
+        0.001,
+        0.0035,
+        0.009
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Prototype vCPU proxy spanning allocation and utilization assumptions, not a machine measurement."
+    },
+    "vcore-hour": {
+      "values": [
+        0.001,
+        0.0035,
+        0.009
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Prototype vCPU proxy spanning allocation and utilization assumptions, not a machine measurement."
+    },
+    "node-hour": {
+      "values": [
+        0.026,
+        0.076,
+        0.18
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "16 vCPU-hours plus a host allocation allowance per node-hour."
+    },
+    "gpu-hour": {
+      "values": [
+        0.1,
+        0.3,
+        0.48
+      ],
+      "source": "Challenge data dictionary, server_inventory.csv (300 W class); https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Mid assumes 0.30 kW including allocated host overhead. Idle/load and hardware assumptions set the bounds."
+    },
+    "gb-day": {
+      "values": [
+        1.2e-05,
+        3.6e-05,
+        9e-05
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Converted from storage power proxy 0.5–3.75 W/TB over 24 hours, decimal GB."
+    },
+    "gb": {
+      "values": [
+        0.0002,
+        0.001,
+        0.004
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Broad proxy per GB where the source defines this unit as network egress."
+    },
+    "runner-minute": {
+      "values": [
+        7e-05,
+        0.00023,
+        0.0008
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Default runner assumption of four allocated vCPUs. Hardware varies."
+    },
+    "capacity-day": {
+      "values": [
+        0.1,
+        0.6,
+        2.4
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Low-confidence reporting capacity proxy, 4–100 W average IT draw; validate service SKU."
+    },
+    "token-small": {
+      "values": [
+        1e-07,
+        4e-07,
+        1.3e-06
+      ],
+      "source": "https://arxiv.org/abs/2508.15734",
+      "note": "Facility-energy proxy per weighted token. Inference uncertainty spans model sizes and throughput.",
+      "facility": true
+    },
+    "token-large": {
+      "values": [
+        3e-07,
+        8e-07,
+        4e-06
+      ],
+      "source": "https://arxiv.org/abs/2508.15734",
+      "note": "0.24 Wh divided by assumed 300 weighted tokens in mid scenario. Google reports per prompt; token count and bounds are prototype assumptions.",
+      "facility": true
+    },
+    "message": {
+      "values": [
+        7e-05,
+        0.00024,
+        0.0012
+      ],
+      "source": "https://arxiv.org/abs/2508.15734",
+      "note": "Gemini median facility-energy anchor, applied as a proxy for other subscription messages.",
+      "facility": true
+    },
+    "video-minute": {
+      "values": [
+        2e-06,
+        1.5e-05,
+        6e-05
+      ],
+      "source": "https://www.cloudcarbonfootprint.org/docs/methodology/",
+      "note": "Analyst proxy for allocated datacenter IT and network processing; excludes endpoints and access networks."
+    }
+  },
+  "ai_input_weight": 0.25,
+  "growth": {
+    "values": [
+      -0.02,
+      0.08,
+      0.2
+    ],
+    "source": "Prototype scenario assumptions",
+    "note": "Annual blended demand and spend change; fixed CHF unit rates and grid intensity."
+  },
+  "hourly_grid": {
+    "de": {
+      "synthetic": true,
+      "source": "Representative synthetic 24-hour profile; demonstration only",
+      "values": [
+        0.39,
+        0.38,
+        0.37,
+        0.36,
+        0.35,
+        0.34,
+        0.33,
+        0.31,
+        0.28,
+        0.26,
+        0.24,
+        0.22,
+        0.2,
+        0.19,
+        0.2,
+        0.22,
+        0.26,
+        0.31,
+        0.35,
+        0.38,
+        0.4,
+        0.41,
+        0.4,
+        0.39
+      ]
+    }
+  },
+  "market_grid": {
+    "de": {
+      "values": [
+        0.55,
+        0.72456,
+        0.85
+      ],
+      "source": "https://www.aib-net.org/facts/european-residual-mix/2024",
+      "note": "AIB 2024 DE residual direct CO2 724.56 g/kWh with sensitivity bounds; not a supplier contract."
+    },
+    "ie": {
+      "values": [
+        0.25,
+        0.36561,
+        0.52
+      ],
+      "source": "https://www.aib-net.org/facts/european-residual-mix/2024",
+      "note": "AIB 2024 IE residual direct CO2 365.61 g/kWh with sensitivity bounds."
+    },
+    "eu": {
+      "values": [
+        0.25,
+        0.452,
+        0.75
+      ],
+      "source": "https://www.aib-net.org/facts/european-residual-mix/2024",
+      "note": "AIB 2024 unweighted mean residual factor across published mixes, used as a mixed-region proxy."
+    }
+  },
+  "market_grid_periods": {
+    "de": [
+      {
+        "from": "2025-01-01",
+        "through": "2025-12-31",
+        "values": [
+          0.55,
+          0.70147,
+          0.85
+        ],
+        "source": "https://www.aib-net.org/facts/european-residual-mix/2025",
+        "note": "AIB 2025 calendar-year residual mix, CO2 spreadsheet. Low and high are scenario bounds."
+      },
+      {
+        "from": "2026-01-01",
+        "through": "2026-12-31",
+        "values": [
+          0.55,
+          0.70147,
+          0.85
+        ],
+        "source": "https://www.aib-net.org/facts/european-residual-mix/2025",
+        "note": "2026 case proxy carrying forward the latest sourced 2025 residual factor. It is not a 2026 disclosure."
+      }
+    ],
+    "ie": [
+      {
+        "from": "2025-01-01",
+        "through": "2025-12-31",
+        "values": [
+          0.25,
+          0.36874,
+          0.52
+        ],
+        "source": "https://www.aib-net.org/facts/european-residual-mix/2025",
+        "note": "AIB 2025 calendar-year residual mix, CO2 spreadsheet. Low and high are scenario bounds."
+      },
+      {
+        "from": "2026-01-01",
+        "through": "2026-12-31",
+        "values": [
+          0.25,
+          0.36874,
+          0.52
+        ],
+        "source": "https://www.aib-net.org/facts/european-residual-mix/2025",
+        "note": "2026 case proxy carrying forward the latest sourced 2025 residual factor. It is not a 2026 disclosure."
+      }
+    ]
+  }
+}

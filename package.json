@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "backend": "python backend/app.py serve --data backend/inputs/sprintd-basel-green-ai-data-main --policy backend/challenge-policy.json",
+    "backend:demo": "python backend/app.py serve",
+    "test:backend": "cd backend && python -m unittest discover -p 'test_*.py'"
   },
   "overrides": {
     "rolldown": "1.2.1",

@@ -1,0 +1,4 @@
+﻿server_id,region,type,vcpu,ram_gb,environment,criticality,owner_cost_center,ram_utilisation_30d_pct,runtime_h_30d,last_login
+gpu-lab,Frankfurt,ml,8,64,dev,low,4500,24,720,2026-08-30
+vm-stage,Dublin,test,8,64,test,low,4500,18,720,2026-08-30
+vm-live,Zurich,prod,16,64,prod,high,4500,65,720,2026-08-30
