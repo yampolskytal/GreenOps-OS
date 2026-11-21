@@ -43,7 +43,7 @@ type Draft = {
   mode: "saved" | "suggested" | "manual";
 };
 function Studio() {
-  const { s, commitPlan } = useApp();
+  const { s, set, commitPlan } = useApp();
   const q = useGlobalQuery(),
     ms = useMeasures(),
     ov = useOverview();
@@ -53,7 +53,16 @@ function Studio() {
     measureIds: [...s.measureIds],
     mode: "saved",
   });
-  const [draft, setDraft] = useState<Draft>(saved);
+  const [draft, setDraft] = useState<Draft>(() =>
+    s.assistantProposal ? { ...s.assistantProposal, mode: "manual" } : saved(),
+  );
+  // An assistant proposal opens once as a temporary preview; committing still needs the explicit confirm flow.
+  useEffect(() => {
+    if (s.assistantProposal) {
+      setDraft({ ...s.assistantProposal, mode: "manual" });
+      set({ assistantProposal: null });
+    }
+  }, [s.assistantProposal, set]);
   const [debounced, setDebounced] = useState(draft);
   const [confirm, setConfirm] = useState(false);
   const [committing, setCommitting] = useState(false);

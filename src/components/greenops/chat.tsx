@@ -17,8 +17,9 @@ import { DemoTag, EvidencePopover } from "./ui";
 
 const SUGGESTED = [
   "How many AI seats were bought but not used in August 2026?",
-  "What does it bring to start the GPU server only when needed?",
-  "May the production platform be switched off at night and at weekends?",
+  "Build a plan that meets both targets and let me preview it",
+  "Show only the IT department and open the cost breakdown",
+  "Forecast CO₂ for the next 3 years with the current plan",
 ];
 
 /** Persistent assistant. Backend LLM integration point: api.chat(). Voice (ElevenLabs) can plug in here later. */
@@ -56,10 +57,25 @@ export function ChatPanel() {
   };
   const run = (a: ChatAction) => {
     set({ chatOpen: false });
-    if (a.type === "navigate") navigate({ to: a.to });
+    if (a.type === "navigate") navigate(a.hash ? { to: a.to, hash: a.hash } : { to: a.to });
     else if (a.type === "openSimulation") navigate({ to: "/studio" });
     else if (a.type === "openMeasure") navigate({ to: "/studio", hash: `measure-${a.measureId}` });
-    else navigate({ to: "/it", hash: `res-${a.resourceId}` });
+    else if (a.type === "setFilters") {
+      const { type: _t, label: _l, ...filters } = a;
+      set(filters);
+    } else if (a.type === "setRole") {
+      set({ role: a.role });
+      navigate({ to: `/${a.role}` });
+    } else if (a.type === "stagePlan") {
+      set({
+        assistantProposal: {
+          measureIds: a.measureIds,
+          budgetChf: a.budgetChf,
+          priority: a.priority,
+        },
+      });
+      navigate({ to: "/studio" });
+    } else navigate({ to: "/it", hash: `res-${a.resourceId}` });
   };
   return (
     <Sheet open={s.chatOpen} onOpenChange={(o) => set({ chatOpen: o })}>

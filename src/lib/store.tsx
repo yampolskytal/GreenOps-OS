@@ -17,6 +17,8 @@ export interface AppState {
   chatOpen: boolean;
   theme: "dark" | "light";
   sidebarCollapsed: boolean;
+  /** Assistant-suggested plan, opened once as an uncommitted Studio preview. Never the Current Plan. */
+  assistantProposal: { measureIds: string[]; budgetChf: number; priority: Priority } | null;
 }
 const initial: AppState = {
   role: null,
@@ -31,6 +33,7 @@ const initial: AppState = {
   chatOpen: false,
   theme: "dark",
   sidebarCollapsed: false,
+  assistantProposal: null,
 };
 const KEY = "greenops-state-v1";
 

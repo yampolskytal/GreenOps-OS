@@ -281,7 +281,23 @@ export interface ImportResult {
 }
 
 export type ChatAction =
-  | { type: "navigate"; to: string; label: string }
+  | { type: "navigate"; to: string; hash?: string; label: string }
+  | {
+      type: "setFilters";
+      label: string;
+      department?: string;
+      provider?: string;
+      from?: string;
+      to?: string;
+    }
+  | { type: "setRole"; role: Role; label: string }
+  | {
+      type: "stagePlan";
+      measureIds: string[];
+      budgetChf: number;
+      priority: Priority;
+      label: string;
+    }
   | { type: "highlight"; resourceId: string; label: string }
   | { type: "openMeasure"; measureId: string; label: string }
   | { type: "openSimulation"; label: string };
