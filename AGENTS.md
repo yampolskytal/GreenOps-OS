@@ -58,4 +58,6 @@ use the editor.
 - Current Plan saving validates calculation integrity and operational eligibility separately from numerical compliance; over-limit strategies remain explicit local proposals, not submissions.
 - Comparison tracks occupy a shared full-width grid row independently of labels and icons; rendered bounds must match within one pixel.
 - Path-result links use stable Path hashes and an origin-local open event; opening an existing Path never changes membership or Current Plan.
+- Management DEMO risk links use explicit recommendation IDs; Studio always reveals the linked measure despite browsing filters, without changing saved selections.
+- Switching inspector triggers updates the active dock directly; outside-click dismissal excludes other inspector triggers to prevent close/reopen layout jumps.
 - Footprint ranges use the tested inclusive `footprint-range.ts` filter on supplied daily rows while planning uses the fixed official query; historical domains and selected-month summaries consume supplied values only.

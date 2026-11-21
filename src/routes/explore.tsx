@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useRouterState, useNavigate, useHydrated } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,16 @@ function Explore() {
     bonus = useBonus();
   const navigate = useNavigate();
   const hash = useRouterState({ select: (r) => r.location.hash });
+  const hydrated = useHydrated();
   const [tab, setTab] = useState("footprint");
   const [metric, setMetric] = useState<CalMetric>("co2Kg");
-  const effective = hash.startsWith("finding-") ? "findings" : hash === "compare" ? "compare" : tab;
+  const effective = !hydrated
+    ? tab
+    : hash.startsWith("finding-")
+      ? "findings"
+      : hash === "compare"
+        ? "compare"
+        : tab;
   return (
     <AppShell
       kicker="Connect · Find"

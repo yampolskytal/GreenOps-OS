@@ -105,7 +105,7 @@ export function AnalyticalInspector({
         return;
       if (
         target.closest(
-          "[data-radix-popper-content-wrapper], [role=dialog], [role=listbox], [role=menu], [data-inspector-owned]",
+          "[data-radix-popper-content-wrapper], [role=dialog], [role=listbox], [role=menu], [data-inspector-owned], [data-inspector-trigger]",
         )
       )
         return;
@@ -132,6 +132,7 @@ export function AnalyticalInspector({
     <>
       <span
         ref={anchor}
+        data-inspector-trigger
         className={fullWidth ? "block w-full min-w-0" : "inline-flex max-w-full"}
         onClick={() => {
           previousFocus.current =

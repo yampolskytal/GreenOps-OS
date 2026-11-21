@@ -1,3 +1,8 @@
+## Screenshot refinements
+- [x] Link management attention to its exact recommendation
+- [x] Deepen four-tier footprint blues in both themes
+- [x] Keep the information dock open when changing selections
+
 ## V7 refinement
 - [x] Shared comparison alignment, IT resource rows and single-line badges
 - [x] Atomic bulk Path saving, automatic recommendations and contextual browsing filters

@@ -11,6 +11,8 @@ import { useMeasures, useOverview, useSimulation } from "@/lib/queries";
 import { HistoricalPerformance } from "@/components/greenops/historical-performance";
 import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
 import { seo } from "@/lib/seo";
+import { api } from "@/lib/api/client";
+import { managementRecommendation } from "@/lib/management-recommendations";
 export const Route = createFileRoute("/ceo")({
   head: () =>
     seo(
@@ -49,18 +51,23 @@ function Ceo() {
         <Q q={ov}>
           {(o) => (
             <div className="grid gap-4 lg:grid-cols-3">
-              {o.managementRisks.slice(0, 3).map((r) => (
-                <article key={r.title} className="rounded-lg border bg-card p-4">
-                  <RiskBadge level={r.level} />
-                  <h3 className="mt-3 font-medium">{r.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{r.detail}</p>
-                  <Button asChild size="sm" variant="link" className="mt-3 px-0">
-                    <Link to="/studio" hash="recommendations">
-                      Review recommendations <ArrowRight />
-                    </Link>
-                  </Button>
-                </article>
-              ))}
+              {o.managementRisks.slice(0, 3).map((r) => {
+                const recommendation = managementRecommendation(r, ms.data ?? [], api.isDemo);
+                return (
+                  <article key={r.title} className="rounded-lg border bg-card p-4">
+                    <RiskBadge level={r.level} />
+                    <h3 className="mt-3 font-medium">{r.title}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{r.detail}</p>
+                    {recommendation && (
+                      <Button asChild size="sm" variant="link" className="mt-3 px-0">
+                        <Link to="/studio" hash={`measure-${recommendation.id}`}>
+                          Review recommendations <ArrowRight />
+                        </Link>
+                      </Button>
+                    )}
+                  </article>
+                );
+              })}
               {!o.managementRisks.length && (
                 <p className="text-sm text-muted-foreground">No management risks supplied.</p>
               )}

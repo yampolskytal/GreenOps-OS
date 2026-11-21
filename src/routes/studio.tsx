@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookmarkPlus, ShieldCheck, List } from "lucide-react";
 import { toast } from "sonner";
@@ -52,6 +52,8 @@ const PRIOS = [
   { id: "co2" as const, label: "CO₂ reduction" },
 ];
 function Studio() {
+  const hash = useRouterState({ select: (r) => r.location.hash });
+  const linkedMeasureId = hash.startsWith("measure-") ? hash.slice(8) : null;
   const { s, set, hydrated } = useApp();
   const q = officialQuery(useGlobalQuery());
   const ms = useMeasures(),
@@ -317,14 +319,15 @@ function Studio() {
             const visible = all
               .filter(
                 (m) =>
-                  (!search ||
+                  m.id === linkedMeasureId ||
+                  ((!search ||
                     `${m.title} ${m.resource}`.toLowerCase().includes(search.toLowerCase())) &&
-                  (risk === "all" || m.risk.level === risk) &&
-                  (category === "all" || m.service === category) &&
-                  (resource === "all" || m.resource === resource) &&
-                  (!minCost || m.savingsChf >= Number(minCost)) &&
-                  (!minCo2 || m.savingsCo2KgLocation >= Number(minCo2)) &&
-                  (!maxEffort || m.effortPersonDays <= Number(maxEffort)),
+                    (risk === "all" || m.risk.level === risk) &&
+                    (category === "all" || m.service === category) &&
+                    (resource === "all" || m.resource === resource) &&
+                    (!minCost || m.savingsChf >= Number(minCost)) &&
+                    (!minCo2 || m.savingsCo2KgLocation >= Number(minCo2)) &&
+                    (!maxEffort || m.effortPersonDays <= Number(maxEffort))),
               )
               .sort((a, b) =>
                 sort === "co2"
