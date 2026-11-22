@@ -32,9 +32,9 @@ from accounting import ai_price_reconciliation, allocate, coverage, embodied_inv
 from analytics import Reports
 from evidence import contradictions, figure, question_figures, totals_explained
 from verification import energy_coverage, review_queue
-from decision import attribution_checks, combine_production, gap_priorities, investment_options, savings_timing, swiss_sensitivity
+from decision import attribution_checks, combine_production, gap_priorities, investment_options, readiness, savings_timing, swiss_sensitivity
 from submission import validate, write_receipt
-from insights import projections
+from insights import forecast_changes, projections
 from service import accounts_from, serve
 from records import Records, fingerprint
 from templates import BASE_NAME, MEASURE_NAME, tables
@@ -101,7 +101,15 @@ class Workspace:
                 self.manifest["sources"][name] = hashlib.sha256(path.read_bytes()).hexdigest()
         self.run_id = store.snapshot(self.manifest, self.a.baseline) if store else fingerprint(self.manifest)
         self.plan = self.package()
-        self.outputs = tables(self.a, self.plan, template_root)
+        growth_model = forecast(self.a, damp_growth=True)
+        dated_growth = forecast_changes(self.a)
+        trends = "; ".join(f"{label}: {growth_model['describe'][key]}" for key, label in
+                           (("chf", "Cost"), ("kwh", "Energy"), ("kg", "Location CO₂e")))
+        changes = "; ".join(f"{c['effective_date']} {c.get('label', 'Capacity change')} ({c['source']})" for c in dated_growth)
+        growth_note = " Configured long-run and fallback range. Dashboard growth begins with the metric-specific estimate and converges to the configured range by year three. " + trends + "."
+        if changes:
+            growth_note += " Dated steps are applied separately: " + changes + "."
+        self.outputs = tables(self.a, self.plan, template_root, growth_note=growth_note)
         tariff = ai_price_reconciliation(self.a)
         quality = coverage(self.a)
         footprint_coverage = energy_coverage(self.a.lines)
@@ -130,11 +138,12 @@ class Workspace:
                                                if any(r["ticket_id"] in p["source"] for p in self.a.policy.get("protection_register", []))]},
             "contradictions": conflicts, "footprint-coverage": footprint_coverage,
             "issue-queue": [*attribution_checks(self.reports), *review_queue(conflicts)],
-            "coverage-priorities": gap_priorities(self.a.lines, self.plan),
+            "coverage-priorities": gap_priorities(self.a.lines, self.plan, self.a.sources.values()),
             "investment-options": investment_options(self.reports, self.plan),
             "market-breakdown": market_breakdown(self.a),
             "ci-attribution": self.reports.ci_attribution,
             "bonus-decisions": considered_joins(self.reports, allocation),
+            "submission-readiness": readiness(self, footprint_coverage, shifted is not None),
             "carbon-replay": {"shifted_case_job": shifted, "protected_case_job": kept,
                               "operational_approval": False,
                               "method": "Historical replay only. Uses a proxy for local coal and gas generation intensity, excluding imports and treating unmodeled categories as zero contribution. No operational booking."},
@@ -298,7 +307,7 @@ def main():
                 if not all(r["match"] for r in check["report_comparisons"]):
                     raise ValueError("An assistant answer differs from its same-run export.")
                 if args.live_model and (check["apertus"] != "Endpoint checked" or not all(check.get(k) for k in
-                    ("german_matches_cost_rows", "followup_preserves_tool_grouping", "unsupported_has_no_result"))):
+                    ("german_used_model", "german_matches_cost_rows", "followup_preserves_tool_grouping", "unsupported_has_no_result"))):
                     raise ValueError("Live Apertus checks are incomplete; see the report.")
             elif args.command == "export":
                 if args.out.resolve() == args.data.resolve() or args.out.resolve().is_relative_to(args.data.resolve()):

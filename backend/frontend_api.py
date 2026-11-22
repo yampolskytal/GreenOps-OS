@@ -124,8 +124,8 @@ class FrontendApi:
         decisions = measure_decisions(self.measures.values())
         for option in self.w.views.get("investment-options", []):
             replacement = option["replacement_test"]
-            decision = decisions[option["id"]]
-            if decision["status"] == "evidence-needed" and replacement:
+            decision = decisions.get(option["id"])
+            if decision and decision["status"] == "evidence-needed" and replacement:
                 decision["replacement"] = {
                     "measureIds": replacement["replaces"],
                     "maxAnnualQuoteChf": replacement["maximum_annual_quote_chf"],

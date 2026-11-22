@@ -3,7 +3,7 @@ from datetime import date
 from types import SimpleNamespace
 
 from app import Workspace
-from decision import combine_production, gap_priorities, investment_options
+from decision import combine_production, gap_priorities, investment_options, reference_sensitivity
 from demo import generate
 from greenops import ROOT
 from submission import validate
@@ -34,6 +34,8 @@ class DecisionTest(unittest.TestCase):
             generate(data)
             w = Workspace(data, ROOT / "factors.json", ROOT / "dist", date(2026, 9, 6))
             w.export(out)
+            self.assertIn("metric-specific estimate", w.outputs["template_baseline_and_assumptions.csv"])
+            self.assertTrue((out / "submission-readiness.json").is_file())
             checked = validate(out, data)
             self.assertTrue(checked["live_inputs_verified"])
             self.assertEqual(checked["run_id"], w.run_id)
@@ -75,3 +77,12 @@ class DecisionTest(unittest.TestCase):
         gaps = [{"resource": rid, "ref": rid, "unit": "node-hour", "region": "ch", "chf": val, "kwh": None}
                 for rid, val in [("outside", 100), ("dp-dev", 10)]]
         self.assertEqual(gap_priorities(gaps, plan)[0]["scope"], "dp-dev")
+
+    def test_jury_sensitivity_keeps_savings_fixed(self):
+        base = {"chf": 1000, "kg": [50, 100, 200]}
+        savings = {"chf": 252, "kg": [15, 42, 50]}
+        result = reference_sensitivity(base, savings)
+        self.assertEqual(result["maximum_reference_baseline"], {"chf": 1008, "kg": 105})
+        at_one = next(s for s in result["scenarios"] if s["baseline_increase_pct"] == 1)
+        self.assertFalse(at_one["meets_both"])
+        self.assertEqual(at_one["additional_cost_savings_chf_needed"], .5)

@@ -36,7 +36,14 @@ def investment_options(reports, plan):
 
     selected = plan["selected"]
     options = []
-    for m in reports.measures:
+    catalog = {m["id"]: m for m in reports.measures}
+    rate = catalog.get("Negotiate production compute rate:dp-prod")
+    autoscale = catalog.get("Autoscale surplus production workers:dp-prod")
+    combined_id = "Autoscale and reprice production compute:dp-prod"
+    if rate and autoscale and combined_id not in catalog and rate["baseline"]["chf"] > 0:
+        quote = combine_production(autoscale, rate, rate["baseline"]["chf"], hypothetical=True)
+        catalog[combined_id] = quote | {"quote_status": "quote required"}
+    for m in catalog.values():
         if not m.get("quote_status"):
             continue
         scope = set(m.get("scopes") or [m["resource"]])
@@ -83,12 +90,14 @@ def investment_options(reports, plan):
     return options
 
 
-def gap_priorities(lines, plan):
+def gap_priorities(lines, plan, sources=()):
     scopes = defaultdict(list)
     for m in plan["selected"]:
         for scope in m.get("scopes") or [m["resource"]]:
             scopes[scope].append(m["id"])
-    gaps = defaultdict(lambda: {"missing_cost": 0, "missing_energy": 0, "known_chf_without_energy": 0.0, "refs": []})
+    source_hashes = {s["file"]: s.get("sha256") for s in sources}
+    gaps = defaultdict(lambda: {"missing_cost": 0, "missing_energy": 0, "known_chf_without_energy": 0.0,
+                                "refs": [], "cost_evidence_needed": [], "energy_evidence_needed": []})
     for line in lines:
         if line["chf"] is not None and line["kwh"] is not None:
             continue
@@ -99,11 +108,66 @@ def gap_priorities(lines, plan):
             group["known_chf_without_energy"] += abs(line["chf"] or 0)
         if len(group["refs"]) < 8 and line["ref"] not in group["refs"]:
             group["refs"].append(line["ref"])
+        ref = line["ref"]
+        evidence = {"ref": ref, "source_sha256": source_hashes.get(ref.partition(":")[0]), "month": line.get("month")}
+        if line["chf"] is None:
+            group["cost_evidence_needed"].append(evidence)
+        if line["kwh"] is None:
+            group["energy_evidence_needed"].append(evidence | {"observed_chf": line["chf"]})
     rows = [{"scope": rid, "unit": unit, "region": region, "affected_selected_measures": scopes[rid], **item,
              "known_chf_without_energy": round(item["known_chf_without_energy"], 2)}
             for (rid, unit, region), item in gaps.items()]
     return sorted(rows, key=lambda row: (not row["affected_selected_measures"], -row["known_chf_without_energy"],
                                          -row["missing_cost"], row["scope"]))
+
+
+def reference_sensitivity(base, savings):
+    """Hold the submitted savings fixed and stress the unknown reference denominators."""
+    limits = {"chf": savings["chf"] / .25, "kg": savings["kg"][1] / .40}
+    b0 = {"chf": base["chf"], "kg": base["kg"][1]}
+    scenarios = []
+    for pct in (0, .5, 1, 5, 10):
+        chf, kg = (v * (1 + pct / 100) for v in b0.values())
+        scenarios.append({"baseline_increase_pct": pct, "reference_chf": round(chf, 2),
+                          "reference_location_kg": round(kg, 4),
+                          "additional_cost_savings_chf_needed": round(max(0, chf * .25 - savings["chf"]), 2),
+                          "additional_carbon_savings_kg_needed": round(max(0, kg * .40 - savings["kg"][1]), 4),
+                          "meets_both": 0 < chf <= limits["chf"] and 0 < kg <= limits["kg"]})
+    return {"maximum_reference_baseline": {k: round(v, 4) for k, v in limits.items()},
+            "maximum_savings_haircut": {"chf": round(savings["chf"] - .25 * b0["chf"], 2),
+                                        "kg": round(savings["kg"][1] - .4 * b0["kg"], 4)},
+            "scenarios": scenarios,
+            "method": "Sensitivity only. The jury baseline is unknown; changes to the savings numerator are separate."}
+
+
+def readiness(work, coverage, replay):
+    plan, a = work.plan, work.a
+    pending = set(plan["pending_approvals"])
+    selected = {m["id"] for m in plan["selected"]}
+    contingencies = []
+    for measure in plan["selected"]:
+        alternate = work.package(plan["budget_chf"], plan["day_limit"], exclude=[measure["id"]])
+        ids = {m["id"] for m in alternate["selected"]}
+        contingencies.append({"excluded": measure["id"], "replacements": sorted(ids - selected),
+                              "removed": sorted(selected - ids), "cost_gap_chf": alternate["cost_gap_chf"],
+                              "carbon_gap_kg": alternate["carbon_gap_kg"], "meets_both": alternate["target_met"],
+                              "search_complete": alternate["optimum_proven"]})
+    ci = work.reports.ci_attribution["rows"]
+    return {"run_id": work.run_id, "reference_sensitivity": reference_sensitivity(a.baseline, plan["savings"]),
+            "known_reference": plan["reference"], "contingencies": contingencies,
+            "selected_measure_reviews": [{"id": m["id"], "approver": m["approval"], "pending": m["id"] in pending,
+                                           "checks": m["blockers"], "required_checks": m.get("required_checks", []),
+                                           "meter_scope": m.get("meter_scope"), "evidence_refs": m["evidence"][:8]}
+                                          for m in plan["selected"]],
+            "footprint": coverage,
+            "coverage_worklist": "coverage-priorities.json includes row references and hashes for evidence-backed recovery.",
+            "ci": {"needs_review_minutes": round(sum(row["review_candidate_minutes"] for row in ci), 2),
+                   "confirmed_optional_minutes": round(sum(row["optional_minutes"] for row in ci), 2),
+                   "required_evidence": ["Dated runner-to-meter mapping", "Dated owner approval for optional checks"],
+                   "details_report": "ci-attribution.json"},
+            "carbon_scheduling": {"replay_available": bool(replay), "hourly_grid_file_supplied": (a.path / "hourly_grid.csv").is_file(),
+                                  "owner_clearance_records": len(a.policy.get("job_dependencies", {})),
+                                  "replay_has_operational_approval": False, "details_report": "carbon-replay.json"}}
 
 
 def attribution_checks(reports):
