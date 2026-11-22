@@ -36,19 +36,6 @@ The challenge compares **annual run-rate savings** with the baseline. First-year
 
 **Coverage matters.** The baseline contains **47,160 ledger rows**, including **114 without CHF** and **672 without estimated energy**. Rows without energy estimates account for about **CHF 124,058 in absolute observed spend**. Market factors cover **17,614.17 kWh**, or **44.23%** of the modeled electricity. The market estimate therefore describes a subset of activity. Each accounting view has its own coverage and should be read independently. [Factor configuration](backend/factors.json) · [Coverage and market evidence](#evidence-to-open)
 
-## Five-minute jury walkthrough
-
-| Time | Where to go | What to verify |
-| --- | --- | --- |
-| 0:00–0:50 | **Dashboard → Finance** and **Explore & Findings → Compare** | Inspect spend, energy and CO₂e by department, provider, tool or service. Open an evidence panel and check the period, units and calculation. |
-| 0:50–1:35 | **Explore & Findings → Digital Footprint / Geographic Footprint** | Switch among CHF, electricity, location-based and market-based emissions. Compare Zurich with Frankfurt and Dublin. In the market view, Zurich is unavailable and locations with evidence show coverage. |
-| 1:35–2:35 | **Optimization Studio** | Use **Balanced** and CHF 16,500. Inspect a measure’s effect, assumptions and approver. Open the GPU and development-cluster proposals to see the shared training protection. |
-| 2:35–3:25 | **Ask GreenOps** and the findings | Ask whether `dr-failover` can be switched off. Follow the protection evidence to **T-1094**. Ask about production night and weekend shutdowns and check the closing window and fixed jobs. |
-| 3:25–4:10 | **Current Plan → Forecasts** | Review annual versus first-year savings. Create or select a plan in Studio to compare the without-change and plan scenarios. Open a dated driver or growth assumption. |
-| 4:10–5:00 | **Data & Reports → Submission** | Prepare the two official CSVs from the current plan. Compare them with the reproducible CLI package and independent validator. |
-
-For a quick evidence check, ask **“Top five tools by carbon”**, then **“And cost?”**. The follow-up preserves tool grouping and changes the metric. A request to approve or execute a shutdown requires a human operator. [Assistant capabilities and safeguards](backend/ASSISTANT_SAFETY.md)
-
 ## How the entry meets the challenge
 
 | Requirement | What GreenOps does | Evidence for review |
@@ -261,21 +248,6 @@ For the September 2025–August 2026 baseline shown above, the seven recommended
 
 - **Review unused licences.** The [August 2026 AI subscription export](backend/inputs/sprintd-basel-green-ai-data-main/ai_subscriptions.csv) lists 14 paid Microsoft Copilot seats for cost centre 4500, with nine active in the prior 30 days. At USD 21 per seat, the five inactive seats represent USD 105 per month to review. That is a candidate saving, subject to owner confirmation and contract terms.
 - **Keep the idle recovery server.** [Ticket T-1094](backend/inputs/sprintd-basel-green-ai-data-main/it_tickets.csv) explicitly requires `dr-failover` to keep running even without load. Low utilization alone would give the wrong recommendation.
-
-## Try a planning session
-
-<details>
-<summary>Preview the welcome page and its three role choices</summary>
-
-![GreenOps welcome page offering Executive Overview, Financial Intelligence and Technical Operations](docs/screenshots/welcome.webp)
-
-</details>
-
-1. **Start on the CEO dashboard.** Compare the cost and carbon targets with the recommended starting plan. Switch to CFO or IT Manager to inspect spending or resource usage behind the totals.
-2. **Open Studio.** Change the budget or selection of measures and compare alternatives. Save an alternative as a Path to revisit it later.
-3. **Adopt a Current Plan**, then open **Submission** to check and export the baseline and measures CSVs. Savings are projections for a fictional company; saving a plan on this device does not approve or execute infrastructure changes.
-
-**From prototype to operations:** Pilot with one SME using read-only exports. Have finance reconcile the baseline against invoices and IT confirm protection windows and disputed records. Trial one approved measure, then compare subsequent bills and workload metrics with the estimate before expanding the rollout.
 
 ## Run locally
 
