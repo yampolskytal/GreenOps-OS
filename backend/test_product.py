@@ -233,6 +233,11 @@ class ProductTest(unittest.TestCase):
         simulation = api.simulate(frontend_query({}), {"measureIds": [report_id]})
         self.assertEqual(simulation["includedMeasureIds"], [])
         self.assertEqual([entry["id"] for entry in simulation["excluded"]], [report_id])
+        reviews = {m["resource"]: m for m in work.reports.measures if m["resource"] in ("portal-e2e", "pbi-06")}
+        self.assertIn("17,280 refreshes and 8 recorded views across 360 observed days", reviews["pbi-06"]["method"])
+        self.assertIn("472 accepted rerun records; 472 marked successful", reviews["portal-e2e"]["method"])
+        review_ids = [m["id"] for m in reviews.values()]
+        self.assertEqual(api.simulate(frontend_query({}), {"measureIds": review_ids})["includedMeasureIds"], [])
         for m in work.reports.measures:
             view = api.to_measure(m)
             if m.get("attribution_check") or m.get("quote_status") == "quote required":

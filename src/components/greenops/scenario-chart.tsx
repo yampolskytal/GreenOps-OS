@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { scenarioDomain, type ScenarioRow } from "@/lib/scenario-series";
+import { scenarioAxis, scenarioDateTicks, type ScenarioRow } from "@/lib/scenario-series";
 import { isAvailable, percentDifference } from "@/lib/analytics";
 import { formatNumber, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -109,6 +109,7 @@ export function ScenarioChart({
   rows,
   series,
   boundary,
+  annualPeriods = false,
   format,
   unit,
   milestones = [],
@@ -121,6 +122,7 @@ export function ScenarioChart({
   rows: ScenarioRow[];
   series: ScenarioSeries[];
   boundary: number;
+  annualPeriods?: boolean;
   format: (n: number) => string;
   unit: string;
   milestones?: { time: number; label: string }[];
@@ -137,30 +139,38 @@ export function ScenarioChart({
   const dates = new Map(rows.map((row) => [row.time, row]));
   const selected =
     dates.get(selectedTime ?? NaN) ??
+    (annualPeriods ? rows.find((row) => row.kind === "projected") : undefined) ??
     rows.filter((row) => row.kind === "actual" && isAvailable(row["history"])).at(-1) ??
     rows.filter((row) => row.kind === "actual").at(-1) ??
     rows[0];
-  const showBaselineBand =
+  const [includeRange, setIncludeRange] = useState(false);
+  const bandAvailable =
     showBand &&
+    !annualPeriods &&
     visible.some(({ key }) => key === "noChange") &&
     rows.some((row) => {
       const range = row.ranges?.["noChange"];
       return range && range.low !== range.high;
     });
-  const values = rows.flatMap((row) => {
+  const showBaselineBand = bandAvailable && includeRange;
+  const timeline = annualPeriods ? rows.filter((row) => row.kind === "actual") : rows;
+  const annualRows = annualPeriods ? rows.filter((row) => row.kind === "projected") : [];
+  const scenarios = visible.filter((s) => s.key !== "history");
+  const barMax = Math.max(
+    1,
+    ...annualRows.flatMap((r) => scenarios.map((s) => r[s.key]).filter(isAvailable)),
+  );
+  const values = timeline.flatMap((row) => {
     const values = visible.map(({ key }) => row[key]).filter(isAvailable);
     const range = showBaselineBand ? row.ranges?.["noChange"] : null;
     if (range) values.push(range.low, range.high);
     return values;
   });
   const start = rows[0]?.time ?? boundary;
-  const end = Math.max(boundary, rows.at(-1)?.time ?? boundary);
-  const ticks = rows
-    .map((row) => row.time)
-    .filter(
-      (_time, index) =>
-        index % Math.max(1, Math.ceil(rows.length / 7)) === 0 || index === rows.length - 1,
-    );
+  const end = timeline.at(-1)?.time ?? boundary;
+  const [width, setWidth] = useState(720);
+  const { ticks, yearsOnly } = scenarioDateTicks(start, end, width);
+  const yAxis = scenarioAxis(values);
   return (
     <div className="min-w-0">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -191,128 +201,213 @@ export function ScenarioChart({
             )}
           </li>
         ))}
-        {showBaselineBand && (
-          <li className="py-1 text-muted-foreground">Shading · supplied baseline low–high range</li>
+        {bandAvailable && (
+          <li className="py-1">
+            <label className="inline-flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={includeRange}
+                onChange={(e) => setIncludeRange(e.target.checked)}
+              />
+              Show baseline low–high range
+            </label>
+          </li>
         )}
       </ul>
-      {values.length > 0 && (
-        <div
-          style={{ height }}
-          className="w-full min-w-0"
-          data-inspector-interactive
-          role="img"
-          aria-label={`Forecast timeline · ${unit}`}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={rows}
-              margin={{ top: 20, right: 16, bottom: 6, left: 0 }}
-              onClick={(event) => {
-                const time = Number(event?.activeLabel);
-                if (dates.has(time)) setSelectedTime(time);
-              }}
+      <div
+        className={
+          annualPeriods
+            ? "grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+            : undefined
+        }
+      >
+        {annualPeriods && (
+          <section className="min-w-0 lg:order-2" aria-label="Annual scenario comparison">
+            <h3 className="text-sm font-semibold">Forecast by fiscal year</h3>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Average per month over each year · shared scale from zero
+            </p>
+            {annualRows.map((row) => (
+              <button
+                key={row.time}
+                type="button"
+                onClick={() => setSelectedTime(row.time)}
+                aria-pressed={selected?.time === row.time}
+                className="block w-full border-t px-2 py-3 text-left hover:bg-muted aria-pressed:bg-muted/50"
+              >
+                <span className="text-xs font-semibold">{row.label}</span>
+                {scenarios.map((s) => {
+                  const value = row[s.key];
+                  return (
+                    <span key={s.key} className="mt-1.5 block">
+                      <span className="flex justify-between gap-2 text-xs">
+                        <span>{s.label}</span>
+                        <span className="num">
+                          {isAvailable(value) ? format(value) : "Unavailable"}
+                        </span>
+                      </span>
+                      {isAvailable(value) && (
+                        <span className="mt-1 block h-1.5 rounded bg-muted">
+                          <span
+                            className="block h-full rounded"
+                            style={{ width: `${(100 * value) / barMax}%`, background: s.color }}
+                          />
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+              </button>
+            ))}
+          </section>
+        )}
+        <div className="min-w-0">
+          {annualPeriods && (
+            <h3 className="mb-2 text-sm font-semibold">Observed monthly history</h3>
+          )}
+          {annualPeriods && !values.length && (
+            <p className="text-xs text-muted-foreground">No observed values available.</p>
+          )}
+          {values.length > 0 && (
+            <div
+              style={{ height: annualPeriods ? 215 : height }}
+              className="w-full min-w-0"
+              data-inspector-interactive
+              role="img"
+              aria-label={`Forecast timeline · ${unit}`}
             >
-              <CartesianGrid stroke="var(--border)" vertical={false} />
-              <XAxis
-                dataKey="time"
-                type="number"
-                scale="time"
-                domain={[start, end]}
-                ticks={ticks}
-                minTickGap={28}
-                tickFormatter={(time: number) =>
-                  new Date(time).toLocaleDateString("en-US", {
-                    month: "short",
-                    year: "2-digit",
-                    timeZone: "UTC",
-                  })
-                }
-                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                stroke="var(--border)"
-              />
-              <YAxis
-                type="number"
-                domain={scenarioDomain(values)}
-                tickCount={5}
-                tickFormatter={(value: number) =>
-                  formatNumber(value, { maximumFractionDigits: Math.abs(value) < 1 ? 3 : 0 })
-                }
-                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-                stroke="var(--border)"
-                width={75}
-              />
-              {end > boundary && (
-                <ReferenceArea
-                  x1={boundary}
-                  x2={end}
-                  fill="var(--muted-foreground)"
-                  fillOpacity={0.07}
-                />
-              )}
-              <ReferenceLine
-                x={boundary}
-                stroke="var(--muted-foreground)"
-                strokeDasharray="3 3"
-                label={{
-                  value: "Forecast starts",
-                  position: "insideTopLeft",
-                  fill: "var(--muted-foreground)",
-                  fontSize: 11,
-                }}
-              />
-              {milestones
-                .filter(({ time }) => time >= boundary && time <= end)
-                .map(({ time, label }) => (
-                  <ReferenceLine key={label} x={time} stroke="var(--info)" strokeDasharray="3 5" />
-                ))}
-              {selected && selected.time !== boundary && (
-                <ReferenceLine x={selected.time} stroke="var(--ring)" strokeOpacity={0.55} />
-              )}
-              <Tooltip
-                cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
-                filterNull={false}
-                wrapperStyle={{ zIndex: 20, maxWidth: "min(340px, 75vw)" }}
-                content={({ active, label }) => {
-                  const row = dates.get(Number(label));
-                  return active && row ? (
-                    <div className="rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md">
-                      <Observation row={row} series={visible} format={format} compact />
-                    </div>
-                  ) : null;
-                }}
-              />
-              {showBaselineBand && (
-                <Area
-                  dataKey={(row: ScenarioRow) => {
-                    const range = row.ranges?.["noChange"];
-                    return range ? [range.low, range.high] : null;
+              <ResponsiveContainer width="100%" height="100%" onResize={setWidth}>
+                <ComposedChart
+                  data={timeline}
+                  margin={{ top: 20, right: 16, bottom: 6, left: 0 }}
+                  onClick={(event) => {
+                    const time = Number(event?.activeLabel);
+                    if (dates.has(time)) setSelectedTime(time);
                   }}
-                  type="linear"
-                  stroke="none"
-                  fill="var(--scenario-none)"
-                  fillOpacity={0.14}
-                  connectNulls={false}
-                  isAnimationActive={false}
-                />
-              )}
-              {visible.map((item) => (
-                <Line
-                  key={item.key}
-                  dataKey={item.key}
-                  type="linear"
-                  stroke={item.color}
-                  strokeWidth={item.key === "history" ? 2.5 : 2}
-                  strokeDasharray={item.dashed ? "5 3" : undefined}
-                  dot={{ r: 2.5, fill: item.color, strokeWidth: 0 }}
-                  activeDot={{ r: 5 }}
-                  connectNulls={false}
-                  isAnimationActive={false}
-                />
-              ))}
-            </ComposedChart>
-          </ResponsiveContainer>
+                >
+                  <CartesianGrid stroke="var(--border)" vertical={false} />
+                  <XAxis
+                    dataKey="time"
+                    type="number"
+                    scale="time"
+                    domain={[start, end]}
+                    ticks={ticks}
+                    minTickGap={28}
+                    tickFormatter={(time: number) =>
+                      new Date(time).toLocaleDateString("en-US", {
+                        ...(yearsOnly ? {} : { month: "short" }),
+                        year: yearsOnly ? "numeric" : "2-digit",
+                        timeZone: "UTC",
+                      })
+                    }
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                    stroke="var(--border)"
+                  />
+                  <YAxis
+                    type="number"
+                    domain={yAxis.domain}
+                    ticks={yAxis.ticks}
+                    tickFormatter={(value: number) =>
+                      formatNumber(value, { maximumSignificantDigits: 6 })
+                    }
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                    stroke="var(--border)"
+                    width={
+                      Math.max(
+                        ...yAxis.ticks.map(
+                          (v) => formatNumber(v, { maximumSignificantDigits: 6 }).length,
+                        ),
+                      ) *
+                        7 +
+                      14
+                    }
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  {end > boundary && (
+                    <ReferenceArea
+                      x1={boundary}
+                      x2={end}
+                      fill="var(--muted-foreground)"
+                      fillOpacity={0.07}
+                    />
+                  )}
+                  {!annualPeriods && (
+                    <ReferenceLine
+                      x={boundary}
+                      stroke="var(--muted-foreground)"
+                      strokeDasharray="3 3"
+                      label={{
+                        value: "Forecast starts",
+                        position: "insideTopLeft",
+                        fill: "var(--muted-foreground)",
+                        fontSize: 11,
+                      }}
+                    />
+                  )}
+                  {milestones
+                    .filter(({ time }) => time >= boundary && time <= end)
+                    .map(({ time, label }) => (
+                      <ReferenceLine
+                        key={label}
+                        x={time}
+                        stroke="var(--info)"
+                        strokeDasharray="3 5"
+                      />
+                    ))}
+                  {selected && selected.time <= end && selected.time !== boundary && (
+                    <ReferenceLine x={selected.time} stroke="var(--ring)" strokeOpacity={0.55} />
+                  )}
+                  <Tooltip
+                    cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
+                    filterNull={false}
+                    wrapperStyle={{ zIndex: 20, maxWidth: "min(340px, 75vw)" }}
+                    content={({ active, label }) => {
+                      const row = dates.get(Number(label));
+                      return active && row ? (
+                        <div className="rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md">
+                          <Observation row={row} series={visible} format={format} compact />
+                        </div>
+                      ) : null;
+                    }}
+                  />
+                  {showBaselineBand && (
+                    <Area
+                      dataKey={(row: ScenarioRow) => {
+                        const range = row.ranges?.["noChange"];
+                        return range ? [range.low, range.high] : null;
+                      }}
+                      type="linear"
+                      stroke="none"
+                      fill="var(--scenario-none)"
+                      fillOpacity={0.14}
+                      connectNulls={false}
+                      isAnimationActive={false}
+                    />
+                  )}
+                  {visible
+                    .filter((item) => !annualPeriods || item.key === "history")
+                    .map((item) => (
+                      <Line
+                        key={item.key}
+                        dataKey={item.key}
+                        type="linear"
+                        stroke={item.color}
+                        strokeWidth={item.key === "history" ? 2.5 : 2}
+                        strokeDasharray={item.dashed ? "5 3" : undefined}
+                        dot={{ r: 2.5, fill: item.color, strokeWidth: 0 }}
+                        activeDot={{ r: 5 }}
+                        connectNulls={false}
+                        isAnimationActive={false}
+                      />
+                    ))}
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
-      )}
+      </div>
       {selected && (
         <section aria-label="Selected forecast date" className="mt-3 border-t pt-3 text-sm">
           <div className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">

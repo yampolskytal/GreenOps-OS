@@ -108,6 +108,39 @@ def subscription_consolidation(r, spec, seats):
     return item
 
 
+def workload_reviews(r):
+    """Owner reviews supported by workload telemetry, without an attributable saving."""
+    rid = "pbi-06"
+    report = [row for row in r.d["powerbi_usage"] if row.get("resource_id") == rid and inside(row.get("date"))]
+    owner = r.a.mapping.get(rid, {})
+    protected = any(rid in rule.get("resources", []) for rule in r.a.policy.get("protection_register", []))
+    # Require a month of observations, known counts and repeat refreshes on mostly unviewed days.
+    counts = [(natural(row.get("refresh_count")), natural(row.get("view_count"))) for row in report]
+    days = len({row["date"] for row in report})
+    if (not protected and days >= 30 and owner.get("responsible_role") and len(report) == days
+            and all(refresh is not None and views is not None for refresh, views in counts)
+            and sum(refresh > 1 and views == 0 for refresh, views in counts) > days / 2):
+        check = "Confirm freshness requirements for exports, alerts and downstream reports with Marketing and BI operations."
+        item = r.measure(rid, "Pilot daily refresh for Marketing campaigns 2024",
+                         "After owner confirmation, pilot one daily refresh. Compare capacity load and restore the previous schedule if a freshness deadline is missed. Leave audit report pbi-07 unchanged.",
+                         [], 0, 1, [check], [owner["ref"], *(row["ref"] for row in report)],
+                         f"{sum(n for n, _ in counts):,.0f} refreshes and {sum(n for _, n in counts):g} recorded views across {days} observed days. Views do not capture downstream consumers. Only the separate capacity-resize decision can claim a verified bill reduction.")
+        item.update(approval=owner["responsible_role"], attribution_check=check)
+        yield item
+
+    reruns = [row for row in r.d["ci_pipeline_runs"] if inside(row.get("started_at"))
+              and (row.get("repo"), row.get("pipeline"), row.get("trigger"), row.get("team"))
+              == ("portal", "e2e-tests", "rerun", "team-portal")]
+    if len({day(row["started_at"]) for row in reruns}) >= 30:
+        check = "Trace a sample to original CI runs and confirm the cause with team-portal. Keep required checks and retries enabled."
+        item = r.measure("portal-e2e", "Investigate portal end-to-end test reruns",
+                         "Fix a recurring test or runner fault if confirmed, then compare the rerun rate before and after the fix.",
+                         [], 0, 1, [check], [row["ref"] for row in reruns],
+                         f"{len(reruns)} accepted rerun records; {sum(row.get('status') == 'ok' for row in reruns)} marked successful. The trigger does not establish why the test ran again or which runner minutes were avoidable.")
+        item.update(approval="team-portal", attribution_check=check)
+        yield item
+
+
 def case_candidates(r, existing):
     a = r.a
     cfg = a.policy.get("case_measures", {})
@@ -115,6 +148,7 @@ def case_candidates(r, existing):
         return existing
     seats = [m for m in existing if m["name"] == "Reduce unused seats" and not m["blockers"]]
     candidates = [m for m in existing if m["name"] not in ("Reduce unused seats", "Coordinate seat reductions by contract")]
+    candidates.extend(workload_reviews(r))
     if seats:
         rows = [line for m in seats for line in r.by_resource[m["resource"]]]
         annual = sum(m["chf"] for m in seats)

@@ -1,6 +1,6 @@
 # Approvals audit: September 2025–August 2026 baseline
 
-Scope: the September 2025–August 2026 official dataset in `backend/inputs/sprintd-basel-green-ai-data-main`, evaluated with `challenge-policy.json` as of 6 September 2026. Five of the original 29 entries were removed and two added, leaving 26. A candidate is a planning scenario requiring owner review; its savings are not measured rollout results. Estimates on overlapping scopes must not be added together.
+Scope: the September 2025–August 2026 official dataset in `backend/inputs/sprintd-basel-green-ai-data-main`, evaluated with `challenge-policy.json` as of 6 September 2026. Five of the original 29 entries were removed and four added, leaving 28. A candidate is a planning scenario requiring owner review; its savings are not measured rollout results. Estimates on overlapping scopes must not be added together.
 
 Removed: the catalog does not identify the storage meter for its tables, so it cannot justify separate tiering decisions for `dp-storage`, `st-proj` or `m365`. The data dictionary identifies `web_traffic.csv` as CDN/hosting telemetry, not `net-egress`. `ai-agent2` is mapped to “Other agents”, which does not identify a specific agent in the run log.
 
@@ -31,4 +31,6 @@ Removed: the catalog does not identify the storage meter for its tables, so it c
 | Negotiate production rate | dp-prod | Investigate. CHF 85,777.04 annual billed cost; savings unknown without an equivalent-service quote. |
 | Negotiate development rate | dp-dev | Investigate. CHF 37,226.38 annual billed cost; same quote requirement. |
 | Resize Power BI capacity | pbi-kap | Investigate. CHF 23,225.31 annual billed cost. Obtain a comparable quote and test peak refresh, audit report pbi-07 and rollback. No energy or emissions change is assumed. |
+| Pilot daily refresh for Marketing campaigns 2024 | pbi-06 | Investigate. 17,280 refreshes and 8 recorded views across 360 observed days. Confirm downstream freshness requirements before the pilot; measure capacity load. Attribute any eventual billing change only to the capacity resize. |
+| Investigate portal end-to-end test reruns | portal-e2e | Investigate. 472 accepted rerun records after exact duplicate removal, all successful. Team-portal should trace original runs to identify recurring faults; the log does not establish that retries can be skipped. |
 | Route AI calls and cache prefixes | ai-gateway | Candidate. Uses the higher modeled saving per workload, not the sum of two overlapping techniques. Verify quality, tariffs and cache isolation. |

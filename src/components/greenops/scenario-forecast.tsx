@@ -330,10 +330,11 @@ export function ScenarioForecastPanel({
       <ScenarioChart
         rows={chart.rows}
         boundary={chart.boundary}
+        annualPeriods={chart.granularity === "annual"}
         series={series}
         unit={
           chart.granularity === "annual"
-            ? `${unit} / month · one projected monthly average per supplied year`
+            ? `${unit} / month · annual projections shown as monthly averages`
             : `${unit} / month`
         }
         format={(value) => formatValue(value, unit)}

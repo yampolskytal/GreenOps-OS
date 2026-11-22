@@ -178,6 +178,13 @@ class FrontendApi:
     def forecast_market_scope(self):
         return MarketSummary(self.a.lines, residual_only=True)
 
+    @cached_property
+    def complete_market_months(self):
+        months = defaultdict(lambda: MarketSummary(residual_only=True))
+        for line in self.a.lines:
+            months[line["month"]].add(line)
+        return all(months[f"{2025 + (m <= 8)}-{m:02}"].result() is not None for m in range(1, 13))
+
     def baseline(self):
         b = self.a.baseline
         return b["chf"], b["kg"][1]
@@ -540,9 +547,9 @@ class FrontendApi:
         limitations.extend(row["reason"] for row in excluded)
         methodology = {
             "title": "Timed forecast scenario", "kind": "forecast", "period": PERIOD, "units": units,
-            "formula": "Seasonal baseline × compound growth + documented changes − dated recurring effects × affected workload growth + one-time CHF implementation",
+            "formula": "Annual baseline projected along a monthly growth trend + documented changes − dated recurring effects × affected workload growth + one-time CHF implementation",
             "sources": sorted({"Normalized baseline ledger", self.a.factors["growth"]["source"], *(d["source"] for d in drivers)}),
-            "assumptions": ["Baseline growth converges to the configured long-run rate by year three. Recorded capacity changes use observed unit rates.",
+            "assumptions": ["One observed year cannot establish seasonality. Monthly estimates follow the growth trend; dated changes can create steps. Baseline growth converges to the configured long-run rate by year three. Recorded capacity changes use observed unit rates.",
                             "Continuing operational effects scale with their affected workload after year one. Contract and other cost-only savings stay at their modeled run-rate.",
                             "Unit prices and grid factors stay fixed unless the scenario records a change.", *scope_assumptions],
             "inputs": [], "limitations": limitations,
@@ -571,7 +578,7 @@ class FrontendApi:
                        "Hold the evidenced residual factors fixed for the scenario. No supplier contract renewal, new market coverage or dated market-intensity adjustment is assumed.",
                        "Apply supported recurring effects from rollout and scale them after year one using the affected workload's growth.",
                        "Use opposite range endpoints for baseline emissions and savings to bound remaining emissions. The physical lower bound is zero."]
-        limitations = ["Annual scenario totals for the modeled residual-mix portion only. Uncovered energy and effects without comparable market factors are excluded."]
+        limitations = ["Scenario covers the modeled residual-mix portion only. Uncovered energy and effects without comparable market factors are excluded."]
         if affected:
             limitations.append("Some selected measures have effects outside the residual-mix scenario: " + "; ".join(affected) + ".")
         if ids and delta is None:
@@ -607,7 +614,38 @@ class FrontendApi:
                 points.append({"year": 2026 + year, "date": f"{2026 + year}-08-01", "periodLabel": f"Sep {2025 + year}–Aug {2026 + year}",
                                "baseline": rng(projected), "optimized": rng(remaining) if remaining is not None else None,
                                "coverage": scope_label, "marketCoverage": coverage})
-        return {"metric": "co2Market", "unit": "kg CO₂e", "granularity": "annual", "points": points, "annualTotals": points,
+        annual = points
+        monthly = bool(annual and self.complete_market_months)
+        if monthly:
+            # Calibrate a monthly demand trend to the sum of the twelve covered ledger months.
+            # Normalizing the geometric weights preserves annual totals and continuity across years.
+            weights = [(1 + growth["values"][1]) ** (i / 12) for i in range(12)]
+            norm = sum(weights)
+            points = []
+            for year_index, target in enumerate(annual[1:]):
+                totals = [0.] * 3
+                for offset, weight in enumerate(weights):
+                    m = (8 + offset) % 12 + 1
+                    begin = date(END.year + year_index + (m <= 8), m, 1)
+                    days = calendar.monthrange(begin.year, m)[1]
+                    end = begin + timedelta(days=days)
+                    level = [target["baseline"][k] * weight / norm for k in ("low", "mid", "high")]
+                    cut = [0.] * 3
+                    for measure, effect in supported:
+                        effective = max(active_from(self.a), date.fromisoformat(measure["effective_date"]) if measure.get("effective_date") else active_from(self.a))
+                        share = day_share(begin, end, effective)
+                        scaled = scale_effect(effect, scope_growth.get(measure["id"], (None, None))[0], year_index)
+                        for i in range(3):
+                            cut[i] += scaled[i] * share
+                    remaining = [max(0, v - cut[2-i]) for i, v in enumerate(level)] if delta is not None else None
+                    if remaining is not None:
+                        totals = [a + b for a, b in zip(totals, remaining)]
+                    points.append({"date": begin.isoformat(), "year": begin.year, "baseline": rng(level),
+                                   "optimized": rng(remaining) if remaining is not None else None,
+                                   "coverage": scope_label, "marketCoverage": coverage})
+                target["optimized"] = rng([round(v, 3) for v in totals]) if delta is not None else None
+            methodology["assumptions"].append("All twelve baseline months have residual-mix evidence. The monthly scenario follows the assumed demand trend at fixed residual factors; supported reductions begin at modeled rollout dates.")
+        return {"metric": "co2Market", "unit": "kg CO₂e", "granularity": "monthly" if monthly else "annual", "points": points, "annualTotals": annual,
                 "growthAssumption": f"Fixed residual factor scenario, with annual compound activity growth of "
                                     f"{', '.join(f'{rate:.1%}' for rate in growth['values'])} (low, mid, high).",
                 "implementationTiming": "Supported market-based effects are prorated from the modeled rollout date.",

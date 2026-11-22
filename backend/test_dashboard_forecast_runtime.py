@@ -3,10 +3,27 @@ from types import SimpleNamespace
 import unittest
 
 from forecast_scenarios import dashboard_forecast
+from bonus import forecast
 from runtime import recent_runtime
 
 
 class DashboardForecastRuntimeTest(unittest.TestCase):
+    def test_one_off_spike_is_not_replayed_and_months_reconcile(self):
+        observed = []
+        for m in (*range(9, 13), *range(1, 9)):
+            value = 300 if m == 3 else 100
+            observed.append({"name": f"{2025 + int(m <= 8)}-{m:02}", "chf": value,
+                             "kg": [value] * 3, "kwh": [value] * 3})
+        a = SimpleNamespace(grouped=lambda _: observed, factors={"growth": {"values": [0, .05, .1]}},
+                            baseline={"chf": 1400, "kwh": [1400] * 3, "kg": [1400] * 3})
+        model = forecast(a, damp_growth=True)
+        for i, year in enumerate(model["results"]):
+            rows = model["monthly"]["chf"][12 * i:12 * (i + 1)]
+            for j in range(3):
+                self.assertAlmostEqual(sum(r["values"][j] for r in rows), year["chf"][j])
+            feb, mar, apr = (r["values"][1] for r in rows[5:8])
+            self.assertTrue(min(feb, apr) <= mar <= max(feb, apr))
+
     def test_dated_capacity_and_renewals_change_the_shape_and_reconcile(self):
         a = SimpleNamespace(as_of=date(2026, 9, 6), lines=[], policy={"forecast": {"dated_changes": [{
             "effective_date": "2026-10-01", "source": "Case ticket", "annual_delta_chf": 3650,
