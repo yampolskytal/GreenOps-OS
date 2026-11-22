@@ -70,9 +70,9 @@
   --path-a: #60a5fa;
   --path-b: #a78bfa;
   --path-c: #fbbf24;
-  --scenario-history: #a1a6b0;
-  --scenario-none: #737b89;
-  --scenario-plan: #4ade80;
+  --scenario-history: #e1e5eb;
+  --scenario-none: #9099a6;
+  --scenario-plan: #c8fa50;
   --background: oklch(0.154098 0.004578 264.432);
   --foreground: oklch(0.970151 0 89.876);
   --card: oklch(0.204236 0.008553 264.367);
@@ -86,10 +86,10 @@
   --destructive: oklch(0.710627 0.166148 22.216);
   --info: oklch(0.72 0.12 240);
   --forecast: oklch(0.716017 0.109231 271.712);
-  --heat-1: oklch(0.88 0.055 255);
-  --heat-2: oklch(0.72 0.12 255);
-  --heat-3: oklch(0.56 0.18 255);
-  --heat-4: oklch(0.40 0.17 255);
+  --heat-1: oklch(0.35 0.057 151);
+  --heat-2: oklch(0.53 0.12 148);
+  --heat-3: oklch(0.70 0.157 139);
+  --heat-4: oklch(0.92 0.198 124);
   --radius: 0.5rem;
   --surface: var(--card);
   --card-foreground: var(--foreground);
@@ -146,10 +146,10 @@ html.light {
   --destructive: oklch(0.557269 0.184145 25.492);
   --info: oklch(0.52 0.13 240);
   --forecast: oklch(0.540885 0.126395 269.592);
-  --heat-1: oklch(0.88 0.055 255);
-  --heat-2: oklch(0.72 0.12 255);
-  --heat-3: oklch(0.56 0.18 255);
-  --heat-4: oklch(0.40 0.17 255);
+  --heat-1: oklch(0.87 0.064 138);
+  --heat-2: oklch(0.72 0.135 139);
+  --heat-3: oklch(0.58 0.147 141);
+  --heat-4: oklch(0.43 0.122 145);
   --radius: 0.5rem;
   --surface: var(--card);
   --card-foreground: var(--foreground);
@@ -387,6 +387,10 @@ html.light {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 12px;
+}
+.calendar-renderer[data-compact] {
+  width: min(100%, 19rem);
+  margin-inline: auto;
 }
 .calendar-floating-legend {
   margin-bottom: 16px;

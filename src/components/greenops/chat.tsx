@@ -1,3 +1,4 @@
+import { formatEvidenceText } from "@/lib/format";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight, RotateCcw, Send } from "lucide-react";
@@ -117,7 +118,7 @@ export function ChatPanel() {
                 : "mr-4 space-y-2 rounded-xl border bg-card p-3 text-sm"
             }
           >
-            <p className="whitespace-pre-line leading-relaxed">{m.content}</p>
+            <p className="whitespace-pre-line leading-relaxed">{m.role === "assistant" ? formatEvidenceText(m.content) : m.content}</p>
             {m.tables?.map((table) => (
               <div key={table.title} className="overflow-x-auto rounded-md border">
                 <table className="w-full border-collapse text-left text-sm">

@@ -3,7 +3,7 @@ import type { Measure } from "@/lib/api/types";
 import { api } from "@/lib/api/client";
 import { useApp } from "@/lib/store";
 import { decisionGroup } from "@/lib/administration";
-import { chf, kg } from "@/lib/format";
+import { carbonMass, chf, formatEvidenceText, kg, kwh } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,68 +13,24 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { DetailDrawer, DetailBlock } from "./details";
+import { DetailBlock, EvidenceSources } from "./details";
+import { AnalyticalInspector } from "./analytical-inspector";
+import { CheckCircle2 } from "lucide-react";
 import { RiskBadge } from "./ui";
 
-export type ReviewFilter = "all" | "blocked" | "review";
+type ReviewFilter = "all" | "blocked" | "review" | "unblocked";
 const groups = [
   ["all", "All decisions", ""],
   ["blocked", "Blocked", "text-destructive"],
   ["review", "Review required", "text-warning"],
+  ["unblocked", "Unblocked", "text-success"],
 ] as const;
 
-export function DemoExceptions({ measures }: { measures: Measure[] }) {
-  const { s } = useApp();
-  const decisions = api.isDemo ? s.demoExceptions : s.simulationDecisions;
-  const items = measures.filter((m) => m.risk.level !== "low" || !m.includable || decisions[m.id]);
-  return (
-    <section id="approvals" className="mt-8 border-t pt-6">
-      <h2 className="text-lg font-semibold">
-        Approvals &amp; Exceptions{" "}
-        {api.isDemo && <span className="text-xs text-warning">DEMO</span>}
-      </h2>
-      <div className="mt-5 space-y-4">
-        {items.map((m) => (
-          <article key={m.id} className="rounded-lg border bg-card p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="font-medium">{m.title}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">{m.resource}</p>
-              </div>
-              <RiskBadge level={m.risk.level} />
-            </div>
-            <p className="mt-3 text-sm">{m.risk.why || "Reason unavailable"}</p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {m.risk.consequences || "Operational consequences unavailable"}
-            </p>
-            <p className="my-3 text-xs text-muted-foreground">
-              {decisions[m.id]?.approved
-                ? "Simulation approved locally"
-                : decisions[m.id]
-                  ? "Rejected for simulation"
-                  : decisionGroup(m) === "blocked"
-                    ? "Excluded by the provider"
-                    : "Owner review required"}
-            </p>
-            <RecommendationEvidence measure={m} label="Inspect reason & evidence" />
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-export function ApprovalWorkspace({
-  measures,
-  filter,
-  onFilter,
-}: {
-  measures: Measure[];
-  filter: ReviewFilter;
-  onFilter: (filter: ReviewFilter) => void;
-}) {
+export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   const { s, decideException } = useApp();
   const decisions = api.isDemo ? s.demoExceptions : s.simulationDecisions;
+  const [filter, setFilter] = useState<ReviewFilter>("all");
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [category, setCategory] = useState("all");
@@ -83,27 +39,35 @@ export function ApprovalWorkspace({
   const [selectedId, setSelectedId] = useState<string>();
   const [pending, setPending] = useState<Measure | null>(null);
   const [error, setError] = useState("");
-  const items = measures.filter((m) => decisionGroup(m) !== null);
-  const categories = [...new Set(items.map((m) => m.service))].sort();
-  const visible = items
-    .filter((m) => {
-      const decision = decisions[m.id];
-      return (
-        (filter === "all" || decisionGroup(m) === filter) &&
-        `${m.title} ${m.resource}`.toLowerCase().includes(search.trim().toLowerCase()) &&
-        (status === "all" ||
-          status === (!decision ? "pending" : decision.approved ? "approved" : "rejected")) &&
-        (category === "all" || m.service === category) &&
-        (membership === "all" || s.measureIds.includes(m.id) === (membership === "included"))
-      );
-    })
+  const items = measures.flatMap((measure) => {
+    const original = decisionGroup(measure);
+    if (original == null) return [];
+    const decision = decisions[measure.id];
+    const effective = decision?.approved ? ("unblocked" as const) : original;
+    return [{ measure, original, decision, effective }];
+  });
+  const categories = [...new Set(items.map(({ measure }) => measure.service))].sort();
+  const term = search.trim().toLowerCase();
+  const matching = items.filter(
+    ({ measure: m, decision }) =>
+      `${m.title} ${m.resource}`.toLowerCase().includes(term) &&
+      (status === "all" ||
+        status === (!decision ? "pending" : decision.approved ? "approved" : "rejected")) &&
+      (category === "all" || m.service === category) &&
+      (membership === "all" || s.measureIds.includes(m.id) === (membership === "included")),
+  );
+  const rank = { blocked: 0, review: 1, unblocked: 2 };
+  const visible = matching
+    .filter(({ effective }) => filter === "all" || effective === filter)
     .sort((a, b) => {
-      if (sort === "cost") return b.savingsChf - a.savingsChf;
-      if (sort === "carbon") return b.savingsCo2KgLocation - a.savingsCo2KgLocation;
-      return Number(decisionGroup(b) === "blocked") - Number(decisionGroup(a) === "blocked");
+      if (sort === "cost") return b.measure.savingsChf - a.measure.savingsChf;
+      if (sort === "carbon") return b.measure.savingsCo2KgLocation - a.measure.savingsCo2KgLocation;
+      return rank[a.effective] - rank[b.effective];
     });
-  const selected = visible.find((m) => m.id === selectedId) ?? visible[0];
-  const decision = selected && decisions[selected.id];
+  const selection = visible.find(({ measure }) => measure.id === selectedId) ?? visible[0];
+  const selected = selection?.measure;
+  // Commit the fallback so changing filters again does not resurrect an old selection.
+  if (selected?.id !== selectedId) setSelectedId(selected?.id);
   const record = (m: Measure, approved: boolean | null) => {
     try {
       decideException(m.id, m.risk.why, approved, !api.isDemo);
@@ -116,17 +80,19 @@ export function ApprovalWorkspace({
   };
   return (
     <section id="approvals" className="@container space-y-4">
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 gap-2 @xl:grid-cols-4 @xl:gap-3">
         {groups.map(([id, label, color]) => (
           <button
             key={id}
             type="button"
             aria-pressed={filter === id}
-            onClick={() => onFilter(id)}
-            className={`rounded-lg border bg-card p-2 text-center hover:bg-accent sm:p-4 ${filter === id ? "border-[#C8FA50]" : ""}`}
+            onClick={() => setFilter(id)}
+            className={`rounded-lg border bg-card p-2 text-center hover:bg-accent sm:p-4 ${filter === id ? "border-accent-ink bg-primary/10" : ""}`}
           >
             <span className={`num block text-2xl font-semibold ${color}`}>
-              {id === "all" ? items.length : items.filter((m) => decisionGroup(m) === id).length}
+              {id === "all"
+                ? matching.length
+                : matching.filter(({ effective }) => effective === id).length}
             </span>
             <span className="text-xs">{label}</span>
           </button>
@@ -177,13 +143,13 @@ export function ApprovalWorkspace({
           ]}
         />
       </div>
-      {selected ? (
+      {selected && selection ? (
         <div className="grid min-w-0 gap-3 @2xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           <ul
             aria-label="Recommendations"
             className="max-h-80 space-y-1 overflow-y-auto rounded-lg border bg-card p-2 @2xl:max-h-[32rem]"
           >
-            {visible.map((m) => (
+            {visible.map(({ measure: m, effective, original }) => (
               <li key={m.id}>
                 <button
                   type="button"
@@ -195,17 +161,7 @@ export function ApprovalWorkspace({
                   <span className="my-1 block break-words text-xs text-muted-foreground">
                     {m.resource}
                   </span>
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    <RiskBadge level={m.risk.level} />
-                    {!m.includable && m.risk.level !== "blocked" && (
-                      <span className="text-xs text-muted-foreground">Provider excluded</span>
-                    )}
-                    {decisions[m.id] && (
-                      <span className="text-xs text-muted-foreground">
-                        {decisions[m.id]?.approved ? "Approved locally" : "Rejected locally"}
-                      </span>
-                    )}
-                  </span>
+                  <DecisionBadge effective={effective} original={original} />
                 </button>
               </li>
             ))}
@@ -216,54 +172,57 @@ export function ApprovalWorkspace({
                 <h2 className="font-semibold">{selected.title}</h2>
                 <p className="text-sm text-muted-foreground">{selected.resource}</p>
               </div>
-              <RiskBadge level={selected.risk.level} />
+              <DecisionBadge effective={selection.effective} original={selection.original} />
             </header>
             <p className="text-sm">{selected.description || selected.change}</p>
             <DetailBlock
               title={
-                decisionGroup(selected) === "blocked"
-                  ? "Why is it blocked?"
+                selection.original === "blocked"
+                  ? "Original restriction"
                   : "Why is review required?"
               }
             >
               <p className="text-sm">
                 {selected.risk.why || selected.decision?.reason || "Reason unavailable"}
               </p>
+              {selected.risk.consequences && (
+                <p className="mt-1 text-sm text-muted-foreground">{selected.risk.consequences}</p>
+              )}
             </DetailBlock>
-            <DetailBlock title="Operational and business consequences">
-              <p className="text-sm">{selected.risk.consequences || "Consequences unavailable"}</p>
+            <DetailBlock title="Potential annual impact">
+              <p className="text-sm">
+                {chf(selected.savingsChf)} · {kg(selected.savingsCo2KgLocation)} location-based CO₂
+                · {kwh(selected.savingsKwh)}
+              </p>
+              {selected.savingsCo2KgMarket != null && (
+                <p className="text-sm">
+                  {carbonMass(selected.savingsCo2KgMarket, "kg CO₂e")} market-based
+                  {selected.marketCoverage?.status === "partial" ? " · covered subtotal" : ""}
+                </p>
+              )}
             </DetailBlock>
-            <p className="text-sm">
-              Potential annual savings · {chf(selected.savingsChf)} ·{" "}
-              {kg(selected.savingsCo2KgLocation)} location-based CO₂
-            </p>
             <p className="text-sm text-muted-foreground">
-              {decision
-                ? decision.approved
-                  ? "Approved for simulation locally."
-                  : "Rejected for simulation."
-                : "Awaiting a local simulation decision."}{" "}
+              {selection.decision?.approved === false && "Previous simulation decision declined. "}
               {api.isDemo
-                ? "Demo calculations are illustrative. Operational restrictions still apply."
-                : "The connected backend applies its original eligibility rules. Local approvals cannot include a blocked measure in calculations or qualify it for submission."}
+                ? "Original restrictions still apply. Demo projections are illustrative."
+                : !selected.includable || selected.risk.level === "blocked"
+                  ? "The backend excludes this measure under its original restrictions."
+                  : "Original operational approvals and submission checks still apply."}
             </p>
             <div className="flex flex-wrap gap-2">
-              <RecommendationEvidence measure={selected} label="More information" />
+              <Button size="sm" variant="outline" onClick={() => setEvidenceOpen(true)}>
+                More information
+              </Button>
               {s.role === "ceo" && (
                 <>
-                  {!decision?.approved && (
+                  {!selection.decision?.approved && (
                     <Button size="sm" onClick={() => setPending(selected)}>
-                      {decisionGroup(selected) === "blocked"
+                      {selection.original === "blocked"
                         ? "Unblock for simulation"
-                        : "Approve for simulation"}
+                        : "Confirm review for simulation"}
                     </Button>
                   )}
-                  {decision?.approved !== false && (
-                    <Button size="sm" variant="outline" onClick={() => record(selected, false)}>
-                      Reject / Keep blocked
-                    </Button>
-                  )}
-                  {decision && (
+                  {selection.decision && (
                     <Button size="sm" variant="ghost" onClick={() => record(selected, null)}>
                       Revoke decision
                     </Button>
@@ -280,9 +239,22 @@ export function ApprovalWorkspace({
         </div>
       ) : (
         <p className="rounded-lg border p-4 text-sm text-muted-foreground">
-          No matching decisions.
+          No matching decisions. Change the status or clear a filter.
         </p>
       )}
+      <AnalyticalInspector
+        title={selected?.title ?? "Recommendation evidence"}
+        trigger={null}
+        open={evidenceOpen}
+        onOpenChange={setEvidenceOpen}
+        contentKey={selected?.id ?? ""}
+      >
+        {selected ? (
+          <RecommendationEvidence key={selected.id} measure={selected} />
+        ) : (
+          <p>No matching recommendation selected.</p>
+        )}
+      </AnalyticalInspector>
       <Dialog
         open={pending != null && s.role === "ceo"}
         onOpenChange={(open) => {
@@ -342,20 +314,33 @@ function ApprovalSelect({
   );
 }
 
-function RecommendationEvidence({ measure, label }: { measure: Measure; label: string }) {
+function DecisionBadge({
+  effective,
+  original,
+}: {
+  effective: "blocked" | "review" | "unblocked";
+  original: "blocked" | "review";
+}) {
+  if (effective !== "unblocked") return <RiskBadge level={effective} />;
   return (
-    <DetailDrawer
-      title={measure.title}
-      trigger={
-        <Button size="sm" variant="outline">
-          {label}
-        </Button>
-      }
-    >
+    <span className="risk-badge inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded border border-success/40 bg-success/10 px-1.5 text-[10px] font-semibold text-success">
+      <CheckCircle2 aria-hidden className="size-3 shrink-0" />
+      {original === "blocked" ? "Unblocked" : "Review confirmed"} · simulation only
+    </span>
+  );
+}
+
+function RecommendationEvidence({ measure }: { measure: Measure }) {
+  return (
+    <>
       <DetailBlock title="Original restriction">
         <RiskBadge level={measure.risk.level} />
         <p>{measure.risk.why}</p>
-        <p>{measure.includable ? "Backend eligible" : "Backend excluded"}</p>
+        <p>
+          {measure.includable && measure.risk.level !== "blocked"
+            ? "Backend eligible"
+            : "Backend excluded"}
+        </p>
       </DetailBlock>
       <DetailBlock title="Resource, change and consequences">
         <p>
@@ -373,23 +358,14 @@ function RecommendationEvidence({ measure, label }: { measure: Measure; label: s
         {measure.risk.conflicts.join(" · ") || "None supplied"}
       </DetailBlock>
       <DetailBlock title="Assumptions">
-        {measure.assumptions.join(" · ") || "None supplied"}
-      </DetailBlock>
-      <DetailBlock title="Sources">
-        {measure.evidence.length
-          ? measure.evidence.map((e) => (
-              <p key={e.source + e.detail}>
-                {e.source} · {e.detail}
-              </p>
-            ))
-          : "None supplied"}
+        {formatEvidenceText(measure.assumptions.join(" · ")) || "None supplied"}
       </DetailBlock>
       {measure.decision && (
         <DetailBlock title="Backend decision">
           <p>
-            {measure.decision.status} · {measure.decision.reason}
+            {measure.decision.status} · {formatEvidenceText(measure.decision.reason)}
           </p>
-          <p>{measure.decision.nextStep}</p>
+          <p>{measure.decision.nextStep && formatEvidenceText(measure.decision.nextStep)}</p>
           {measure.decision.replacement && (
             <p>
               Linked measures · {measure.decision.replacement.measureIds.join(", ")}. Maximum annual
@@ -399,6 +375,7 @@ function RecommendationEvidence({ measure, label }: { measure: Measure; label: s
           )}
         </DetailBlock>
       )}
-    </DetailDrawer>
+      <EvidenceSources sources={measure.evidence} />
+    </>
   );
 }

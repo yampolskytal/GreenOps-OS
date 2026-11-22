@@ -1,60 +1,57 @@
-import type { ReactNode } from "react";
-import type { Constraint, Measure, Overview, SimulationResult } from "@/lib/api/types";
-import { decisionGroup, gaugeGeometry } from "@/lib/administration";
-import { chf, kg, pct } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import { DetailBlock, DetailDrawer } from "./details";
+import { CheckCircle2, MinusCircle, XCircle } from "lucide-react";
+import type { Constraint, Overview, SimulationResult } from "@/lib/api/types";
+import { gaugeGeometry } from "@/lib/administration";
+import { chf, formatNumber, pct } from "@/lib/format";
+import { DetailBlock, DetailDrawer, EvidenceInfoButton } from "./details";
 import { PlanOutcomes } from "./plan-outcomes";
 import { TargetProgress } from "./ui";
 
-export function ReviewSummary({
-  measures,
-  onReviews,
-}: {
-  measures: Measure[];
-  onReviews: () => void;
-}) {
-  const count = measures.filter((m) => decisionGroup(m) === "review").length;
+function TargetStatus({ label, met }: { label: string; met: boolean | null }) {
+  const Icon = met == null ? MinusCircle : met ? CheckCircle2 : XCircle;
+  const status = met == null ? "unavailable" : met ? "target met" : "target missed";
   return (
-    <Button variant="outline" className="h-auto whitespace-normal text-left" onClick={onReviews}>
-      {count} {count === 1 ? "recommendation requires" : "recommendations require"} human review
-    </Button>
+    <span role="img" aria-label={`${label} · ${status}`} title={status}>
+      <Icon
+        aria-hidden
+        className={`size-4 ${met == null ? "text-muted-foreground" : met ? "text-success" : "text-destructive"}`}
+      />
+    </span>
   );
+}
+
+function meetsTarget(actual: number, limit: number | undefined, direction: "atLeast" | "atMost") {
+  if (!Number.isFinite(actual) || limit == null || !Number.isFinite(limit)) return null;
+  return direction === "atLeast" ? actual >= limit : actual <= limit;
 }
 
 export function AdministrationScorecard({
   overview,
   result,
   suggested,
-  reviewSummary,
 }: {
   overview: Overview;
   result: SimulationResult;
   suggested: boolean;
-  reviewSummary: ReactNode;
 }) {
   const carbon = result.constraints.find((c) => c.unit === "%" && /CO₂|CO2/i.test(c.label));
   const cost = result.constraints.find((c) => c.unit === "%" && /cost/i.test(c.label));
   const effort = result.constraints.find((c) => c.unit === "PD");
   const budget = result.constraints.find((c) => c.unit === "CHF");
-  const achieved = result.constraints.filter((c) => c.met).length;
   return (
-    <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
         <ReductionGauge
           label="Carbon reduction"
           actual={result.co2ReductionPct}
           target={carbon?.target}
-          savings={kg(result.savingsCo2Kg)}
         />
         <ReductionGauge
           label="Cost reduction"
           actual={result.costReductionPct}
           target={cost?.target}
-          savings={chf(result.savingsChf)}
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Limit
           label="Implementation effort"
           actual={result.effortDays}
@@ -68,71 +65,55 @@ export function AdministrationScorecard({
           format={chf}
         />
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
-        <div>
-          <p className="font-semibold">
-            {result.constraints.length
-              ? `${achieved} of ${result.constraints.length} numerical targets achieved`
-              : "Numerical targets unavailable"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Operational eligibility and human approvals remain separate.
-          </p>
-          {result.excluded.length > 0 && (
-            <p className="mt-1 text-xs text-warning">
-              {result.excluded.length} measures excluded by the calculation.
-            </p>
-          )}
-          {result.conservativeCo2Pct != null && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Conservative location-based reduction · {pct(result.conservativeCo2Pct)}
-            </p>
-          )}
-        </div>
-        {reviewSummary}
-        <DetailDrawer
-          title="Plan calculation and evidence"
-          trigger={
-            <Button size="sm" variant="outline">
-              Calculation &amp; Evidence
-            </Button>
-          }
-        >
-          <DetailBlock title="Constraints">
-            {result.constraints.map((c) => (
-              <p key={c.label}>
-                {c.label} · {c.achieved.toLocaleString("en-CH")} /{" "}
-                {c.target.toLocaleString("en-CH")} {c.unit}
-              </p>
-            ))}
-          </DetailBlock>
-          <DetailBlock title="Calculation notes">
-            {result.reasons.length
-              ? result.reasons.map((reason) => <p key={reason}>{reason}</p>)
-              : "No additional notes supplied."}
-          </DetailBlock>
-          {result.excluded.length > 0 && (
-            <DetailBlock title="Excluded measures">
-              {result.excluded.map((m) => (
-                <p key={m.id}>
-                  {m.id} · {m.reason}
+      <section className="border-t pt-3">
+        <div className="mb-2 flex items-center gap-1">
+          <h2 className="font-semibold">Annual baseline and projection</h2>
+          <DetailDrawer
+            title="Plan calculation and evidence"
+            trigger={<EvidenceInfoButton description="the annual projection" />}
+          >
+            <DetailBlock title="Constraints">
+              {result.constraints.map((c) => (
+                <p key={c.label}>
+                  {c.label} · {formatNumber(c.achieved)} / {formatNumber(c.target)} {c.unit}
                 </p>
               ))}
             </DetailBlock>
-          )}
-          <DetailBlock title="Baseline coverage">
-            <p>Annual spending · {overview.cost.coverage ?? "Coverage unavailable"}</p>
-            <p>Location-based CO₂ · {overview.co2Location.coverage ?? "Coverage unavailable"}</p>
-          </DetailBlock>
-        </DetailDrawer>
-      </div>
-      <section className="rounded-lg border bg-card p-4">
-        <h2 className="mb-4 font-semibold">Annual baseline and projection</h2>
+            <DetailBlock title="Calculation notes">
+              {result.reasons.length
+                ? result.reasons.map((reason) => <p key={reason}>{reason}</p>)
+                : "No additional notes supplied."}
+            </DetailBlock>
+            {result.excluded.length > 0 && (
+              <DetailBlock title="Excluded measures">
+                {result.excluded.map((m) => (
+                  <p key={m.id}>
+                    {m.id} · {m.reason}
+                  </p>
+                ))}
+              </DetailBlock>
+            )}
+            <DetailBlock title="Baseline coverage">
+              <p>Annual spending · {overview.cost.coverage ?? "Coverage unavailable"}</p>
+              <p>Location-based CO₂ · {overview.co2Location.coverage ?? "Coverage unavailable"}</p>
+            </DetailBlock>
+            {(result.conservativeCo2Pct != null || result.excluded.length > 0) && (
+              <DetailBlock title="Projection notes">
+                {result.conservativeCo2Pct != null && (
+                  <p>Conservative location-based reduction · {pct(result.conservativeCo2Pct)}</p>
+                )}
+                {result.excluded.length > 0 && (
+                  <p>{result.excluded.length} measures excluded by the calculation.</p>
+                )}
+              </DetailBlock>
+            )}
+          </DetailDrawer>
+        </div>
         <PlanOutcomes
           overview={overview}
           result={result}
-          afterLabel={suggested ? "Suggested strategy" : "Current Plan"}
-          compact
+          afterLabel={suggested ? "After suggested strategy" : "After Current Plan"}
+          projectionFirst
         />
       </section>
     </div>
@@ -143,20 +124,25 @@ function ReductionGauge({
   label,
   actual,
   target,
-  savings,
 }: {
   label: string;
   actual: number;
   target: number | undefined;
-  savings: string;
 }) {
-  const { arc, marker, scale } = gaugeGeometry(actual, target ?? 0);
+  const met = meetsTarget(actual, target, "atLeast");
+  const { arc, marker, scale } = gaugeGeometry(
+    Number.isFinite(actual) ? actual : 0,
+    target != null && Number.isFinite(target) ? target : 0,
+  );
   const [x1, y1] = marker(70);
   const [x2, y2] = marker(96);
   return (
-    <section className="flex min-w-0 flex-col items-center rounded-xl border bg-card p-5 text-center">
+    <section className="relative flex min-w-0 flex-col items-center border-b px-6 pb-2 text-center">
+      <div className="absolute left-1 top-1">
+        <TargetStatus label={label} met={met} />
+      </div>
       <h2 className="text-base font-semibold">{label}</h2>
-      <div className="relative my-3 aspect-square w-full max-w-48">
+      <div className="relative my-1 aspect-square w-full max-w-40">
         <svg aria-hidden="true" viewBox="0 0 200 200" className="size-full">
           <circle
             cx="100"
@@ -180,11 +166,11 @@ function ReductionGauge({
               transform="rotate(-90 100 100)"
             />
           )}
-          {target != null && (
+          {target != null && Number.isFinite(target) && (
             <g>
               <path
                 d={`M ${x1} ${y1} L ${x2} ${y2}`}
-                className="stroke-card"
+                className="stroke-background"
                 strokeWidth="6"
                 strokeLinecap="round"
               />
@@ -200,14 +186,15 @@ function ReductionGauge({
         <div className="absolute inset-0 grid content-center">
           <p className="num text-2xl font-semibold sm:text-3xl">{pct(actual)}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {target == null ? "Target unavailable" : `Target ${pct(target)}`}
+            {target == null || !Number.isFinite(target)
+              ? "Target unavailable"
+              : `Target ${pct(target)}`}
           </p>
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        Scale 0–{scale.toLocaleString("en-CH")}%{actual < 0 && " · increase"}
+        Scale 0–{formatNumber(scale)}%{actual < 0 && " · increase"}
       </p>
-      <p className="num mt-2 font-semibold text-success">{savings} projected savings / year</p>
     </section>
   );
 }
@@ -223,29 +210,36 @@ function Limit({
   constraint: Constraint | undefined;
   format: (value: number) => string;
 }) {
+  const met = meetsTarget(actual, constraint?.target, "atMost");
+  const icon = <TargetStatus label={label} met={met} />;
   return (
-    <section className="rounded-lg border bg-card p-4">
-      {constraint && constraint.target > 0 ? (
+    <section className="min-w-0 px-1 py-1">
+      {constraint && met != null && constraint.target > 0 ? (
         <TargetProgress
           label={label}
           achieved={actual}
           target={constraint.target}
           direction="atMost"
           unitLabel={format}
+          statusIcon={icon}
         />
       ) : (
-        <p className="text-sm">
-          {label} · {format(actual)} /{" "}
-          {constraint ? format(constraint.target) : "limit unavailable"}
-        </p>
+        <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+          <span className="flex items-center gap-1.5">
+            {icon}
+            {label}
+          </span>
+          <span className="num text-xs">
+            {Number.isFinite(actual) ? format(actual) : "Unavailable"} /{" "}
+            {constraint && Number.isFinite(constraint.target)
+              ? format(constraint.target)
+              : "limit unavailable"}
+          </span>
+        </div>
       )}
-      {constraint && (
-        <p
-          className={`mt-2 text-xs ${actual > constraint.target ? "text-destructive" : "text-muted-foreground"}`}
-        >
-          {actual > constraint.target
-            ? `${format(actual - constraint.target)} over limit`
-            : "Within limit"}
+      {constraint && met != null && (
+        <p className={`mt-2 text-xs ${met ? "text-muted-foreground" : "text-destructive"}`}>
+          {met ? "Within limit" : `${format(actual - constraint.target)} over limit`}
         </p>
       )}
     </section>

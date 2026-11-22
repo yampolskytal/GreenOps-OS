@@ -34,7 +34,11 @@ export function StartingPlanNotice({ compact = false }: { compact?: boolean }) {
         <p role="alert" className="text-sm font-medium">
           Your recommendation could not be generated.
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p
+          className={
+            compact ? "mt-0.5 text-xs text-muted-foreground" : "mt-2 text-sm text-muted-foreground"
+          }
+        >
           {s.initialization.error} Available baseline data remains unchanged.
         </p>
         <Button variant="outline" className="mt-3" onClick={retryInitialization}>
@@ -51,18 +55,26 @@ export function StartingPlanNotice({ compact = false }: { compact?: boolean }) {
     <section
       aria-label="Recommended starting plan"
       className={
-        compact
-          ? "flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4"
-          : "mb-6 border-y py-5"
+        compact ? "flex flex-wrap items-center gap-x-4 gap-y-2 border-b pb-3" : "mb-6 border-y py-5"
       }
     >
       <div>
-        <h2 className="text-lg font-semibold">Recommended starting plan</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <h2 className={compact ? "text-sm font-semibold" : "text-lg font-semibold"}>
+          Recommended starting plan
+        </h2>
+        <p
+          className={
+            compact ? "mt-0.5 text-xs text-muted-foreground" : "mt-2 text-sm text-muted-foreground"
+          }
+        >
           {candidate.measureIds.length} recommended measures · Balanced · CHF 16,500 budget · 15
           person-days maximum
         </p>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p
+          className={
+            compact ? "mt-0.5 text-xs text-muted-foreground" : "mt-2 text-sm text-muted-foreground"
+          }
+        >
           {!compact && (
             <>
               {selected

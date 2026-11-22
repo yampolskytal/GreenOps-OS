@@ -1,42 +1,34 @@
-import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import {
-  ApprovalWorkspace,
-  DemoExceptions,
-  type ReviewFilter,
-} from "@/components/greenops/demo-exceptions";
+import { ApprovalWorkspace } from "@/components/greenops/demo-exceptions";
+import { AdministrationScorecard } from "@/components/greenops/administration-overview";
+import { evaluatePackage } from "@/lib/optimizer";
 import { InspectorProvider } from "@/components/greenops/analytical-inspector";
-import { DonutBreakdown } from "@/components/greenops/spending-donut";
+import { DonutBreakdown, donutColor } from "@/components/greenops/spending-donut";
 import { SelectedMonthSummary } from "@/components/greenops/historical-performance";
 import { AppStateProvider } from "@/lib/store";
 import { categoryShares, gaugeGeometry } from "@/lib/administration";
 import { api, getPlanningApi } from "@/lib/api/client";
 import { approvedDemoIds } from "@/lib/proposals";
-import { demoMeasures } from "@/lib/api/demo-data";
+import { demoMeasures, demoOverview, DEMO_BASELINE } from "@/lib/api/demo-data";
 import type { MonthlyObservation } from "@/lib/api/types";
 
 const key = "greenops-state-v1";
-const all = [demoMeasures.find((m) => m.id === "M7")!, demoMeasures.find((m) => m.id === "M2")!];
+const blocked = demoMeasures.find((m) => m.id === "M7")!;
+const review = { ...demoMeasures.find((m) => m.id === "M2")!, includable: false };
+const all = [blocked, review];
 afterEach(() => {
   cleanup();
   localStorage.clear();
 });
 
-function approvals(
-  role: "ceo" | "cfo" | "it" = "ceo",
-  filter: "all" | "blocked" | "review" = "all",
-) {
+function approvals(role: "ceo" | "cfo" | "it" = "ceo") {
   const stored = JSON.parse(localStorage.getItem(key) ?? "{}");
   localStorage.setItem(key, JSON.stringify({ ...stored, role }));
-  function Workspace() {
-    const [selectedFilter, setFilter] = useState<ReviewFilter>(filter);
-    return <ApprovalWorkspace measures={all} filter={selectedFilter} onFilter={setFilter} />;
-  }
   return render(
     <AppStateProvider>
       <InspectorProvider>
-        <Workspace />
+        <ApprovalWorkspace measures={all} />
       </InspectorProvider>
     </AppStateProvider>,
   );
@@ -57,7 +49,6 @@ describe("Administration scorecard, decisions and analysis", () => {
     expect(screen.getByRole("button", { name: "2 All decisions" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "1 Blocked" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "1 Review required" })).toBeInTheDocument();
-    const review = all[1]!;
     fireEvent.click(
       within(screen.getByRole("list", { name: "Recommendations" })).getByRole("button", {
         name: new RegExp(review.title),
@@ -76,23 +67,29 @@ describe("Administration scorecard, decisions and analysis", () => {
     expect(screen.queryByRole("complementary", { name: review.title })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "More information" }));
     fireEvent.pointerDown(screen.getByLabelText("Search recommendations"));
+    expect(screen.getByRole("complementary", { name: review.title })).toBeVisible();
+    fireEvent.pointerDown(screen.getByLabelText("Analysis details").previousElementSibling!);
     expect(screen.queryByRole("complementary", { name: review.title })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Search recommendations"), {
       target: { value: "no matching resource" },
     });
-    expect(screen.getByText("No matching decisions.")).toBeInTheDocument();
+    expect(screen.getByText(/No matching decisions/)).toBeInTheDocument();
   });
 
   it("pre-filters reviews and restricts the decision controls to Administration", () => {
-    const view = approvals("ceo", "review");
+    const view = approvals("ceo");
+    fireEvent.click(screen.getByRole("button", { name: "1 Review required" }));
     expect(
       within(screen.getByRole("list", { name: "Recommendations" })).getAllByRole("button"),
     ).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Approve for simulation" })).toBeInTheDocument();
-    view.unmount();
-    approvals("cfo", "review");
     expect(
-      screen.queryByRole("button", { name: "Approve for simulation" }),
+      screen.getByRole("button", { name: "Confirm review for simulation" }),
+    ).toBeInTheDocument();
+    view.unmount();
+    approvals("cfo");
+    fireEvent.click(screen.getByRole("button", { name: "1 Review required" }));
+    expect(
+      screen.queryByRole("button", { name: "Confirm review for simulation" }),
     ).not.toBeInTheDocument();
   });
 
@@ -101,6 +98,7 @@ describe("Administration scorecard, decisions and analysis", () => {
     const view = approvals();
     const field = api.isDemo ? "demoExceptions" : "simulationDecisions";
     const stored = () => JSON.parse(localStorage.getItem(key) ?? "{}");
+    fireEvent.click(screen.getByRole("button", { name: "1 Blocked" }));
     fireEvent.click(screen.getByRole("button", { name: "Unblock for simulation" }));
     expect(stored()[field]).toEqual({});
     fireEvent.click(screen.getByRole("button", { name: "Confirm simulation decision" }));
@@ -112,24 +110,69 @@ describe("Administration scorecard, decisions and analysis", () => {
     expect(getPlanningApi(approvedDemoIds(stored()[field], false), connectedProvider)).toBe(
       connectedProvider,
     );
+    expect(screen.getByRole("button", { name: "0 Blocked" })).toBeInTheDocument();
+    expect(screen.getByText(/No matching decisions/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "1 Unblocked" }));
+    expect(screen.getByRole("heading", { name: blocked.title })).toBeInTheDocument();
+    expect(screen.getAllByText("Unblocked · simulation only")).toHaveLength(2);
+    expect(screen.getByText(/backend excludes this measure/)).toBeVisible();
     view.unmount();
-    const readOnly = render(
-      <AppStateProvider>
-        <DemoExceptions measures={all} />
-      </AppStateProvider>,
-    );
-    expect(screen.getByText("Simulation approved locally")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Revoke decision" })).not.toBeInTheDocument();
-    readOnly.unmount();
     approvals();
+    fireEvent.click(screen.getByRole("button", { name: "1 Unblocked" }));
     fireEvent.click(screen.getByRole("button", { name: "Revoke decision" }));
     expect(stored()[field]).toEqual({});
-    fireEvent.click(screen.getByRole("button", { name: "Reject / Keep blocked" }));
-    expect(stored()[field].M7.approved).toBe(false);
-    fireEvent.change(screen.getByLabelText("Decision status"), { target: { value: "rejected" } });
-    expect(
-      within(screen.getByRole("list", { name: "Recommendations" })).getAllByRole("button"),
-    ).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "1 Blocked" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "0 Unblocked" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject / Keep blocked" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the evidence dock open when changing recommendation and moves review confirmations", () => {
+    approvals();
+    fireEvent.click(screen.getByRole("button", { name: "More information" }));
+    const panel = screen.getByRole("complementary", { name: blocked.title });
+    const row = within(screen.getByRole("list", { name: "Recommendations" })).getByRole("button", {
+      name: new RegExp(review.title),
+    });
+    fireEvent.pointerDown(row);
+    fireEvent.click(row);
+    expect(screen.getByRole("complementary", { name: review.title })).toBe(panel);
+    expect(within(panel).getByText("Backend excluded")).toBeVisible();
+    expect(within(panel).getByText(review.risk.approver!)).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Confirm review for simulation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm simulation decision" }));
+    expect(screen.getByRole("button", { name: "0 Review required" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1 Unblocked" })).toBeInTheDocument();
+    expect(screen.getAllByText("Review confirmed · simulation only")).toHaveLength(2);
+  });
+
+  it("uses unrounded values for four target indicators and renders the projection before baseline", () => {
+    const result = evaluatePackage(demoMeasures, [], DEMO_BASELINE, 16500, 1100);
+    result.co2ReductionPct = 39.999;
+    result.costReductionPct = 25;
+    result.effortDays = 15.001;
+    result.constraints = result.constraints.filter(({ unit }) => unit !== "CHF");
+    const { container } = render(
+      <InspectorProvider>
+        <AdministrationScorecard overview={demoOverview} result={result} suggested />
+      </InspectorProvider>,
+    );
+    for (const name of [
+      "Carbon reduction · target missed",
+      "Cost reduction · target met",
+      "Implementation effort · target missed",
+      "Implementation budget · unavailable",
+    ]) {
+      expect(screen.getByRole("img", { name })).toBeInTheDocument();
+    }
+    expect(screen.queryByText(/numerical targets achieved/)).not.toBeInTheDocument();
+    expect(screen.getAllByText("After suggested strategy")).toHaveLength(2);
+    const tracks = Array.from(container.querySelectorAll("[data-outcome-track]"));
+    expect(tracks.map((track) => track.previousElementSibling?.firstChild?.textContent)).toEqual([
+      "After suggested strategy",
+      "Baseline",
+      "After suggested strategy",
+      "Baseline",
+    ]);
   });
 
   it("shares segment and legend colors, keeps every category and distinguishes missing values", () => {
@@ -143,16 +186,18 @@ describe("Administration scorecard, decisions and analysis", () => {
         <DonutBreakdown rows={rows} metric="costChf" unit="CHF" rule="Source allocations" />
       </InspectorProvider>,
     );
-    expect(screen.getByText("30 CHF · 75%")).toBeInTheDocument();
+    expect(screen.getByText("CHF 30 · 75%")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "C Unavailable" })).toBeInTheDocument();
     const segment = container.querySelector('[data-category="A"]');
-    expect(segment?.getAttribute("stroke")).toBe("#C8FA50");
+    expect(segment?.getAttribute("stroke")).toBe(donutColor(0, 2));
+    const color = document.createElement("span");
+    color.style.backgroundColor = donutColor(0, 2);
     expect(
       container.querySelector<HTMLElement>('[data-category-color="A"]')?.style.backgroundColor,
-    ).toBe("rgb(200, 250, 80)");
+    ).toBe(color.style.backgroundColor);
     fireEvent.click(segment!);
     expect(screen.getByRole("complementary", { name: "A" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "B 10 CHF · 25%" }));
+    fireEvent.click(screen.getByRole("button", { name: "B CHF 10 · 25%" }));
     expect(screen.getByRole("complementary", { name: "B" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close evidence" }));
     expect(screen.queryByRole("complementary", { name: "B" })).not.toBeInTheDocument();
@@ -169,11 +214,13 @@ describe("Administration scorecard, decisions and analysis", () => {
       { month: "2026-02", costChf: 500, energyKwh: 100, co2Kg: 40, co2KgMarket: 20 },
     ];
     render(<SelectedMonthSummary id="month" rows={rows} selected={rows[1]!} />);
-    expect(screen.getByRole("heading", { name: "Jan 2026" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "January 2026 — Observed results" }),
+    ).toBeInTheDocument();
     for (const label of [
       "CHF 90",
       "20 kWh",
-      "15 kg",
+      "15 kg CO₂",
       "Unavailable",
       "10.0% decrease vs previous month",
     ]) {

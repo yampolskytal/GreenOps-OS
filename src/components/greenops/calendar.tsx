@@ -1,33 +1,28 @@
 import { useMemo, useRef, useState } from "react";
 import type { DailyFootprint } from "@/lib/api/types";
-import { kg } from "@/lib/format";
+import { carbonMass, chf, formatNumber, kg } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RotateCcw } from "lucide-react";
 import { AnalyticalInspector } from "./analytical-inspector";
-import { DetailDrawer } from "./details";
-import { Info } from "lucide-react";
+import { DetailBlock, EvidenceInfoButton, EvidenceSources } from "./details";
 import { marketCoverageLabel, SKYLINE_ENCODING } from "@/lib/analytics";
-import { buildFootprintGrid, type buildCalendarScale } from "@/lib/calendar-model";
+import { buildFootprintGrid, DAY_MS, type buildCalendarScale } from "@/lib/calendar-model";
 import { footprintRange } from "@/lib/footprint-range";
 import ContributionSkyline from "./contribution-skyline";
 export type CalMetric = "co2Kg" | "costChf" | "energyKwh" | "co2KgMarket";
+const PALETTE = ["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"];
 const LABELS = {
-  co2Kg: "CO₂ — Location-based",
-  co2KgMarket: "CO₂ — Market-based",
+  co2Kg: "Location-based CO₂",
+  co2KgMarket: "Market-based CO₂",
   costChf: "Cost",
   energyKwh: "Energy",
 };
-const decimal = new Intl.NumberFormat("en-CH", { maximumFractionDigits: 3 });
-const francs = new Intl.NumberFormat("en-CH", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
 const fmt = {
-  co2KgMarket: (v: number) => `${decimal.format(v)} kg CO₂`,
-  co2Kg: (v: number) => `${decimal.format(v)} kg CO₂`,
-  costChf: (v: number) => `CHF ${francs.format(v)}`,
-  energyKwh: (v: number) => `${decimal.format(v)} kWh`,
+  co2KgMarket: (v: number) => carbonMass(v, "kg CO₂e"),
+  co2Kg: (v: number) => carbonMass(v, "kg CO₂"),
+  costChf: chf,
+  energyKwh: (v: number) => `${formatNumber(v, { maximumFractionDigits: 3 })} kWh`,
 };
 function metricValue(day: DailyFootprint, metric: CalMetric) {
   const value = day[metric];
@@ -49,13 +44,13 @@ function ColorLegend({
   scale: ReturnType<typeof buildCalendarScale>;
 }) {
   return (
-    <div className="text-xs text-muted-foreground">
+    <div className="max-w-md text-xs text-muted-foreground">
       <p>Color · {LABELS[metric]}</p>
       {scale && scale.min < scale.max ? (
         <>
           <div className="mt-2 flex h-2 overflow-hidden rounded">
-            {[1, 2, 3, 4].map((level) => (
-              <span key={level} className="flex-1" style={{ background: `var(--heat-${level})` }} />
+            {PALETTE.map((background) => (
+              <span key={background} className="flex-1" style={{ background }} />
             ))}
           </div>
           <div className="num mt-2 flex flex-wrap justify-between gap-2 text-[10px]">
@@ -64,7 +59,7 @@ function ColorLegend({
             ))}
           </div>
           <p className="mt-1">
-            Darker means higher.
+            Left to right · lower to higher.
             {scale.compressed && " Extreme values are compressed."}
           </p>
         </>
@@ -77,66 +72,94 @@ function ColorLegend({
   );
 }
 
+export type FootprintSelection = {
+  range: { from: string; to: string } | null;
+  view: "2d" | "3d";
+  date: string | null;
+};
+
+const presets = [
+  [0, "Last 30 days"],
+  [6, "Last 6 months"],
+  [null, "Official baseline year"],
+] as const;
+const initial: FootprintSelection = { range: null, view: "2d", date: null };
+
+function presetRange(months: number | null, availableFrom: string, availableTo: string) {
+  if (months == null) return { from: "2025-09-01", to: "2026-08-31" };
+  const end = new Date(`${availableTo}T00:00:00Z`);
+  if (months === 0) end.setUTCDate(end.getUTCDate() - 29);
+  else {
+    end.setUTCMonth(end.getUTCMonth() - months);
+    end.setUTCDate(end.getUTCDate() + 1);
+  }
+  const from = end.toISOString().slice(0, 10);
+  return { from: from < availableFrom ? availableFrom : from, to: availableTo };
+}
+
 export function FootprintCalendar({
   days,
   metric,
   compare,
   onCompareChange,
+  selection,
+  onSelectionChange,
 }: {
   days: DailyFootprint[];
   metric: CalMetric;
   compare: boolean;
   onCompareChange: (compare: boolean) => void;
+  selection?: FootprintSelection;
+  onSelectionChange?: (selection: FootprintSelection) => void;
 }) {
-  const [view, setView] = useState<"2d" | "3d">("2d");
+  const [local, setLocal] = useState(initial);
+  const current = selection ?? local;
+  const { range, view, date: selectedDate } = current;
+  const update = (patch: Partial<FootprintSelection>) =>
+    (onSelectionChange ?? setLocal)({ ...current, ...patch });
+  const setView = (view: FootprintSelection["view"]) => update({ view });
+  const setRange = (range: FootprintSelection["range"]) => update({ range });
   const sortedDays = useMemo(() => [...days].sort((a, b) => a.date.localeCompare(b.date)), [days]);
   const availableFrom = sortedDays[0]?.date ?? "",
     availableTo = sortedDays.at(-1)?.date ?? "";
-  const [range, setRange] = useState<{ from: string; to: string } | null>(null);
   const from = range?.from ?? availableFrom,
     to = range?.to ?? availableTo;
-  const month = from.slice(0, 7);
-  const period = month === to.slice(0, 7) ? "month" : "year";
   const validRange = Boolean(
     from && to && from <= to && from >= availableFrom && to <= availableTo,
   );
-  const preset = (months: number | null) => {
-    if (months == null) {
-      setRange({ from: "2025-09-01", to: "2026-08-31" });
-      return;
-    }
-    const end = new Date(`${availableTo}T00:00:00Z`);
-    if (months === 0) end.setUTCDate(end.getUTCDate() - 29);
-    else {
-      end.setUTCMonth(end.getUTCMonth() - months);
-      end.setUTCDate(end.getUTCDate() + 1);
-    }
-    setRange({
-      from:
-        end.toISOString().slice(0, 10) < availableFrom
-          ? availableFrom
-          : end.toISOString().slice(0, 10),
-      to: availableTo,
-    });
-  };
+  const compact =
+    validRange &&
+    (from.slice(0, 7) === to.slice(0, 7) || Date.parse(to) - Date.parse(from) <= 30 * DAY_MS);
+  const matchesPreset = availableTo
+    ? presets.find(([months]) => {
+        const preset = presetRange(months, availableFrom, availableTo);
+        return validRange && preset.from === from && preset.to === to;
+      })
+    : undefined;
   const frame = useRef<HTMLDivElement>(null);
-  const [sel, setSel] = useState<DailyFootprint | null>(null);
-  const [dayOpen, setDayOpen] = useState(false);
+  const [inspector, setInspector] = useState<"day" | "coverage" | null>(null);
   const comparing = view === "3d" && compare;
   const heightMetric = comparing ? SKYLINE_ENCODING.height : metric;
   const color = comparing ? SKYLINE_ENCODING.color : metric;
-  const activeMonth = period === "month" ? month : undefined;
+  const activeMonth = compact ? from.slice(0, 7) : undefined;
   const shown = useMemo(
     () => (validRange ? footprintRange(sortedDays, from, to) : []),
     [sortedDays, validRange, from, to],
   );
+  const selectedInRange =
+    selectedDate != null && validRange && selectedDate >= from && selectedDate <= to;
+  const sel = shown.find((day) => day.date === selectedDate);
   const data = useMemo(
     () =>
       shown.map((d) => ({
         date: d.date,
         count: metricValue(d, heightMetric),
         colorCount: metricValue(d, color),
-        detail: `${d.date} · ${comparing ? `Cost ${display(d, heightMetric)} · CO₂ ${display(d, color)}` : display(d, color)} · ${d.coverage}`,
+        partial:
+          d.coverage === "allocated" ||
+          d.coverage === "estimated" ||
+          (color === "co2KgMarket" && d.marketCoverage?.status === "partial"),
+        detail: `${d.date} · ${comparing ? `Cost ${display(d, heightMetric)} · CO₂ ${display(d, color)}` : display(d, color)} · ${d.coverage}${color === "co2KgMarket" && d.marketCoverage?.status === "partial" ? " · covered subtotal" : ""}`,
       })),
     [shown, heightMetric, color, comparing],
   );
@@ -166,7 +189,6 @@ export function FootprintCalendar({
               value={from}
               onChange={(e) => {
                 setRange({ from: e.target.value, to });
-                setSel(null);
               }}
             />
           </label>
@@ -181,21 +203,22 @@ export function FootprintCalendar({
               value={to}
               onChange={(e) => {
                 setRange({ from, to: e.target.value });
-                setSel(null);
               }}
             />
           </label>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button size="sm" variant="outline" onClick={() => preset(0)}>
-            Last 30 days
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => preset(6)}>
-            Last 6 months
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => preset(null)}>
-            Official baseline year
-          </Button>
+          {presets.map(([months, label]) => (
+            <Button
+              key={label}
+              size="sm"
+              variant={matchesPreset?.[1] === label ? "default" : "outline"}
+              aria-pressed={matchesPreset?.[1] === label}
+              onClick={() => setRange(presetRange(months, availableFrom, availableTo))}
+            >
+              {label}
+            </Button>
+          ))}
           <div className="ml-auto flex gap-1" role="group" aria-label="Chart view">
             {(["2d", "3d"] as const).map((v) => (
               <Button
@@ -203,7 +226,7 @@ export function FootprintCalendar({
                 size="sm"
                 aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
                 aria-pressed={view === v}
-                variant={view === v ? "secondary" : "ghost"}
+                variant={view === v ? "default" : "ghost"}
                 onClick={() => setView(v)}
               >
                 {v.toUpperCase()}
@@ -250,14 +273,7 @@ export function FootprintCalendar({
           </Button>
         </div>
       )}
-      {period === "month" && view === "2d" && (
-        <div className="mb-1 grid grid-cols-7 text-center text-xs text-muted-foreground">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-            <span key={d}>{d}</span>
-          ))}
-        </div>
-      )}
-      {shown.length > 0 && (
+      {validRange && grid.cells.length > 0 && (
         <div ref={frame} className="calendar-chart-frame" data-view={view}>
           {view === "3d" && (
             <div className="calendar-floating-legend">
@@ -289,79 +305,104 @@ export function FootprintCalendar({
           </p>
           <p className="mb-3 text-xs">
             Selected day:{" "}
-            {sel ? `${sel.date} · ${display(sel, "costChf")} · ${display(sel, "co2Kg")}` : "None"}
+            {selectedInRange
+              ? `${selectedDate} · ${sel ? display(sel, color) : "Unavailable"}`
+              : "None in this range"}
           </p>
-          <div className="calendar-renderer">
+          <div
+            className="calendar-renderer"
+            data-compact={compact && view === "2d" ? "" : undefined}
+            data-inspector-interactive
+          >
             <ContributionSkyline
               data={data}
               footprintGrid={grid}
-              heightScale={period === "month" ? 0.28 : 1}
-              {...(period === "month" ? { month } : {})}
+              heightScale={compact ? 0.28 : 1}
+              {...(activeMonth ? { month: activeMonth } : {})}
               view={view}
               onViewChange={setView}
               showToggle={false}
               weekStart={1}
-              palette={["var(--heat-1)", "var(--heat-2)", "var(--heat-3)", "var(--heat-4)"]}
+              palette={PALETTE}
               showStats={false}
               showLegend={false}
-              title={`${from} — ${to}`}
-              footer="Dashed cells: unavailable metric coverage"
+              title={null}
+              footer={null}
+              selectedDate={selectedInRange ? selectedDate : null}
               onCellClick={(d) => {
-                setSel(shown.find((x) => x.date === d.date) ?? null);
-                setDayOpen(true);
+                update({ date: d.date });
+                setInspector("day");
               }}
             />
           </div>
         </div>
       )}
-      <p className="mt-4 text-xs text-muted-foreground">
-        Daily coverage: {shown.filter((d) => d.coverage === "measured").length} measured ·{" "}
-        {shown.filter((d) => d.coverage === "allocated").length} allocated ·{" "}
-        {shown.filter((d) => d.coverage === "estimated").length} estimated ·{" "}
-        {shown.filter((d) => d.coverage === "unavailable").length} unavailable.
-      </p>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <p className="text-xs text-muted-foreground">
+          Daily coverage: {shown.filter((d) => d.coverage === "measured").length} measured ·{" "}
+          {shown.filter((d) => d.coverage === "allocated").length} allocated ·{" "}
+          {shown.filter((d) => d.coverage === "estimated").length} estimated ·{" "}
+          {shown.filter((d) => d.coverage === "unavailable").length} unavailable.
+        </p>
+        <EvidenceInfoButton
+          label="View daily coverage and data quality"
+          onClick={() => setInspector("coverage")}
+        />
+      </div>
       {color === "co2KgMarket" && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Market-based values cover activity with a supported factor. Open a day for its coverage and sources.
+        <p className="text-xs text-muted-foreground">
+          Market-based values cover activity with a supported factor.
         </p>
       )}
-      <DetailDrawer
-        title="Daily data-quality details"
-        trigger={
-          <Button className="mt-3" variant="outline" size="sm">
-            <Info />
-            Coverage & data quality
-          </Button>
-        }
-      >
-        <p>
-          {shown.length} supplied daily records in this view.{" "}
-          {shown.filter((d) => d.coverage === "allocated" || d.coverage === "estimated").length}{" "}
-          allocated or estimated.
-        </p>
-        <p className="mt-3">
-          {
-            shown.filter(
-              (d) => metricValue(d, "costChf") === null || metricValue(d, "co2Kg") === null,
-            ).length
-          }{" "}
-          records lack cost or location-based CO₂. Absent days and missing metrics stay unavailable,
-          never zero.
-        </p>
-      </DetailDrawer>
       <AnalyticalInspector
-        title={sel?.date ?? "Day details"}
+        title={
+          inspector === "coverage"
+            ? "Daily data-quality details"
+            : selectedInRange
+              ? selectedDate
+              : "Day details"
+        }
         trigger={null}
-        open={dayOpen}
-        onOpenChange={(o) => {
-          setDayOpen(o);
+        open={inspector != null}
+        onOpenChange={(open) => {
+          if (!open) setInspector(null);
         }}
+        contentKey={`${inspector}:${selectedInRange ? selectedDate : ""}`}
       >
-        {sel && (
-          <div className="mt-6 space-y-4 text-sm">
-            <p className="num">
-              {display(sel, "costChf")} · {display(sel, "co2Kg")} · {display(sel, "energyKwh")}
+        {inspector === "coverage" ? (
+          <DetailBlock title="Observation coverage">
+            <p>
+              {shown.length} supplied days ·{" "}
+              {shown.filter((d) => metricValue(d, color) === null).length} supplied days without{" "}
+              {LABELS[color]}.
             </p>
+            <p>
+              {
+                shown.filter(
+                  (day) =>
+                    metricValue(day, "costChf") === null || metricValue(day, "co2Kg") === null,
+                ).length
+              }{" "}
+              supplied days lack cost or location-based CO₂.
+            </p>
+            <p className="mt-2">
+              Dashed outlines mark unavailable values. A corner marker flags allocated, estimated or
+              partially covered values. Measured zero is scaled as an observed value.
+            </p>
+          </DetailBlock>
+        ) : sel ? (
+          <div className="space-y-4 text-sm">
+            <p className="num">
+              {["costChf", "energyKwh", "co2Kg", "co2KgMarket"].map((key) => {
+                const id = key as CalMetric;
+                return (
+                  <span className="block" key={id}>
+                    {LABELS[id]} · {display(sel, id)}
+                  </span>
+                );
+              })}
+            </p>
+            <p className="capitalize">Coverage · {sel.coverage}</p>
             <p>{sel.holiday ?? (sel.workday ? "Workday" : "Weekend")}</p>
             <h4 className="font-semibold">CO₂ contributors</h4>
             {(sel.contributors ?? []).map((c) => (
@@ -373,14 +414,26 @@ export function FootprintCalendar({
             {sel.marketCoverage && (
               <div className="space-y-2 border-t pt-3">
                 <h4 className="font-semibold">Market-based CO₂</h4>
-                <p>{display(sel, "co2KgMarket")} · {marketCoverageLabel(sel.marketCoverage)}</p>
-                {[...sel.marketCoverage.missingInputs, ...sel.marketCoverage.assumptions].map((s) => (
-                  <p key={s} className="text-muted-foreground">{s}</p>
-                ))}
-                <p className="break-words text-muted-foreground">{sel.marketCoverage.sources.join(" · ")}</p>
+                <p>
+                  {display(sel, "co2KgMarket")} · {marketCoverageLabel(sel.marketCoverage)}
+                </p>
+                {[...sel.marketCoverage.missingInputs, ...sel.marketCoverage.assumptions].map(
+                  (s) => (
+                    <p key={s} className="text-muted-foreground">
+                      {s}
+                    </p>
+                  ),
+                )}
+                <EvidenceSources sources={sel.marketCoverage.sources} />
               </div>
             )}
           </div>
+        ) : (
+          <p>
+            {selectedInRange
+              ? "No observations were supplied for this date."
+              : "The selected date is outside the current range. Select a day in this range to view its evidence."}
+          </p>
         )}
       </AnalyticalInspector>
     </div>

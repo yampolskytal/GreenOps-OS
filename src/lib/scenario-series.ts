@@ -1,5 +1,5 @@
-import type { Forecast, HistoricalMetric, MonthlyObservation } from "./api/types";
-import { aggregateForecast, isAvailable, monthLabel } from "./analytics";
+import type { Forecast, HistoricalMetric, MonthlyObservation, Range } from "./api/types";
+import { forecastLabel, isAvailable, monthLabel } from "./analytics";
 
 export const METRIC_FIELD: Record<Forecast["metric"], HistoricalMetric> = {
   cost: "costChf",
@@ -7,101 +7,144 @@ export const METRIC_FIELD: Record<Forecast["metric"], HistoricalMetric> = {
   co2Location: "co2Kg",
   co2Market: "co2KgMarket",
 };
+const baselineFrom = Date.UTC(2025, 8, 1);
+export const FORECAST_BOUNDARY = Date.UTC(2026, 8, 1);
+const MONTH = /^(\d{4})-(0[1-9]|1[0-2])/;
 export interface ScenarioRow {
   time: number;
   label: string;
   kind: "actual" | "projected";
   coverage?: string;
-  [series: string]: number | string | null | undefined;
+  ranges?: Record<string, Range>;
+  [series: string]: number | string | Record<string, Range> | null | undefined;
 }
 export interface ScenarioSource {
   key: string;
   forecast: Forecast | null | undefined;
 }
-export type ScenarioGranularity = "quarterly" | "annual" | "none";
-const monthStart = (month: string) => Date.parse(`${month.slice(0, 7)}-01T00:00:00Z`);
-const addMonths = (time: number, n: number) => {
-  const d = new Date(time);
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1);
+export type ScenarioGranularity = "monthly" | "annual" | "none";
+
+const monthStart = (label: string) => {
+  const match = MONTH.exec(label);
+  return match ? Date.UTC(Number(match[1]), Number(match[2]) - 1, 1) : NaN;
+};
+const nextMonth = (time: number) => {
+  const date = new Date(time);
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1);
 };
 
+function scaleRange(range: Range | null, scale: number) {
+  return (
+    range && {
+      low: range.low * scale,
+      mid: range.mid * scale,
+      high: range.high * scale,
+    }
+  );
+}
+
 /**
- * Builds one shared timeline in a monthly unit:
- * - Actual history comes from genuine monthly observations (missing stays null).
- * - Monthly forecasts are averaged into supplied 3-month periods only.
- * - Annual forecasts are shown as one point per year at their monthly average (annual ÷ 12);
- *   no intermediate quarterly or monthly values are created.
- * "noChange" uses the first available forecast's baseline; each source uses its optimized values.
+ * Monthly projections use supplied dates and values. Annual totals use one
+ * monthly-average point per supplied year so the units match observed months.
  */
 export function buildScenarioChart(
   history: MonthlyObservation[],
   metric: Forecast["metric"],
   sources: ScenarioSource[],
-  historyMonths = 12,
 ) {
-  const field = METRIC_FIELD[metric];
-  const sorted = [...history]
-    .filter((r) => Number.isFinite(monthStart(r.month)))
-    .sort((a, b) => a.month.localeCompare(b.month))
-    .slice(-historyMonths);
   const rows = new Map<number, ScenarioRow>();
-  const row = (time: number, label: string, kind: ScenarioRow["kind"]) => {
-    const existing = rows.get(time);
-    if (existing) return existing;
-    const created: ScenarioRow = { time, label, kind };
-    rows.set(time, created);
-    return created;
-  };
+  const field = METRIC_FIELD[metric];
+  const observations = new Map(history.map((point) => [monthStart(point.month), point]));
   let historyCount = 0;
-  for (const r of sorted) {
-    const value = r[field];
-    const t = monthStart(r.month);
-    const target = row(t, monthLabel(r.month), "actual");
-    target["history"] = isAvailable(value) ? value : null;
+  for (let time = baselineFrom; time < FORECAST_BOUNDARY; time = nextMonth(time)) {
+    const observed = observations.get(time);
+    const value = observed?.[field];
     if (isAvailable(value)) historyCount++;
-  }
-  const lastHistory = sorted.at(-1);
-  const boundary = lastHistory ? monthStart(lastHistory.month) : null;
-  const available = sources.filter((s) => s.forecast && s.forecast.points.length);
-  const monthly = available.length > 0 && available.every((s) => s.forecast?.granularity === "monthly" && s.forecast.points.every((p) => p.date));
-  const granularity: ScenarioGranularity = !available.length ? "none" : monthly ? "quarterly" : "annual";
-  let baselineSet = false;
-  for (const source of available) {
-    const f = monthly ? aggregateForecast(source.forecast as Forecast, 3) : (source.forecast as Forecast);
-    f.points.forEach((p, i) => {
-      let time: number;
-      let label: string;
-      if (monthly && p.date) {
-        time = Date.parse(p.date);
-        label = p.periodLabel ?? monthLabel(p.date);
-      } else {
-        const anchor = boundary ?? Date.UTC(p.year, 0, 1);
-        time = addMonths(anchor, 12 * i);
-        label = i === 0 ? `Baseline year ${p.year} (monthly avg)` : `Year ${i} · ${p.year} (monthly avg)`;
-      }
-      const target = row(time, label, boundary != null && time <= boundary && i === 0 ? "actual" : "projected");
-      if (target.kind === "actual" && i === 0) target.kind = "projected";
-      const scale = monthly ? 1 : 1 / 12;
-      if (p.coverage) target.coverage = p.coverage;
-      const optimized = p.optimized?.mid;
-      target[source.key] = isAvailable(optimized) ? optimized * scale : null;
-      if (!baselineSet) target["noChange"] = isAvailable(p.baseline.mid) ? p.baseline.mid * scale : null;
+    rows.set(time, {
+      time,
+      kind: "actual",
+      label: monthLabel(new Date(time).toISOString(), "long"),
+      history: isAvailable(value) ? value : null,
+      coverage:
+        metric === "co2Market" && observed?.marketCoverage?.coveragePct != null
+          ? `${observed.marketCoverage.coveragePct.toFixed(1)}% of modeled energy covered`
+          : (observed?.status ?? "Observation coverage unavailable"),
     });
-    baselineSet = true;
   }
-  const list = [...rows.values()].sort((a, b) => a.time - b.time);
-  for (const r of list) if (r["history"] != null) r.kind = "actual";
-  const values = list.flatMap((r) =>
-    Object.entries(r)
-      .filter(([k, v]) => !["time", "label", "kind", "coverage"].includes(k) && isAvailable(v))
-      .map(([, v]) => v as number),
+
+  const available = sources.filter(
+    ({ forecast }) => forecast?.metric === metric && forecast.points.length,
   );
+  const granularity: ScenarioGranularity = !available.length
+    ? "none"
+    : available[0]?.forecast?.granularity === "monthly"
+      ? "monthly"
+      : "annual";
+  const resolutionMismatch = available.some(
+    ({ forecast }) => (forecast?.granularity === "monthly") !== (granularity === "monthly"),
+  );
+
+  for (const { key, forecast } of available) {
+    if (!forecast || (forecast.granularity === "monthly") !== (granularity === "monthly")) continue;
+    for (const point of forecast.points) {
+      const monthly = forecast.granularity === "monthly";
+      const time = point.date ? Date.parse(point.date) : monthly ? NaN : Date.UTC(point.year, 0, 1);
+      if (!Number.isFinite(time) || time < FORECAST_BOUNDARY) continue;
+      const scale = monthly ? 1 : 1 / 12;
+      const row = rows.get(time) ?? {
+        time,
+        kind: "projected" as const,
+        label: monthly ? monthLabel(point.date ?? "", "long") : forecastLabel(point),
+        ...(point.coverage ? { coverage: point.coverage } : {}),
+      };
+      const ranges = (row.ranges ??= {});
+      if (row["noChange"] == null) {
+        row["noChange"] = point.baseline.mid * scale;
+        ranges["noChange"] = scaleRange(point.baseline, scale)!;
+      }
+      if (key !== "baseline") {
+        const range = scaleRange(point.optimized, scale);
+        row[key] = range?.mid ?? null;
+        if (range) ranges[key] = range;
+      }
+      rows.set(time, row);
+    }
+  }
+
+  // Represent missing model months as gaps, with no numeric values.
+  if (granularity === "monthly") {
+    const last = Math.max(...rows.keys());
+    const monthKeys = new Set(
+      [...rows.keys()].map((time) => monthStart(new Date(time).toISOString())),
+    );
+    for (let time = FORECAST_BOUNDARY; time < last; time = nextMonth(time)) {
+      if (!monthKeys.has(time))
+        rows.set(time, {
+          time,
+          label: monthLabel(new Date(time).toISOString(), "long"),
+          kind: "projected",
+          coverage: "No projection supplied for this month",
+        });
+    }
+  }
   return {
-    rows: list,
+    rows: [...rows.values()].sort((a, b) => a.time - b.time),
     granularity,
     historyCount,
-    boundary,
-    max: values.length ? Math.max(...values) : 0,
-    unitSuffix: "/ month",
+    resolutionMismatch,
+    boundary: FORECAST_BOUNDARY,
   };
+}
+
+export function scenarioDomain(values: number[]): [number, number] {
+  if (!values.length) return [0, 1];
+  const minimum = Math.min(...values);
+  const maximum = Math.max(...values);
+  const span = Math.max(
+    maximum - minimum,
+    0.2 * Math.max(Math.abs(minimum), Math.abs(maximum)),
+    0.001,
+  );
+  const padding = (span - (maximum - minimum)) / 2 + span * 0.08;
+  return [minimum >= 0 ? Math.max(0, minimum - padding) : minimum - padding, maximum + padding];
 }

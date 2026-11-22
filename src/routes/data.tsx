@@ -25,7 +25,7 @@ function DataReports() {
       subtitle="Manage source data, review data quality and prepare your submission exports."
     >
       <Tabs defaultValue="management">
-        <TabsList className="mb-6">
+        <TabsList aria-label="Data and Reports sections" className="mb-6">
           <TabsTrigger value="management">Data Management</TabsTrigger>
           <TabsTrigger value="submission">Submission</TabsTrigger>
         </TabsList>

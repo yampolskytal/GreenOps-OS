@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Info, OctagonX, ShieldAlert, FileSearch } from "lucide-react";
+import { AlertTriangle, CheckCircle2, OctagonX, ShieldAlert, FileSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import type { Calculation, Evidence, RiskLevel, ValueKind } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { AnalyticalInspector } from "./analytical-inspector";
+import { EvidenceInfoButton, EvidenceSources } from "./details";
+import { carbonMass, formatEvidenceText, kg } from "@/lib/format";
 
 /** Replaceable loading animation (21st.dev component will drop in here). */
 export function Loader({ label = "Loading" }: { label?: string }) {
@@ -104,80 +106,68 @@ export function CalcInfo({ calc, children }: { calc: Calculation; children?: Rea
           <KindTag kind={calc.kind} /> · {calc.period}
         </>
       }
-      trigger={
-        children ?? (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`How is "${calc.title}" calculated?`}
-            className="rounded-full p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          >
-            <Info className="h-3.5 w-3.5" />
-          </Button>
-        )
-      }
+      trigger={children ?? <EvidenceInfoButton description={calc.title} />}
     >
-      <div className="space-y-5 px-4 pb-8 text-sm">
-        <Block title="Formula">
-          <code className="num block rounded-lg bg-muted p-3 text-xs leading-relaxed">
-            {calc.formula}
-          </code>
-          <p className="mt-1 text-xs text-muted-foreground">Unit: {calc.units}</p>
-        </Block>
-        {calc.inputs.length > 0 && (
-          <Block title="Inputs">
-            <ul className="space-y-1">
-              {calc.inputs.map((i) => (
-                <li key={i.label} className="flex justify-between">
-                  <span className="text-muted-foreground">{i.label}</span>
-                  <span className="num">{i.value}</span>
-                </li>
-              ))}
-            </ul>
-          </Block>
-        )}
-        {calc.factors && (
-          <Block title="Conversion factors (low · mid · high)">
-            <ul className="space-y-2">
-              {calc.factors.map((f) => (
-                <li key={f.label}>
-                  <div className="flex justify-between">
-                    <span>{f.label}</span>
-                    <span className="num">
-                      {f.low} · {f.mid} · {f.high}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{f.source}</p>
-                </li>
-              ))}
-            </ul>
-          </Block>
-        )}
-        <Block title="Data sources">
-          <div className="flex flex-wrap gap-1.5">
-            {calc.sources.map((s) => (
-              <span key={s} className="num rounded bg-secondary px-1.5 py-0.5 text-[11px]">
-                {s}
-              </span>
-            ))}
-          </div>
-        </Block>
-        <Block title="Assumptions">
-          <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-            {calc.assumptions.map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-        </Block>
-        <Block title="Limitations">
-          <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
-            {calc.limitations.map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-        </Block>
-      </div>
+      <CalculationDetails calc={calc} />
     </AnalyticalInspector>
+  );
+}
+
+export function CalculationDetails({ calc }: { calc: Calculation }) {
+  return (
+    <div className="space-y-5 text-sm">
+      <Block title="Formula">
+        <code className="num block break-words rounded-lg bg-muted p-3 text-xs leading-relaxed">
+          {formatEvidenceText(calc.formula)}
+        </code>
+        <p className="mt-1 text-xs text-muted-foreground">Unit: {calc.units}</p>
+      </Block>
+      {calc.inputs.length > 0 && (
+        <Block title="Inputs">
+          <ul className="space-y-1">
+            {calc.inputs.map((i) => (
+              <li key={i.label} className="flex flex-wrap justify-between gap-x-3 break-all">
+                <span className="text-muted-foreground">{i.label}</span>
+                <span className="num">{formatEvidenceText(i.value)}</span>
+              </li>
+            ))}
+          </ul>
+        </Block>
+      )}
+      {calc.factors && (
+        <Block title="Conversion factors (low · mid · high)">
+          <ul className="space-y-2">
+            {calc.factors.map((f) => (
+              <li key={f.label}>
+                <div className="flex flex-wrap justify-between gap-x-3 break-all">
+                  <span>{f.label}</span>
+                  <span className="num">
+                    {formatEvidenceText(f.low)} · {formatEvidenceText(f.mid)} ·{" "}
+                    {formatEvidenceText(f.high)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">{f.source}</p>
+              </li>
+            ))}
+          </ul>
+        </Block>
+      )}
+      <Block title="Assumptions">
+        <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+          {calc.assumptions.map((a) => (
+            <li key={a}>{formatEvidenceText(a)}</li>
+          ))}
+        </ul>
+      </Block>
+      <Block title="Limitations">
+        <ul className="list-disc space-y-1 pl-4 text-muted-foreground">
+          {calc.limitations.map((a) => (
+            <li key={a}>{formatEvidenceText(a)}</li>
+          ))}
+        </ul>
+      </Block>
+      <EvidenceSources sources={calc.sources} />
+    </div>
   );
 }
 function Block({ title, children }: { title: string; children: ReactNode }) {
@@ -209,16 +199,7 @@ export function EvidencePopover({
         </Button>
       }
     >
-      <div className="mt-5">
-        <ul className="space-y-2">
-          {evidence.map((e) => (
-            <li key={e.source + e.detail}>
-              <p className="num text-[11px] text-info">{e.source}</p>
-              <p className="text-muted-foreground">{e.detail}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <EvidenceSources sources={evidence} />
     </AnalyticalInspector>
   );
 }
@@ -302,7 +283,7 @@ export function KpiCard({
 }) {
   return (
     <div className="rise-in min-w-0 border-b py-5">
-      <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+      <div className="flex min-h-9 flex-wrap items-center gap-2 text-muted-foreground">
         {icon}
         <span className="text-xs font-medium">{label}</span>
         <span className="ml-auto flex items-center gap-1">
@@ -321,7 +302,10 @@ export function KpiCard({
         {value == null || !Number.isFinite(value) ? (
           "Unavailable"
         ) : (
-          <AnimatedNumber value={value} format={format} />
+          <AnimatedNumber
+            value={value}
+            format={format === kg && calc ? (n) => carbonMass(n, calc.units) : format}
+          />
         )}
       </p>
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
@@ -335,12 +319,14 @@ export function TargetProgress({
   target,
   direction,
   unitLabel,
+  statusIcon,
 }: {
   label: string;
   achieved: number;
   target: number;
   direction: "atLeast" | "atMost";
   unitLabel: (n: number) => string;
+  statusIcon?: ReactNode;
 }) {
   const met = direction === "atLeast" ? achieved >= target : achieved <= target;
   const scale = direction === "atLeast" ? target * 1.5 : target * 1.25;
@@ -348,13 +334,19 @@ export function TargetProgress({
   const mark = (target / scale) * 100;
   return (
     <div>
-      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+      <div
+        className={cn(
+          "mb-1.5 text-sm",
+          statusIcon ? "grid gap-1" : "flex flex-wrap items-baseline justify-between gap-2",
+        )}
+      >
         <span className="flex items-center gap-1.5">
-          {met ? (
-            <CheckCircle2 className="h-4 w-4 text-success" />
-          ) : (
-            <AlertTriangle className="h-4 w-4 text-warning" />
-          )}
+          {statusIcon ??
+            (met ? (
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            ) : (
+              <AlertTriangle className="h-4 w-4 text-warning" />
+            ))}
           {label}
         </span>
         <span className="num text-xs">

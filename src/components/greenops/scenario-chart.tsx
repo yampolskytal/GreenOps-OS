@@ -1,8 +1,19 @@
-// Adapted from the line-charts-4 Recharts pattern: card layout, grid, combined tooltip and
-// clickable legend. Values come only from supplied history and forecast series; zero renders.
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import type { ScenarioRow } from "@/lib/scenario-series";
-import { isAvailable } from "@/lib/analytics";
+import { useState } from "react";
+import {
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { scenarioDomain, type ScenarioRow } from "@/lib/scenario-series";
+import { isAvailable, percentDifference } from "@/lib/analytics";
+import { formatNumber, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export interface ScenarioSeries {
@@ -13,6 +24,87 @@ export interface ScenarioSeries {
   hidden?: boolean;
   toggleable?: boolean;
 }
+
+function Swatch({ series }: { series: ScenarioSeries }) {
+  return (
+    <svg width="24" height="8" aria-hidden="true" className="shrink-0">
+      <line
+        x1="1"
+        x2="23"
+        y1="4"
+        y2="4"
+        stroke={series.color}
+        strokeWidth="2.5"
+        strokeDasharray={series.dashed ? "5 3" : undefined}
+      />
+    </svg>
+  );
+}
+
+function Observation({
+  row,
+  series,
+  format,
+  compact = false,
+}: {
+  row: ScenarioRow;
+  series: ScenarioSeries[];
+  format: (n: number) => string;
+  compact?: boolean;
+}) {
+  const observed = row.kind === "actual";
+  const comparison = series.filter((item) =>
+    observed ? item.key === "history" : item.key !== "history",
+  );
+  const baseline = row["noChange"];
+  return (
+    <>
+      <p className="font-semibold">
+        {row.label} — {observed ? "Actual observation" : "Projected outcomes"}
+      </p>
+      {row.coverage && <p className="mt-1 text-xs text-muted-foreground">{row.coverage}</p>}
+      <dl className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1.5">
+        {comparison.map((item) => {
+          const value = row[item.key];
+          const range = row.ranges?.[item.key];
+          const difference =
+            item.key !== "noChange" && !observed && isAvailable(baseline) && isAvailable(value)
+              ? value - baseline
+              : null;
+          const percentage =
+            difference != null && isAvailable(baseline) && isAvailable(value)
+              ? percentDifference(baseline, value)
+              : null;
+          return (
+            <div key={item.key} className="col-span-2 grid grid-cols-subgrid items-baseline">
+              <dt className="flex min-w-0 items-center gap-2">
+                <Swatch series={item} />
+                <span className="min-w-0 break-words">{item.label}</span>
+              </dt>
+              <dd className="num max-w-full text-right">
+                {isAvailable(value) ? format(value) : "Unavailable"}
+                {difference != null && (
+                  <span className="block text-xs text-muted-foreground">
+                    {difference === 0
+                      ? "No modeled difference"
+                      : `${format(Math.abs(difference))} ${difference > 0 ? "higher" : "lower"}`}
+                    {percentage != null && difference !== 0 && ` (${pct(Math.abs(percentage))})`}
+                  </span>
+                )}
+                {!compact && range && range.low !== range.high && (
+                  <span className="block text-xs text-muted-foreground">
+                    Low–high · {format(range.low)}–{format(range.high)}
+                  </span>
+                )}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+    </>
+  );
+}
+
 export function ScenarioChart({
   rows,
   series,
@@ -22,136 +114,243 @@ export function ScenarioChart({
   milestones = [],
   height = 340,
   onToggle,
+  showBand = false,
+  selectedDate,
+  onDateChange,
 }: {
   rows: ScenarioRow[];
   series: ScenarioSeries[];
-  boundary: number | null;
+  boundary: number;
   format: (n: number) => string;
   unit: string;
   milestones?: { time: number; label: string }[];
   height?: number;
   onToggle?: (key: string) => void;
+  showBand?: boolean;
+  selectedDate?: number | undefined;
+  onDateChange?: (time: number) => void;
 }) {
   const visible = series.filter((s) => !s.hidden);
+  const [localTime, setLocalTime] = useState<number>();
+  const selectedTime = onDateChange ? selectedDate : localTime;
+  const setSelectedTime = onDateChange ?? setLocalTime;
+  const dates = new Map(rows.map((row) => [row.time, row]));
+  const selected =
+    dates.get(selectedTime ?? NaN) ??
+    rows.filter((row) => row.kind === "actual" && isAvailable(row["history"])).at(-1) ??
+    rows.filter((row) => row.kind === "actual").at(-1) ??
+    rows[0];
+  const showBaselineBand =
+    showBand &&
+    visible.some(({ key }) => key === "noChange") &&
+    rows.some((row) => {
+      const range = row.ranges?.["noChange"];
+      return range && range.low !== range.high;
+    });
+  const values = rows.flatMap((row) => {
+    const values = visible.map(({ key }) => row[key]).filter(isAvailable);
+    const range = showBaselineBand ? row.ranges?.["noChange"] : null;
+    if (range) values.push(range.low, range.high);
+    return values;
+  });
+  const start = rows[0]?.time ?? boundary;
+  const end = Math.max(boundary, rows.at(-1)?.time ?? boundary);
+  const ticks = rows
+    .map((row) => row.time)
+    .filter(
+      (_time, index) =>
+        index % Math.max(1, Math.ceil(rows.length / 7)) === 0 || index === rows.length - 1,
+    );
   return (
     <div className="min-w-0">
-      <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-2 text-xs" aria-label="Chart legend">
-        {series.map((s) => (
-          <li key={s.key}>
-            <button
-              type="button"
-              disabled={!s.toggleable || !onToggle}
-              aria-pressed={!s.hidden}
-              onClick={() => onToggle?.(s.key)}
-              className={cn(
-                "inline-flex items-center gap-2 rounded px-1 py-0.5",
-                s.toggleable && onToggle && "hover:bg-muted",
-                s.hidden && "opacity-45 line-through",
-              )}
-            >
-              <svg width="22" height="8" aria-hidden="true">
-                <line x1="1" x2="21" y1="4" y2="4" stroke={s.color} strokeWidth="2.5" strokeDasharray={s.dashed ? "4 3" : undefined} />
-              </svg>
-              {s.label}
-            </button>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <span>{unit}</span>
+        <p>Actual history through August 2026 · Projected future from September 2026</p>
+      </div>
+      <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs" aria-label="Chart legend">
+        {series.map((item) => (
+          <li key={item.key}>
+            {item.toggleable && onToggle ? (
+              <button
+                type="button"
+                aria-pressed={!item.hidden}
+                onClick={() => onToggle(item.key)}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded px-1.5 py-1 text-left hover:bg-muted",
+                  item.hidden && "opacity-60 line-through",
+                )}
+              >
+                <Swatch series={item} />
+                {item.label}
+              </button>
+            ) : (
+              <span className="inline-flex items-center gap-2 py-1">
+                <Swatch series={item} />
+                {item.label}
+              </span>
+            )}
           </li>
         ))}
+        {showBaselineBand && (
+          <li className="py-1 text-muted-foreground">Shading · supplied baseline low–high range</li>
+        )}
       </ul>
-      <div style={{ height }} className="w-full min-w-0" role="img" aria-label={`${unit} — ${visible.map((s) => s.label).join(", ")}`}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={rows} margin={{ top: 16, right: 16, bottom: 4, left: 4 }}>
-            <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="time"
-              type="number"
-              scale="time"
-              domain={["dataMin", "dataMax"]}
-              tickFormatter={(t: number) =>
-                new Date(t).toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" })
-              }
-              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-              stroke="var(--border)"
-              minTickGap={24}
-            />
-            <YAxis
-              domain={[0, "auto"]}
-              tickFormatter={(v: number) => format(v)}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-              stroke="var(--border)"
-              width={92}
-            />
-            {boundary != null && (
+      {values.length > 0 && (
+        <div
+          style={{ height }}
+          className="w-full min-w-0"
+          data-inspector-interactive
+          role="img"
+          aria-label={`Forecast timeline · ${unit}`}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart
+              data={rows}
+              margin={{ top: 20, right: 16, bottom: 6, left: 0 }}
+              onClick={(event) => {
+                const time = Number(event?.activeLabel);
+                if (dates.has(time)) setSelectedTime(time);
+              }}
+            >
+              <CartesianGrid stroke="var(--border)" vertical={false} />
+              <XAxis
+                dataKey="time"
+                type="number"
+                scale="time"
+                domain={[start, end]}
+                ticks={ticks}
+                minTickGap={28}
+                tickFormatter={(time: number) =>
+                  new Date(time).toLocaleDateString("en-US", {
+                    month: "short",
+                    year: "2-digit",
+                    timeZone: "UTC",
+                  })
+                }
+                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                stroke="var(--border)"
+              />
+              <YAxis
+                type="number"
+                domain={scenarioDomain(values)}
+                tickCount={5}
+                tickFormatter={(value: number) =>
+                  formatNumber(value, { maximumFractionDigits: Math.abs(value) < 1 ? 3 : 0 })
+                }
+                tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                stroke="var(--border)"
+                width={75}
+              />
+              {end > boundary && (
+                <ReferenceArea
+                  x1={boundary}
+                  x2={end}
+                  fill="var(--muted-foreground)"
+                  fillOpacity={0.07}
+                />
+              )}
               <ReferenceLine
                 x={boundary}
                 stroke="var(--muted-foreground)"
-                strokeDasharray="2 4"
-                label={{ value: "Forecast starts", position: "insideTopLeft", fill: "var(--muted-foreground)", fontSize: 11 }}
+                strokeDasharray="3 3"
+                label={{
+                  value: "Forecast starts",
+                  position: "insideTopLeft",
+                  fill: "var(--muted-foreground)",
+                  fontSize: 11,
+                }}
               />
-            )}
-            {milestones.map(({ time, label }) => (
-              <ReferenceLine key={label} x={time} stroke="var(--info)" strokeDasharray="3 5" />
-            ))}
-            <Tooltip
-              cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
-              allowEscapeViewBox={{ x: false, y: false }}
-              wrapperStyle={{ zIndex: 20, maxWidth: "min(320px, 80vw)" }}
-              content={({ active, payload }) => {
-                const r = payload?.[0]?.payload as ScenarioRow | undefined;
-                if (!active || !r) return null;
-                const base = r["noChange"];
-                return (
-                  <div className="rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md">
-                    <p className="font-semibold">{r.label}</p>
-                    <p className="mb-2 text-muted-foreground">
-                      {r.kind === "actual" ? "Actual observation" : "Projection"} · {unit}
-                      {r.coverage ? ` · ${r.coverage}` : ""}
-                    </p>
-                    {visible.map((s) => {
-                      const v = r[s.key];
-                      if (!isAvailable(v)) return null;
-                      const diff = isAvailable(base) && s.key !== "noChange" && s.key !== "history" ? base - v : null;
-                      return (
-                        <p key={s.key} className="flex justify-between gap-4">
-                          <span className="inline-flex items-center gap-2">
-                            <span className="inline-block size-2 rounded-full" style={{ background: s.color }} />
-                            {s.label}
-                          </span>
-                          <span className="num">
-                            {format(v)}
-                            {diff != null && isAvailable(base) && base > 0 && (
-                              <span className="ml-1 text-muted-foreground">
-                                ({diff >= 0 ? "−" : "+"}
-                                {format(Math.abs(diff))}, {((Math.abs(diff) / base) * 100).toFixed(1)}%)
-                              </span>
-                            )}
-                          </span>
-                        </p>
-                      );
-                    })}
-                  </div>
-                );
-              }}
-            />
-            {visible.map((s) => (
-              <Line
-                key={s.key}
-                dataKey={s.key}
-                type="linear"
-                stroke={s.color}
-                strokeWidth={s.key === "history" ? 2.5 : 2}
-                strokeDasharray={s.dashed ? "6 4" : undefined}
-                dot={{ r: 3, fill: s.color, strokeWidth: 0 }}
-                activeDot={{ r: 5 }}
-                connectNulls={s.key !== "history"}
-                isAnimationActive={false}
+              {milestones
+                .filter(({ time }) => time >= boundary && time <= end)
+                .map(({ time, label }) => (
+                  <ReferenceLine key={label} x={time} stroke="var(--info)" strokeDasharray="3 5" />
+                ))}
+              {selected && selected.time !== boundary && (
+                <ReferenceLine x={selected.time} stroke="var(--ring)" strokeOpacity={0.55} />
+              )}
+              <Tooltip
+                cursor={{ stroke: "var(--muted-foreground)", strokeDasharray: "3 3" }}
+                filterNull={false}
+                wrapperStyle={{ zIndex: 20, maxWidth: "min(340px, 75vw)" }}
+                content={({ active, label }) => {
+                  const row = dates.get(Number(label));
+                  return active && row ? (
+                    <div className="rounded-md border bg-popover p-3 text-xs text-popover-foreground shadow-md">
+                      <Observation row={row} series={visible} format={format} compact />
+                    </div>
+                  ) : null;
+                }}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-      <p className="mt-3 text-xs text-muted-foreground">
-        Solid marks observed monthly values · dashed marks projections · {unit}
-      </p>
+              {showBaselineBand && (
+                <Area
+                  dataKey={(row: ScenarioRow) => {
+                    const range = row.ranges?.["noChange"];
+                    return range ? [range.low, range.high] : null;
+                  }}
+                  type="linear"
+                  stroke="none"
+                  fill="var(--scenario-none)"
+                  fillOpacity={0.14}
+                  connectNulls={false}
+                  isAnimationActive={false}
+                />
+              )}
+              {visible.map((item) => (
+                <Line
+                  key={item.key}
+                  dataKey={item.key}
+                  type="linear"
+                  stroke={item.color}
+                  strokeWidth={item.key === "history" ? 2.5 : 2}
+                  strokeDasharray={item.dashed ? "5 3" : undefined}
+                  dot={{ r: 2.5, fill: item.color, strokeWidth: 0 }}
+                  activeDot={{ r: 5 }}
+                  connectNulls={false}
+                  isAnimationActive={false}
+                />
+              ))}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+      {selected && (
+        <section aria-label="Selected forecast date" className="mt-3 border-t pt-3 text-sm">
+          <div className="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <div>
+              <Observation row={selected} series={visible} format={format} />
+            </div>
+            <label className="grid gap-1 text-xs text-muted-foreground">
+              Inspect a date
+              <select
+                value={selected.time}
+                onChange={(event) => setSelectedTime(Number(event.target.value))}
+                className="h-9 w-full min-w-0 max-w-56 rounded-md border bg-card px-2 text-sm text-foreground"
+              >
+                <optgroup label="Actual history">
+                  {rows
+                    .filter((row) => row.kind === "actual")
+                    .map((row) => (
+                      <option key={row.time} value={row.time}>
+                        {row.label}
+                      </option>
+                    ))}
+                </optgroup>
+                {rows.some((row) => row.kind === "projected") && (
+                  <optgroup label="Projected future">
+                    {rows
+                      .filter((row) => row.kind === "projected")
+                      .map((row) => (
+                        <option key={row.time} value={row.time}>
+                          {row.label}
+                        </option>
+                      ))}
+                  </optgroup>
+                )}
+              </select>
+            </label>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

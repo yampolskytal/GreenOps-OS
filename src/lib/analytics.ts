@@ -20,10 +20,10 @@ export const percentDifference = (before: number, after: number) =>
   isAvailable(before) && isAvailable(after) && before > 0
     ? ((before - after) / before) * 100
     : null;
-export const monthLabel = (month: string) => {
+export const monthLabel = (month: string, length: "short" | "long" = "short") => {
   const date = new Date(`${month.slice(0, 7)}-01T00:00:00Z`);
   return Number.isFinite(date.getTime())
-    ? date.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
+    ? date.toLocaleDateString("en-US", { month: length, year: "numeric", timeZone: "UTC" })
     : month;
 };
 export function monthlyTotal(rows: MonthlyObservation[], metric: HistoricalMetric) {

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, Plus, Check, Lock } from "lucide-react";
 import type { Measure } from "@/lib/api/types";
-import { chf, kg, kwh } from "@/lib/format";
+import { chf, formatEvidenceText, kg, kwh } from "@/lib/format";
 import { useApp } from "@/lib/store";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { canSelectMeasure } from "@/lib/planning";
@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { RiskBadge } from "./ui";
 import { PathMembership } from "./path-membership";
-import { DetailBlock, DetailDrawer } from "./details";
+import { DetailBlock, DetailDrawer, EvidenceSources } from "./details";
 
 function footprintAmount(value: number, unit: string, format: typeof kg) {
   const magnitude = Math.abs(value);
@@ -58,7 +58,7 @@ export function MeasureCard({
   const quote = decision?.replacement;
   const impact = [
     m.savingsChf !== 0 &&
-      `${Math.abs(m.savingsChf) < 1 ? `CHF ${Math.abs(m.savingsChf).toFixed(2)}` : chf(Math.abs(m.savingsChf))} ${m.savingsChf > 0 ? "saved" : "added cost"}/year`,
+      `${chf(Math.abs(m.savingsChf))} ${m.savingsChf > 0 ? "saved" : "added cost"}/year`,
     m.savingsCo2KgLocation !== 0 &&
       `${footprintAmount(m.savingsCo2KgLocation, "kg", kg)} CO₂e/year ${m.savingsCo2KgLocation > 0 ? "avoided" : "added"}`,
     m.savingsKwh !== 0 &&
@@ -114,22 +114,11 @@ export function MeasureCard({
       <DetailBlock title="Assumptions & conflicting evidence">
         <ul className="space-y-2">
           {[...(m.assumptions ?? []), ...(m.risk.conflicts ?? [])].map((x) => (
-            <li key={x}>{x}</li>
+            <li key={x}>{formatEvidenceText(x)}</li>
           ))}
         </ul>
       </DetailBlock>
-      <DetailBlock title="Source evidence">
-        {(m.evidence ?? []).length ? (
-          m.evidence.map((e) => (
-            <div key={e.source + e.detail} className="mb-3">
-              <p className="num break-words text-xs text-info">{e.source}</p>
-              <p className="mt-1 text-muted-foreground">{e.detail}</p>
-            </div>
-          ))
-        ) : (
-          <p>Unavailable</p>
-        )}
-      </DetailBlock>
+      <EvidenceSources sources={m.evidence} />
     </div>
   );
   return (

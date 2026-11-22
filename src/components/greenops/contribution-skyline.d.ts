@@ -5,6 +5,7 @@ export interface ContributionDay {
   count: number | null;
   colorCount?: number | null;
   detail?: string;
+  partial?: boolean;
 }
 export default function ContributionSkyline(props: {
   data: ContributionDay[];
@@ -22,5 +23,6 @@ export default function ContributionSkyline(props: {
   showStats?: boolean;
   showLegend?: boolean;
   weekStart?: 0 | 1;
+  selectedDate?: string | null;
   onCellClick?: (day: ContributionDay) => void;
 }): ReactNode;

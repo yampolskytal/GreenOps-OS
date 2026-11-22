@@ -6,6 +6,8 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type Dispatch,
+  type SetStateAction,
 } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, X } from "lucide-react";
@@ -14,7 +16,7 @@ import { api } from "@/lib/api/client";
 
 const InspectorContext = createContext<{
   active: string | null;
-  setActive: (id: string | null) => void;
+  setActive: Dispatch<SetStateAction<string | null>>;
   target: HTMLElement | null;
   desktop: boolean;
 } | null>(null);
@@ -48,6 +50,7 @@ export function AnalyticalInspector({
   open: requestedOpen,
   onOpenChange,
   fullWidth = false,
+  contentKey,
 }: {
   title: string;
   description?: ReactNode;
@@ -56,15 +59,17 @@ export function AnalyticalInspector({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   fullWidth?: boolean;
+  contentKey?: string;
 }) {
   const ctx = useContext(InspectorContext);
   const showNestedDetails = useContext(NestedInspectorContext);
   const [detailStack, setDetailStack] = useState<NestedDetails[]>([]);
   const currentDetails = detailStack.at(-1);
+  useEffect(() => setDetailStack([]), [contentKey, title]);
   const id = useId();
   const anchor = useRef<HTMLSpanElement>(null);
   const wasOpen = useRef(false);
-  const previousFocus = useRef<HTMLElement | null>(null);
+  const previousFocus = useRef<HTMLElement | SVGElement | null>(null);
   const open = ctx?.active === id;
   const setActive = ctx?.setActive;
   const current = useRef(ctx);
@@ -74,9 +79,13 @@ export function AnalyticalInspector({
   useEffect(() => {
     if (requestedOpen === true) {
       previousFocus.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        document.activeElement instanceof HTMLElement ||
+        document.activeElement instanceof SVGElement
+          ? document.activeElement
+          : null;
       setActive?.(id);
-    } else if (requestedOpen === false && current.current?.active === id) setActive?.(null);
+    } else if (requestedOpen === false && current.current?.active === id)
+      setActive?.((active) => (active === id ? null : active));
   }, [requestedOpen, id, setActive]);
   useEffect(() => {
     if (wasOpen.current && !open) callback.current?.(false);
@@ -84,7 +93,7 @@ export function AnalyticalInspector({
     wasOpen.current = open;
   }, [open]);
   const close = () => {
-    setActive?.(null);
+    setActive?.((active) => (active === id ? null : active));
     callback.current?.(false);
     (anchor.current?.querySelector<HTMLElement>("button") ?? previousFocus.current)?.focus({
       preventScroll: true,
@@ -94,7 +103,7 @@ export function AnalyticalInspector({
     if (!open) return;
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setActive?.(null);
+        setActive?.((active) => (active === id ? null : active));
         callback.current?.(false);
         (anchor.current?.querySelector<HTMLElement>("button") ?? previousFocus.current)?.focus({
           preventScroll: true,
@@ -111,11 +120,11 @@ export function AnalyticalInspector({
         return;
       if (
         target.closest(
-          "[data-radix-popper-content-wrapper], [role=dialog], [role=listbox], [role=menu], [data-inspector-owned], [data-inspector-trigger]",
+          "[data-radix-popper-content-wrapper], [role=dialog], [role=listbox], [role=menu], [data-inspector-owned], [data-inspector-trigger], [data-inspector-interactive], button, a[href], input, select, option, textarea, label, summary, [contenteditable=true], [role=button], [role=tab], [role=combobox]",
         )
       )
         return;
-      setActive?.(null);
+      setActive?.((active) => (active === id ? null : active));
       callback.current?.(false);
       (anchor.current?.querySelector<HTMLElement>("button") ?? previousFocus.current)?.focus({
         preventScroll: true,
@@ -127,33 +136,38 @@ export function AnalyticalInspector({
       document.removeEventListener("keydown", escape);
       document.removeEventListener("pointerdown", outside);
     };
-  }, [open, setActive]);
+  }, [id, open, setActive]);
   useEffect(
     () => () => {
-      if (wasOpen.current) setActive?.(null);
+      if (wasOpen.current) setActive?.((active) => (active === id ? null : active));
     },
-    [setActive],
+    [id, setActive],
   );
   return (
     <>
-      <span
-        ref={anchor}
-        data-inspector-trigger
-        className={fullWidth ? "block w-full min-w-0" : "inline-flex max-w-full"}
-        onClick={(event) => {
-          if (showNestedDetails) {
-            event.stopPropagation();
-            showNestedDetails({ title, description, children });
-            return;
-          }
-          previousFocus.current =
-            document.activeElement instanceof HTMLElement ? document.activeElement : null;
-          setActive?.(open ? null : id);
-          callback.current?.(!open);
-        }}
-      >
-        {trigger}
-      </span>
+      {trigger != null && (
+        <span
+          ref={anchor}
+          data-inspector-trigger
+          className={fullWidth ? "block w-full min-w-0" : "inline-flex max-w-full"}
+          onClick={(event) => {
+            if (showNestedDetails) {
+              event.stopPropagation();
+              showNestedDetails({ title, description, children });
+              return;
+            }
+            previousFocus.current =
+              document.activeElement instanceof HTMLElement ||
+              document.activeElement instanceof SVGElement
+                ? document.activeElement
+                : null;
+            setActive?.(id);
+            if (!open) callback.current?.(true);
+          }}
+        >
+          {trigger}
+        </span>
+      )}
       {open &&
         ctx?.target &&
         createPortal(

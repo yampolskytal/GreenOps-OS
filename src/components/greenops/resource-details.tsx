@@ -5,10 +5,11 @@ import { CalcInfo, Q } from "./ui";
 import { MeasureCard } from "./measure-card";
 import { DetailBlock } from "./details";
 import { EmissionMetric } from "./emissions-evidence";
-import { chf, kwh } from "@/lib/format";
+import { chf, formatNumber, kwh } from "@/lib/format";
 
 const HOURS = 720;
-const hour = (n?: number | null) => (n == null ? "Unavailable" : `${Number(n.toFixed(1))} h`);
+export const runtimeHours = (n?: number | null) =>
+  n == null ? "Unavailable" : `${formatNumber(n, { maximumFractionDigits: 1 })} h`;
 const width = (part: number | null) => `${Math.min(100, ((part ?? 0) / HOURS) * 100)}%`;
 const UNKNOWN_FILL = "repeating-linear-gradient(135deg, #d97706 0 3px, #fcd34d 3px 6px)";
 
@@ -26,15 +27,30 @@ function UtilizationMeter({ label, value }: { label: string; value?: number | nu
   );
 }
 
-function ConsumptionMetric({ label, kpi, format }: { label: string; kpi?: Kpi | null; format: typeof chf }) {
+function ConsumptionMetric({
+  label,
+  kpi,
+  format,
+}: {
+  label: string;
+  kpi?: Kpi | null;
+  format: typeof chf;
+}) {
   return (
     <div>
-      <p className="font-medium">{label} · {kpi ? format(kpi.value.mid) : "Unavailable"}</p>
+      <p className="font-medium">
+        {label} · {kpi ? format(kpi.value.mid) : "Unavailable"}
+      </p>
       {kpi && (
         <>
-          <p className="text-muted-foreground">{kpi.calc.period}{kpi.coverage && ` · ${kpi.coverage}`}</p>
+          <p className="text-muted-foreground">
+            {kpi.calc.period}
+            {kpi.coverage && ` · ${kpi.coverage}`}
+          </p>
           {kpi.value.low !== kpi.value.high && (
-            <p className="text-muted-foreground">Range {format(kpi.value.low)}–{format(kpi.value.high)}</p>
+            <p className="text-muted-foreground">
+              Range {format(kpi.value.low)}–{format(kpi.value.high)}
+            </p>
           )}
           <CalcInfo calc={kpi.calc} />
         </>
@@ -58,19 +74,39 @@ export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) 
         </p>
       </DetailBlock>
       <DetailBlock title="Last 30 days">
-        <p className="font-medium">Running time · {hour(r.runtimeH30d)}</p>
+        <p className="font-medium">Running time · {runtimeHours(r.runtimeH30d)}</p>
         {r.runtimeH30d != null && (
-          <div data-runtime-track className="mt-2 flex h-3 overflow-hidden rounded bg-muted" aria-hidden="true">
+          <div
+            data-runtime-track
+            className="mt-2 flex h-3 w-full overflow-hidden rounded bg-muted"
+            aria-hidden="true"
+          >
             <span className="bg-emerald-600" style={{ width: width(parts.active) }} />
             <span className="bg-sky-500" style={{ width: width(parts.inactive) }} />
             <span style={{ width: width(parts.unknown), background: UNKNOWN_FILL }} />
           </div>
         )}
+        {r.runtimeH30d != null && (
+          <p className="mt-1 text-xs text-muted-foreground">Track scale · {runtimeHours(HOURS)}</p>
+        )}
         <ul className="my-3 space-y-1">
-          <li className="flex items-center gap-2"><span className="size-3 rounded bg-emerald-600" aria-hidden="true" />Recorded active workload · {hour(parts.active)}</li>
-          <li className="flex items-center gap-2"><span className="size-3 rounded bg-sky-500" aria-hidden="true" />Running without recorded workload · {hour(parts.inactive)}</li>
+          <li className="flex items-center gap-2">
+            <span className="size-3 rounded bg-emerald-600" aria-hidden="true" />
+            Recorded active workload · {runtimeHours(parts.active)}
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="size-3 rounded bg-sky-500" aria-hidden="true" />
+            Running without recorded workload · {runtimeHours(parts.inactive)}
+          </li>
           {parts.unknown != null && parts.unknown > 0 && (
-            <li className="flex items-center gap-2"><span className="size-3 rounded" style={{ background: UNKNOWN_FILL }} aria-hidden="true" />Running with unknown active use · {hour(parts.unknown)}</li>
+            <li className="flex items-center gap-2">
+              <span
+                className="size-3 rounded"
+                style={{ background: UNKNOWN_FILL }}
+                aria-hidden="true"
+              />
+              Running with unknown active use · {runtimeHours(parts.unknown)}
+            </li>
           )}
         </ul>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -81,7 +117,10 @@ export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) 
           <div className="mt-2 space-y-1 text-muted-foreground">
             <p>{r.runtimeEvidence.method}</p>
             {r.runtimeEvidence.observedDays != null && (
-              <p>{r.runtimeEvidence.from} to {r.runtimeEvidence.through} · {r.runtimeEvidence.observedDays}/30 days covered</p>
+              <p>
+                {r.runtimeEvidence.from} to {r.runtimeEvidence.through} ·{" "}
+                {r.runtimeEvidence.observedDays}/30 days covered
+              </p>
             )}
             {r.runtimeEvidence.source && <p>Runtime source · {r.runtimeEvidence.source}</p>}
             {r.runtimeEvidence.cpuSource && <p>CPU source · {r.runtimeEvidence.cpuSource}</p>}
@@ -93,7 +132,10 @@ export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) 
         <div className="space-y-3">
           <ConsumptionMetric label="Normalized cost" kpi={r.cost ?? null} format={chf} />
           <ConsumptionMetric label="Energy estimate" kpi={r.energy ?? null} format={kwh} />
-          <p>Estimated idle cost · {r.idleCostChfYear == null ? "Unavailable" : `${chf(r.idleCostChfYear)} / year`}</p>
+          <p>
+            Estimated idle cost ·{" "}
+            {r.idleCostChfYear == null ? "Unavailable" : `${chf(r.idleCostChfYear)} / year`}
+          </p>
         </div>
       </DetailBlock>
       {(r.co2Location || r.co2Market) && (
@@ -112,7 +154,8 @@ export function ResourceDetails({ resource: r }: { resource: ResourceSummary }) 
         <p>Criticality: {r.criticality}</p>
         {r.flag && <p className="text-warning">{r.flag}</p>}
         <p className="mt-2 text-muted-foreground">
-          Check workload dependencies, ticket protections and owner approval before changing runtime.
+          Check workload dependencies, ticket protections and owner approval before changing
+          runtime.
         </p>
       </DetailBlock>
       <DetailBlock title="Related changes and evidence">

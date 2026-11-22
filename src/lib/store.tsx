@@ -19,6 +19,7 @@ export interface AppState {
   measureIds: string[];
   budgetChf: number;
   priority: Priority;
+  studioSettings: { budgetChf: number; priority: Priority } | null;
   chatOpen: boolean;
   theme: "dark" | "light";
   sidebarCollapsed: boolean;
@@ -37,6 +38,7 @@ const initial: AppState = {
   measureIds: initialMeasureIds,
   budgetChf: TARGETS.budgetChf,
   priority: "balanced",
+  studioSettings: null,
   chatOpen: false,
   theme: "dark",
   sidebarCollapsed: false,

@@ -28,7 +28,7 @@ export function demoChatReply(history: ChatMessage[]): ChatMessage {
       role: "assistant",
       demo: true,
       content:
-        "The GPU server is busy ~4% of the time but runs 24/7. Starting it on demand costs ~2 person-days and saves about CHF 21,400 and 3.2 t CO₂ per year (demo).",
+        "The GPU server is busy ~4% of the time but runs 24/7. Starting it on demand costs ~2 person-days and saves about CHF 21,400 and 3,200 kg CO₂ per year (demo).",
       calculation: "saved GPU-h × kWh/GPU-h (0.3–0.7) × PUE × DE grid (0.33–0.45 kg/kWh)",
       evidence: [
         { source: "server_metrics_weekly.csv", detail: "gpu_avg_pct" },

@@ -1,14 +1,23 @@
-import { useState } from "react";
-import { createFileRoute, useRouterState, useNavigate, useHydrated } from "@tanstack/react-router";
+import { chf, carbonMass } from "@/lib/format";
+import { useEffect, useState } from "react";
+import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DashboardSections } from "@/components/greenops/dashboard-sections";
 import { Button } from "@/components/ui/button";
-import { FootprintCalendar, type CalMetric } from "@/components/greenops/calendar";
-import { ComparisonBoard, comparisonFromHash } from "@/components/greenops/compare";
+import {
+  FootprintCalendar,
+  type CalMetric,
+  type FootprintSelection,
+} from "@/components/greenops/calendar";
+import {
+  ComparisonBoard,
+  comparisonFromHash,
+  type ComparisonSelection,
+} from "@/components/greenops/compare";
 import { Q } from "@/components/greenops/ui";
-import { WasteFindings } from "./findings";
+import { WasteFindings, type FindingsSelection } from "./findings";
 import { useDaily, useBonus } from "@/lib/queries";
-import { DetailDrawer, DetailBlock } from "@/components/greenops/details";
+import { DetailDrawer, DetailBlock, EvidenceInfoButton } from "@/components/greenops/details";
 import { seo } from "@/lib/seo";
 import { ExplorationScope } from "@/components/greenops/exploration-scope";
 export const Route = createFileRoute("/explore")({
@@ -19,27 +28,41 @@ export const Route = createFileRoute("/explore")({
     ),
   component: Explore,
 });
+function sectionForHash(hash: string) {
+  if (hash.startsWith("finding-")) return "findings";
+  if (hash === "compare" || comparisonFromHash(hash)) return "compare";
+  return "footprint";
+}
+
 function Explore() {
-  const daily = useDaily(),
-    bonus = useBonus();
   const navigate = useNavigate();
-  const hash = useRouterState({ select: (r) => r.location.hash });
-  const comparison = comparisonFromHash(hash);
-  const hydrated = useHydrated();
-  const [tab, setTab] = useState("footprint");
+  const hash = useRouterState({ select: (r) => r.location.hash.replace(/^#/, "") });
+  const [comparison, setComparison] = useState<ComparisonSelection>({
+    servers: false,
+    serverMetric: "runtimeH30d",
+    search: "",
+  });
+  const [findings, setFindings] = useState<FindingsSelection>({
+    risk: "all",
+    sort: "risk",
+    search: "",
+    expanded: false,
+  });
+  const [footprint, setFootprint] = useState<FootprintSelection>({
+    range: null,
+    date: null,
+    view: "2d",
+  });
   const [metric, setMetric] = useState<CalMetric>("co2Kg");
-  const [compareFootprint, setCompareFootprint] = useState(false);
-  const footprintMetric = hash === "footprint-market" && daily.data?.some((d) => d.co2KgMarket != null)
-    ? "co2KgMarket" : metric;
-  const effective = !hydrated
-    ? tab
-    : hash.startsWith("finding-")
-      ? "findings"
-      : hash === "compare" || comparison
-        ? "compare"
-        : hash === "footprint" || hash === "footprint-market"
-          ? "footprint"
-          : tab;
+  const [compareFootprint, setCompareFootprint] = useState(true);
+  const linkedComparison = comparisonFromHash(hash);
+  useEffect(() => {
+    const linked = comparisonFromHash(hash);
+    if (linked)
+      setComparison((current) => ({ ...current, spending: linked, servers: false, search: "" }));
+    if (hash.startsWith("finding-"))
+      setFindings((current) => ({ ...current, risk: "all", search: "", expanded: true }));
+  }, [hash]);
   return (
     <AppShell
       kicker="Connect · Find"
@@ -47,128 +70,183 @@ function Explore() {
       subtitle="Investigate drivers, compare entities and review potential improvements."
     >
       <ExplorationScope />
-      <Tabs
-        value={effective}
-        onValueChange={(v) => {
-          setTab(v);
-          void navigate({ to: "/explore", hash: "" });
+      <DashboardSections
+        label="Explore and Findings sections"
+        sectionForHash={sectionForHash}
+        onSectionChange={() => {
+          if (hash) void navigate({ to: "/explore", hash: "", resetScroll: false });
         }}
-      >
-        <TabsList className="mb-6 flex h-auto w-full flex-wrap justify-start gap-1">
-          <TabsTrigger value="footprint">Digital Footprint</TabsTrigger>
-          <TabsTrigger value="compare">Compare</TabsTrigger>
-          <TabsTrigger value="findings">Waste Findings</TabsTrigger>
-        </TabsList>
-        <TabsContent value="footprint" id="footprint">
-          <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
-            In 3D, height and color show the selected metric. Use comparison mode to see cost and
-            CO₂ together.
-          </p>
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-lg font-semibold">Footprint calendar</h2>
-            <div className="flex max-w-full flex-wrap gap-1">
-              {(
-                [
-                  ["co2Kg", "CO₂ — Location-based"],
-                  ["costChf", "Cost"],
-                  ["energyKwh", "Energy"],
-                  ["co2KgMarket", "CO₂ — Market-based"],
-                ] as const
-              ).map(([v, l]) => (
-                <Button
-                  key={v}
-                  size="sm"
-                  variant={footprintMetric === v ? "secondary" : "ghost"}
-                  disabled={v === "co2KgMarket" && !daily.data?.some((d) => d.co2KgMarket != null)}
-                  onClick={() => {
-                    setMetric(v);
-                    setCompareFootprint(false);
-                    if (hash === "footprint-market") void navigate({ to: "/explore", hash: "footprint" });
-                  }}
-                >
-                  {l}
-                </Button>
-              ))}
-            </div>
-          </div>
-          {!daily.data?.some((d) => d.co2KgMarket != null) && (
-            <p className="mb-4 text-xs text-muted-foreground">
-              Daily market-based emissions unavailable. Annual accounting totals do not provide
-              daily values.
-            </p>
-          )}
-          <Q q={daily}>
-            {(d) => (
-              <FootprintCalendar
-                days={d}
-                metric={footprintMetric}
+        sections={[
+          {
+            id: "footprint",
+            label: "Digital Footprint",
+            content: (
+              <FootprintSection
+                hash={hash}
+                selection={footprint}
+                onSelectionChange={setFootprint}
+                metric={metric}
+                onMetricChange={setMetric}
                 compare={compareFootprint}
                 onCompareChange={setCompareFootprint}
               />
-            )}
-          </Q>
-        </TabsContent>
-        <TabsContent value="compare" id={comparison ? hash : "compare"}>
-          <p className="mb-5 max-w-2xl text-sm text-muted-foreground">
-            Identify the biggest drivers of cost, energy use and emissions. Select a category and
-            metric to compare resources.
-          </p>
-          <ComparisonBoard key={comparison ? hash : "compare"} initial={comparison} />
-        </TabsContent>
-        <TabsContent value="findings">
-          <WasteFindings />
-          <DetailDrawer
-            title="Operational source evidence"
-            trigger={
-              <Button variant="outline" className="mt-8">
-                Operational source evidence
-              </Button>
-            }
-          >
-            <Q q={bonus}>
-              {(b) => (
-                <div className="space-y-6">
-                  <DetailBlock title="AI models">
-                    {b.aiModels.map((m) => (
-                      <p key={m.model}>
-                        {m.model} · {m.tokensM} million tokens · CHF {m.costChf}
-                      </p>
-                    ))}
-                  </DetailBlock>
-                  <DetailBlock title="Carbon-aware scheduling">
-                    {b.carbonJobs.map((j) => (
-                      <p key={j.job} className="mb-3">
-                        {j.job} · {j.window}
-                        <span className="block text-muted-foreground">
-                          {j.currentStart} → {j.suggestedStart} · {j.co2SavedKgYear} kg CO₂/year
-                        </span>
-                      </p>
-                    ))}
-                  </DetailBlock>
-                  <DetailBlock title="DevOps pipelines">
-                    {b.pipelines.map((p) => (
-                      <p key={p.label} className="mb-3">
-                        {p.label}: {p.value}
-                        <span className="block text-muted-foreground">{p.detail}</span>
-                      </p>
-                    ))}
-                  </DetailBlock>
-                  <DetailBlock title="Usage clusters">
-                    {b.clusters.map((c) => (
-                      <p key={c.name} className="mb-3">
-                        {c.name} ({c.members})
-                        <span className="block text-muted-foreground">
-                          {c.description} · {c.outliers.join(", ")}
-                        </span>
-                      </p>
-                    ))}
-                  </DetailBlock>
+            ),
+          },
+          {
+            id: "compare",
+            label: "Compare",
+            content: (
+              <div id={linkedComparison ? hash : "compare"}>
+                <ComparisonBoard
+                  key={linkedComparison ? hash : "comparison"}
+                  selection={comparison}
+                  onChange={setComparison}
+                />
+              </div>
+            ),
+          },
+          {
+            id: "findings",
+            label: "Waste Findings",
+            content: (
+              <>
+                <WasteFindings selection={findings} onSelectionChange={setFindings} />
+                <div className="mt-3 flex items-center gap-1 text-sm">
+                  <span>Operational source evidence</span>
+                  <DetailDrawer
+                    title="Operational source evidence"
+                    trigger={<EvidenceInfoButton description="operational sources" />}
+                  >
+                    <OperationalEvidence />
+                  </DetailDrawer>
                 </div>
-              )}
-            </Q>
-          </DetailDrawer>
-        </TabsContent>
-      </Tabs>
+              </>
+            ),
+          },
+        ]}
+      />
     </AppShell>
+  );
+}
+
+function FootprintSection({
+  hash,
+  selection,
+  onSelectionChange,
+  metric,
+  onMetricChange,
+  compare,
+  onCompareChange,
+}: {
+  hash: string;
+  selection: FootprintSelection;
+  onSelectionChange: (selection: FootprintSelection) => void;
+  metric: CalMetric;
+  onMetricChange: (metric: CalMetric) => void;
+  compare: boolean;
+  onCompareChange: (compare: boolean) => void;
+}) {
+  const daily = useDaily(false);
+  const navigate = useNavigate();
+  const market = daily.data?.some((d) => d.co2KgMarket != null);
+  const footprintMetric = hash === "footprint-market" && market ? "co2KgMarket" : metric;
+  return (
+    <div id={hash === "footprint-market" ? hash : "footprint"}>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold">Footprint calendar</h2>
+        <div className="flex max-w-full flex-wrap gap-1">
+          {(
+            [
+              ["costChf", "Cost"],
+              ["energyKwh", "Energy"],
+              ["co2Kg", "Location-based CO₂"],
+              ["co2KgMarket", "Market-based CO₂"],
+            ] as const
+          ).map(([v, l]) => (
+            <Button
+              key={v}
+              size="sm"
+              variant={footprintMetric === v ? "default" : "ghost"}
+              aria-pressed={footprintMetric === v}
+              disabled={v === "co2KgMarket" && !market}
+              onClick={() => {
+                onMetricChange(v);
+                onCompareChange(false);
+                if (hash === "footprint-market")
+                  void navigate({ to: "/explore", hash: "footprint" });
+              }}
+            >
+              {l}
+            </Button>
+          ))}
+        </div>
+      </div>
+      {daily.data && !market && (
+        <p className="mb-4 text-xs text-muted-foreground">
+          Daily market-based emissions unavailable. Annual accounting totals do not provide daily
+          values.
+        </p>
+      )}
+      <Q q={daily}>
+        {(d) => (
+          <FootprintCalendar
+            days={d}
+            metric={footprintMetric}
+            compare={compare}
+            onCompareChange={onCompareChange}
+            selection={selection}
+            onSelectionChange={onSelectionChange}
+          />
+        )}
+      </Q>
+    </div>
+  );
+}
+
+function OperationalEvidence() {
+  const bonus = useBonus();
+  return (
+    <Q q={bonus}>
+      {(b) => (
+        <div className="space-y-6">
+          <DetailBlock title="AI models">
+            {b.aiModels.map((m) => (
+              <p key={m.model}>
+                {m.model} · {m.tokensM} million tokens · {chf(m.costChf)}
+              </p>
+            ))}
+          </DetailBlock>
+          <DetailBlock title="Carbon-aware scheduling">
+            {b.carbonJobs.map((j) => (
+              <p key={j.job} className="mb-3">
+                {j.job} · {j.window}
+                <span className="block text-muted-foreground">
+                  {j.currentStart} → {j.suggestedStart} · {carbonMass(j.co2SavedKgYear, "kg CO₂")}
+                  /year
+                </span>
+              </p>
+            ))}
+          </DetailBlock>
+          <DetailBlock title="DevOps pipelines">
+            {b.pipelines.map((p) => (
+              <p key={p.label} className="mb-3">
+                {p.label}: {p.value}
+                <span className="block text-muted-foreground">{p.detail}</span>
+              </p>
+            ))}
+          </DetailBlock>
+          <DetailBlock title="Usage clusters">
+            {b.clusters.map((c) => (
+              <p key={c.name} className="mb-3">
+                {c.name} ({c.members})
+                <span className="block text-muted-foreground">
+                  {c.description} · {c.outliers.join(", ")}
+                </span>
+              </p>
+            ))}
+          </DetailBlock>
+        </div>
+      )}
+    </Q>
   );
 }

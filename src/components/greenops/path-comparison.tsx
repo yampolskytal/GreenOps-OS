@@ -17,6 +17,7 @@ import type { Measure } from "@/lib/api/types";
 import {
   ensurePath,
   MAX_PATHS,
+  PATH_SLOTS,
   pathSlot,
   recommendAdditions,
   removeFromPath,
@@ -30,12 +31,20 @@ import { reveal } from "@/lib/reveal";
 import { chf, kg, pct } from "@/lib/format";
 import { TargetPanel } from "./targets";
 import { AnalyticalInspector } from "./analytical-inspector";
-import { ScenarioForecastPanel } from "./scenario-forecast";
+import { ScenarioForecastPanel, type ScenarioSettings } from "./scenario-forecast";
+import { DetailDrawer, EvidenceInfoButton } from "./details";
+import { MarketSavingsSummary, PackageEvidence } from "./package-evidence";
 import { RiskBadge } from "./ui";
 import { cn } from "@/lib/utils";
 import { approvedDemoIds, isImplementableProposal, numericalWarnings } from "@/lib/proposals";
 
-export function PathComparison() {
+export function PathComparison({
+  scenarioSettings,
+  onScenarioSettingsChange,
+}: {
+  scenarioSettings?: ScenarioSettings | undefined;
+  onScenarioSettingsChange?: (settings: ScenarioSettings) => void;
+} = {}) {
   const displayed = useDisplayedPlan();
   const { s, set } = useApp();
   const measures = useMeasures();
@@ -46,7 +55,7 @@ export function PathComparison() {
   const [committing, setCommitting] = useState<SavedPath | null>(null);
   const commit = useCommitPlan(measures.data);
   const openPath = s.paths.find((p) => p.id === openId) ?? null;
-  const hash = useRouterState({ select: (r) => r.location.hash });
+  const hash = useRouterState({ select: (r) => r.location.hash.replace(/^#/, "") });
   const linkedPathId =
     hash.startsWith("path-") && s.paths.some((p) => p.id === hash.slice(5)) ? hash.slice(5) : null;
   useEffect(() => {
@@ -69,7 +78,7 @@ export function PathComparison() {
       const r = ensurePath(
         s.paths,
         trimmed,
-        { budgetChf: s.budgetChf, priority: s.priority },
+        s.studioSettings ?? { budgetChf: s.budgetChf, priority: s.priority },
         crypto.randomUUID(),
       );
       if (r.created) set({ paths: r.paths });
@@ -83,7 +92,7 @@ export function PathComparison() {
     }
   };
   return (
-    <section id="paths" className="mt-8 border-t pt-6">
+    <section id="paths" className="pt-1">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">Compare Paths</h2>
@@ -130,43 +139,61 @@ export function PathComparison() {
         </p>
       )}
       <div className="grid gap-5 [grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))]">
-        {s.paths.map((path) => (
-          <PathCard
-            key={path.id}
-            path={path}
-            slot={pathSlot(s.paths, path)}
-            measures={measures.data ?? []}
-            active={openId === path.id}
-            onOpen={() => setOpenId(openId === path.id ? null : path.id)}
-            onDelete={() => setDeleting(path)}
-            onCommit={() => {
-              commit.setError(null);
-              setCommitting(path);
-            }}
-            onRename={(n) =>
-              set({ paths: s.paths.map((p) => (p.id === path.id ? { ...p, name: n } : p)) })
-            }
-          />
-        ))}
+        {PATH_SLOTS.map((slot, index) => {
+          const path = s.paths.find((saved) => pathSlot(s.paths, saved) === slot);
+          if (!path)
+            return (
+              <div
+                key={slot}
+                className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground"
+              >
+                Path slot {index + 1} · available
+              </div>
+            );
+          return (
+            <PathCard
+              key={path.id}
+              path={path}
+              slot={slot}
+              measures={measures.data ?? []}
+              active={openId === path.id}
+              onOpen={() => setOpenId(openId === path.id ? null : path.id)}
+              onDelete={() => setDeleting(path)}
+              onCommit={() => {
+                commit.setError(null);
+                setCommitting(path);
+              }}
+              onRename={(n) =>
+                set({ paths: s.paths.map((p) => (p.id === path.id ? { ...p, name: n } : p)) })
+              }
+            />
+          );
+        })}
       </div>
       <div className="mt-6">
         <ScenarioForecastPanel
+          settings={scenarioSettings}
+          {...(onScenarioSettingsChange ? { onSettingsChange: onScenarioSettingsChange } : {})}
           title="Projected outcomes by Path"
           emptyNote="Create a Path to compare it against “Without changes”."
           selections={[
             ...s.paths.map((p) => ({
-              key: `path-${pathSlot(s.paths, p)}`,
+              key: `path-${p.id}`,
               label: p.name,
               color: `var(--path-${pathSlot(s.paths, p)})`,
               measureIds: p.measureIds,
             })),
-            ... (displayed.ready ? [{
-              key: "plan",
-              label: displayed.label,
-              color: "var(--scenario-plan)",
-              measureIds: displayed.measureIds,
-              defaultHidden: true,
-            }] : []),
+            ...(displayed.ready && displayed.measureIds.length > 0
+              ? [
+                  {
+                    key: "plan",
+                    label: displayed.label,
+                    color: "var(--scenario-plan)",
+                    measureIds: displayed.measureIds,
+                    defaultHidden: true,
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -176,9 +203,10 @@ export function PathComparison() {
           description="Edit this Path directly. Changes recalculate its criteria and its line in the comparison."
           open
           onOpenChange={(o) => !o && setOpenId(null)}
-          trigger={<span />}
+          trigger={null}
+          contentKey={openPath.id}
         >
-          <PathInspector path={openPath} measures={measures.data ?? []} />
+          <PathInspector key={openPath.id} path={openPath} measures={measures.data ?? []} />
         </AnalyticalInspector>
       )}
       <Dialog open={deleting != null} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -342,12 +370,12 @@ function PathCard({
       onClick={onOpen}
       onKeyDown={key}
       className={cn(
-        "min-w-0 cursor-pointer rounded-lg border border-t-4 bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring",
+        "flex min-w-0 cursor-pointer flex-col rounded-lg border border-t-4 bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring",
         active && "ring-2 ring-ring",
       )}
       style={{ borderTopColor: `var(--path-${slot})` }}
     >
-      <header className="mb-3 flex items-start justify-between gap-2">
+      <header className="mb-3 flex min-h-16 items-start justify-between gap-2">
         {renaming ? (
           <form
             className="flex min-w-0 flex-1 gap-1"
@@ -386,7 +414,10 @@ function PathCard({
             variant="ghost"
             aria-label={`Rename ${path.name}`}
             title="Rename"
-            onClick={() => setRenaming(!renaming)}
+            onClick={() => {
+              setName(path.name);
+              setRenaming(!renaming);
+            }}
           >
             {renaming ? <X /> : <Pencil />}
           </Button>
@@ -395,6 +426,7 @@ function PathCard({
             variant="ghost"
             aria-label={`Delete ${path.name}`}
             title="Delete"
+            className="text-destructive"
             onClick={onDelete}
           >
             <Trash2 />
@@ -417,25 +449,49 @@ function PathCard({
               <dd>{kg(sim.data.savingsCo2Kg)}</dd>
             </div>
           </dl>
-          <TargetPanel r={sim.data} />
-          <p className="mt-3 text-xs text-muted-foreground">
-            {blocked
-              ? "Contains blocked measures — cannot be committed as is."
-              : sim.data.feasible
-                ? "Meets numerical criteria · approvals still required"
-                : "Not submission-ready"}
-            {api.isDemo ? " · DEMO" : ""}
-          </p>
+          <TargetPanel r={sim.data} indicatorsOnly />
+          <div
+            className="mt-3 flex items-start justify-between gap-2 border-t pt-2 text-xs"
+            onClick={stop}
+            onKeyDown={stop}
+          >
+            <div className="min-w-0">
+              <MarketSavingsSummary result={sim.data} />
+              <p
+                className={cn(
+                  "mt-2 font-medium",
+                  sim.data.feasible && !blocked && !sim.data.excluded.length
+                    ? "text-success"
+                    : "text-warning",
+                )}
+              >
+                {blocked || sim.data.excluded.length
+                  ? "Contains blocked or excluded measures."
+                  : sim.data.feasible
+                    ? "Projected package meets calculated targets"
+                    : "Projected package misses one or more targets"}
+                {api.isDemo ? " · DEMO" : ""}
+              </p>
+            </div>
+            <DetailDrawer
+              title={`${path.name} · projection evidence`}
+              trigger={<EvidenceInfoButton description={`${path.name} projections`} />}
+            >
+              <PackageEvidence result={sim.data} />
+            </DetailDrawer>
+          </div>
         </>
       )}
-      <div className="mt-4 flex flex-wrap gap-2" onClick={stop} onKeyDown={stop}>
+      <div className="mt-auto flex flex-wrap gap-2 pt-4" onClick={stop} onKeyDown={stop}>
         <Button size="sm" variant="outline" onClick={onOpen}>
           <Pencil />
           Edit measures
         </Button>
         <Button
           size="sm"
-          disabled={!path.measureIds.length || blocked > 0 || sim.isPending}
+          disabled={
+            !path.measureIds.length || blocked > 0 || !sim.data || sim.data.excluded.length > 0
+          }
           onClick={onCommit}
         >
           Commit to Current Plan

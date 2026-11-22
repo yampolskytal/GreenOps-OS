@@ -1,9 +1,9 @@
 import type { Measure } from "@/lib/api/types";
 
-export function decisionGroup(m: Measure) {
-  if (!m.includable || m.risk.level === "blocked") return "blocked";
+export function decisionGroup(m: Measure): "blocked" | "review" | null {
+  if (m.risk.level === "blocked") return "blocked";
   if (m.risk.level === "review" || m.risk.approver) return "review";
-  return null;
+  return m.includable ? null : "blocked";
 }
 
 export function gaugeGeometry(actual: number, target: number) {

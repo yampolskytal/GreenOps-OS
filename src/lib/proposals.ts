@@ -1,3 +1,4 @@
+import { chf } from "./format";
 import type { Measure, SimulationResult } from "./api/types";
 import { canSelectMeasure } from "./planning";
 
@@ -28,7 +29,7 @@ export function numericalWarnings(r: SimulationResult) {
     warnings.push(`effort exceeds the limit by ${(r.effortDays - 15).toFixed(1)} person-days`);
   if (r.effortChf > 16500)
     warnings.push(
-      `implementation cost exceeds the limit by CHF ${(r.effortChf - 16500).toLocaleString("en-CH")}`,
+      `implementation cost exceeds the limit by ${chf(r.effortChf - 16500)}`,
     );
   return warnings;
 }

@@ -329,6 +329,7 @@ export default function ContributionSkyline({
   locale = "en-US",
   seed = 7,
   onCellClick,
+  selectedDate,
   className = "",
 }) {
   const endKey = endDate == null ? null : dayMs(endDate);
@@ -406,6 +407,10 @@ export default function ContributionSkyline({
         dfl.format(dayMs(c.date))
     );
   };
+  const partialDates = React.useMemo(
+    () => new Set(data?.filter((day) => day.partial).map((day) => day.date)),
+    [data],
+  );
   // Everything the render loop reads, refreshed every render so the loop never closes over stale props.
   const cfg = React.useRef({
     model,
@@ -415,6 +420,8 @@ export default function ContributionSkyline({
     palette,
     legendLevel,
     onCellClick,
+    selectedDate,
+    partialDates,
     target: view === "3d" ? 1 : 0,
     setActive,
     setWidth,
@@ -430,6 +437,8 @@ export default function ContributionSkyline({
     palette,
     legendLevel,
     onCellClick,
+    selectedDate,
+    partialDates,
     target: view === "3d" ? 1 : 0,
     setActive,
     setWidth,
@@ -731,12 +740,8 @@ export default function ContributionSkyline({
           ctx.setLineDash([]);
         }
         if (cfg.current.model.monthly && e < 0.5) {
-          ctx.fillStyle =
-            luminance([r, g, bl]) > 0.6
-              ? getComputedStyle(root).getPropertyValue("--primary-foreground").trim()
-              : rgbString(...fg);
-          if (luminance([r, g, bl]) <= 0.6) ctx.fillStyle = rgbString(...fg);
-          ctx.font = "600 14px " + (getComputedStyle(root).fontFamily || "sans-serif");
+          ctx.fillStyle = luminance([r, g, bl]) > 0.56 ? "#101b0d" : "#ffffff";
+          ctx.font = font.replace("400 10px", "600 12px");
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(
@@ -756,6 +761,23 @@ export default function ContributionSkyline({
             "rgba(" + fg[0] + "," + fg[1] + "," + fg[2] + "," + (0.85 * hv).toFixed(3) + ")";
           ctx.lineWidth = 1.5;
           ctx.stroke();
+        }
+        const date = cfg.current.model.cells[i].date;
+        if (date === cfg.current.selectedDate) {
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "#142014";
+          ctx.stroke();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "#f4ffef";
+          ctx.stroke();
+        }
+        if (!cfg.current.model.cells[i].missing && cfg.current.partialDates.has(date)) {
+          ctx.beginPath();
+          const dx = px(x1 - 0.12, y0 + 0.12);
+          const ddy = py(x1 - 0.12, y0 + 0.12, z);
+          ctx.arc(dx, ddy, Math.max(1, Math.min(2.3, s * 0.08)), 0, Math.PI * 2);
+          ctx.fillStyle = luminance([r, g, bl]) > 0.56 ? "#653600" : "#ffce73";
+          ctx.fill();
         }
       }
       // Labels: along the top and left in 2D, along the front edge in 3D. They fade, never pop.
@@ -778,10 +800,19 @@ export default function ContributionSkyline({
         ctx.textBaseline = "bottom";
         let edge = -Infinity;
         for (const m of months) {
+          if (cfg.current.model.monthly) {
+            ctx.textAlign = "center";
+            ctx.fillText(
+              s < 22 ? m.label[0] : m.label,
+              px(m.week + 0.5, 0),
+              py(m.week + 0.5, 0) - 5,
+            );
+            continue;
+          }
           const x = px(m.week + off, -0.3);
           const tw = ctx.measureText(m.label).width;
           if (x < edge || x + tw > W) continue;
-          if (!cfg.current.model.monthly) ctx.fillText(m.label, x, py(m.week + off, -0.3, 0) - 3);
+          ctx.fillText(m.label, x, py(m.week + off, -0.3, 0) - 3);
           edge = x + tw + 6;
         }
         ctx.textAlign = "right";
@@ -1132,7 +1163,7 @@ export default function ContributionSkyline({
   }, [locale]);
   React.useEffect(() => {
     engine.current?.kick();
-  }, [view, legendLevel]);
+  }, [view, legendLevel, selectedDate, partialDates]);
   React.useEffect(() => {
     engine.current?.load();
   }, [model, heightScale]);
@@ -1203,52 +1234,54 @@ export default function ContributionSkyline({
         borderColor: "var(--border)",
       }}
     >
-      <header className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <h3 className="m-0 text-[15px] font-normal leading-snug">
-          {title ?? (
-            <>
-              <span className="font-semibold tabular-nums">{nf.format(stats.total)}</span>{" "}
-              {noun(stats.total)} in the last year
-            </>
-          )}
-        </h3>
-        {showToggle && (
-          <div
-            role="group"
-            aria-label="Chart view"
-            className="relative inline-flex rounded-md border p-0.5"
-            style={{ borderColor: "var(--border)" }}
-          >
-            <span
-              aria-hidden="true"
-              className="absolute top-0.5 bottom-0.5 left-0.5 w-8 rounded transition-transform duration-500 motion-reduce:transition-none"
-              style={{
-                background: "var(--foreground)",
-                transform: is3d ? "translateX(100%)" : "translateX(0)",
-                transitionTimingFunction: ease,
-              }}
-            />
-            {["2d", "3d"].map((v) => (
-              <Button
-                variant="ghost"
-                key={v}
-                type="button"
-                aria-pressed={view === v}
-                aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
-                title={v === "2d" ? "Flat heat map" : "3D skyline"}
-                onClick={() => setView(v)}
-                className="relative z-10 grid h-7 w-8 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 transition-colors duration-500 focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none"
+      {(title !== null || showToggle) && (
+        <header className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <h3 className="m-0 text-[15px] font-normal leading-snug">
+            {title ?? (
+              <>
+                <span className="font-semibold tabular-nums">{nf.format(stats.total)}</span>{" "}
+                {noun(stats.total)} in the last year
+              </>
+            )}
+          </h3>
+          {showToggle && (
+            <div
+              role="group"
+              aria-label="Chart view"
+              className="relative inline-flex rounded-md border p-0.5"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <span
+                aria-hidden="true"
+                className="absolute top-0.5 bottom-0.5 left-0.5 w-8 rounded transition-transform duration-500 motion-reduce:transition-none"
                 style={{
-                  color: view === v ? "var(--background)" : MUTED,
-                  outlineColor: "var(--foreground)",
+                  background: "var(--foreground)",
+                  transform: is3d ? "translateX(100%)" : "translateX(0)",
+                  transitionTimingFunction: ease,
                 }}
-              >
-                {v === "2d" ? <GridIcon /> : <CubeIcon />}
-              </Button>
-            ))}
-          </div>
-        )}
-      </header>
+              />
+              {["2d", "3d"].map((v) => (
+                <Button
+                  variant="ghost"
+                  key={v}
+                  type="button"
+                  aria-pressed={view === v}
+                  aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
+                  title={v === "2d" ? "Flat heat map" : "3D skyline"}
+                  onClick={() => setView(v)}
+                  className="relative z-10 grid h-7 w-8 cursor-pointer place-items-center rounded border-0 bg-transparent p-0 transition-colors duration-500 focus-visible:outline-2 focus-visible:outline-offset-2 motion-reduce:transition-none"
+                  style={{
+                    color: view === v ? "var(--background)" : MUTED,
+                    outlineColor: "var(--foreground)",
+                  }}
+                >
+                  {v === "2d" ? <GridIcon /> : <CubeIcon />}
+                </Button>
+              ))}
+            </div>
+          )}
+        </header>
+      )}
 
       <div className="relative" style={{ borderColor: "var(--border)" }}>
         <div className="relative px-3 pt-3 sm:px-4 sm:pt-4">
@@ -1373,53 +1406,55 @@ export default function ContributionSkyline({
           </div>
         )}
 
-        <div
-          className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 pt-3 pb-3 text-[12px] sm:px-4"
-          style={{ color: MUTED }}
-        >
-          {footer === undefined ? (
-            <span className="relative grid flex-1">
-              {hints.map((h) => (
-                <span
-                  key={h}
-                  aria-hidden={h !== hint}
-                  className="[grid-area:1/1] transition-opacity duration-500 motion-reduce:transition-none"
-                  style={{ opacity: h === hint ? 1 : 0 }}
-                >
-                  {h}
-                </span>
-              ))}
-            </span>
-          ) : (
-            <span className="flex-1">{footer}</span>
-          )}
-          {showLegend && (
-            <div className="flex items-center gap-1.5" onMouseLeave={() => setLegendLevel(-1)}>
-              <span className="mr-0.5">Less</span>
-              {theme.swatches.map((c, i) => (
-                <Button
-                  variant="ghost"
-                  key={i}
-                  type="button"
-                  aria-label={"Highlight " + levelNames[i].toLowerCase() + " days"}
-                  aria-pressed={legendLevel === i}
-                  title={levelNames[i]}
-                  onMouseEnter={() => setLegendLevel(i)}
-                  onFocus={() => setLegendLevel(i)}
-                  onBlur={() => setLegendLevel(-1)}
-                  onClick={() => setLegendLevel((l) => (l === i ? -1 : i))}
-                  className="h-[11px] w-[11px] cursor-pointer rounded-[2px] border-0 p-0 transition-[background-color,transform] duration-500 hover:scale-125 focus-visible:outline-2 focus-visible:outline-offset-1 motion-reduce:transition-none"
-                  style={{
-                    background: c,
-                    outlineColor: "var(--foreground)",
-                    boxShadow: "inset 0 0 0 1px rgba(127,127,127,0.12)",
-                  }}
-                />
-              ))}
-              <span className="ml-0.5">More</span>
-            </div>
-          )}
-        </div>
+        {(footer !== null || showLegend) && (
+          <div
+            className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-3 pt-3 pb-3 text-[12px] sm:px-4"
+            style={{ color: MUTED }}
+          >
+            {footer === undefined ? (
+              <span className="relative grid flex-1">
+                {hints.map((h) => (
+                  <span
+                    key={h}
+                    aria-hidden={h !== hint}
+                    className="[grid-area:1/1] transition-opacity duration-500 motion-reduce:transition-none"
+                    style={{ opacity: h === hint ? 1 : 0 }}
+                  >
+                    {h}
+                  </span>
+                ))}
+              </span>
+            ) : (
+              <span className="flex-1">{footer}</span>
+            )}
+            {showLegend && (
+              <div className="flex items-center gap-1.5" onMouseLeave={() => setLegendLevel(-1)}>
+                <span className="mr-0.5">Less</span>
+                {theme.swatches.map((c, i) => (
+                  <Button
+                    variant="ghost"
+                    key={i}
+                    type="button"
+                    aria-label={"Highlight " + levelNames[i].toLowerCase() + " days"}
+                    aria-pressed={legendLevel === i}
+                    title={levelNames[i]}
+                    onMouseEnter={() => setLegendLevel(i)}
+                    onFocus={() => setLegendLevel(i)}
+                    onBlur={() => setLegendLevel(-1)}
+                    onClick={() => setLegendLevel((l) => (l === i ? -1 : i))}
+                    className="h-[11px] w-[11px] cursor-pointer rounded-[2px] border-0 p-0 transition-[background-color,transform] duration-500 hover:scale-125 focus-visible:outline-2 focus-visible:outline-offset-1 motion-reduce:transition-none"
+                    style={{
+                      background: c,
+                      outlineColor: "var(--foreground)",
+                      boxShadow: "inset 0 0 0 1px rgba(127,127,127,0.12)",
+                    }}
+                  />
+                ))}
+                <span className="ml-0.5">More</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <p aria-live="polite" className="sr-only">

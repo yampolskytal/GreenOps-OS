@@ -21,53 +21,100 @@ import {
   monthlyComparison,
   percentDifference,
 } from "@/lib/analytics";
-import { chf, kg, kwh } from "@/lib/format";
+import { carbonMass, carbonUnit, chf, kwh } from "@/lib/format";
 import { api } from "@/lib/api/client";
-import { DetailBlock, DetailDrawer } from "./details";
-import { CalcInfo } from "./ui";
+import { DetailBlock, EvidenceInfoButton } from "./details";
+import { AnalyticalInspector } from "./analytical-inspector";
+import { AnnualEmissionsEvidence, type EmissionsProjection } from "./emissions-evidence";
+import { CalculationDetails } from "./ui";
 import { historicalDomain } from "@/lib/historical-domain";
 import { priorCalendarMonth } from "@/lib/administration";
-import { reveal } from "@/lib/reveal";
 
 const METRICS = [
-  { key: "costChf" as const, label: "Cost", unit: "CHF/month", format: chf },
-  { key: "co2Kg" as const, label: "CO₂ — Location-based", unit: "kg CO₂/month", format: kg },
-  { key: "energyKwh" as const, label: "Energy", unit: "kWh/month", format: kwh },
-  { key: "co2KgMarket" as const, label: "CO₂ — Market-based", unit: "kg CO₂/month", format: kg },
+  {
+    key: "costChf",
+    label: "Cost",
+    unit: "CHF",
+    format: chf,
+    Icon: Wallet,
+    color: "var(--chart-1)",
+  },
+  {
+    key: "energyKwh",
+    label: "Energy",
+    unit: "kWh",
+    format: kwh,
+    Icon: Zap,
+    color: "var(--chart-4)",
+  },
+  {
+    key: "co2Kg",
+    label: "Location-based CO₂",
+    unit: "kg CO₂",
+    Icon: Cloud,
+    color: "var(--chart-2)",
+  },
+  {
+    key: "co2KgMarket",
+    label: "Market-based CO₂",
+    unit: "kg CO₂e",
+    Icon: Leaf,
+    color: "var(--chart-3)",
+  },
 ] as const;
+
+function monthlyMetrics(overview?: Overview) {
+  return METRICS.map((m) => {
+    if ("format" in m) return m;
+    const kpi = m.key === "co2Kg" ? overview?.co2Location : overview?.co2Market;
+    const sourceUnit =
+      overview?.monthly.find((row) => row.evidence?.[m.key])?.evidence?.[m.key]?.units ??
+      kpi?.calc.units ??
+      m.unit;
+    const unit = carbonUnit(sourceUnit);
+    // The monthly observation fields are measured in kilograms.
+    return { ...m, unit, format: (value: number | null | undefined) => carbonMass(value, unit) };
+  });
+}
+
+export type HistoricalSelection = { metric: HistoricalMetric; month: string | undefined };
+
 export function HistoricalPerformance({
   overview,
-  operational = false,
-  executive = false,
+  emissionsProjection,
+  initialSelection,
+  onSelectionChange,
 }: {
   overview: Overview;
-  operational?: boolean;
-  executive?: boolean;
+  emissionsProjection?: EmissionsProjection;
+  initialSelection?: HistoricalSelection | undefined;
+  onSelectionChange?: (selection: HistoricalSelection) => void;
 }) {
-  const metrics = operational
-    ? [METRICS[2], METRICS[0], METRICS[1], METRICS[3]].filter((m) => m != null)
-    : METRICS;
-  const first =
-    metrics.find((m) => overview.monthly.some((r) => isAvailable(r[m.key]))) ?? METRICS[0];
-  const [metric, setMetric] = useState<HistoricalMetric>(first.key);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(() => executive ? overview.monthly.at(-1)?.month ?? null : null);
+  const metrics = monthlyMetrics(overview);
+  const rows = overview.monthly;
+  const first = metrics.find((m) => rows.some((row) => isAvailable(row[m.key]))) ?? metrics[0]!;
+  const [metric, updateMetric] = useState<HistoricalMetric>(initialSelection?.metric ?? first.key);
+  const [selectedMonth, updateMonth] = useState<string | undefined>(initialSelection?.month);
+  const setMetric = (value: HistoricalMetric) => {
+    updateMetric(value);
+    onSelectionChange?.({ metric: value, month: selectedMonth });
+  };
+  const setSelectedMonth = (value: string) => {
+    updateMonth(value);
+    onSelectionChange?.({ metric, month: value });
+  };
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const reduced = useReducedMotion();
   const summaryId = useId();
-  const [zero, setZero] = useState(false);
-  const chooseMonth = (month: string) => {
-    setSelectedMonth(month);
-    reveal(summaryId);
-  };
-  const current = METRICS.find((m) => m.key === metric) ?? METRICS[0];
-  const rows = overview.monthly;
-  const selected = rows.find((r) => r.month === selectedMonth);
+  const current = metrics.find((m) => m.key === metric) ?? first;
+  const selected = rows.find((r) => r.month === selectedMonth) ?? rows.at(-1);
   const period = rows.length
     ? `${monthLabel(rows[0]?.month ?? "")} — ${monthLabel(rows.at(-1)?.month ?? "")}`
     : "Unavailable";
   const evidence = selected?.evidence?.[metric];
   const total = monthlyTotal(rows, metric);
   const values = rows.map((r) => r[metric]).filter(isAvailable);
-  const domain = historicalDomain(values, zero);
+  const domain = historicalDomain(values, false);
   return (
     <section data-analysis-region className="min-w-0 border-b py-6">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -78,94 +125,90 @@ export function HistoricalPerformance({
             {api.isDemo ? "DEMO historical illustration" : "Backend reporting values"}
           </p>
         </div>
-        <DetailDrawer
-          title={`${current.label} · historical evidence`}
-          description={`${selected ? monthLabel(selected.month) : period} · ${current.unit}`}
-          trigger={
-            <Button variant="outline" size="sm">
-              Calculation & Evidence
-            </Button>
-          }
-        >
-          <DetailBlock title="Selected metric & reporting period">
-            <p>
-              {current.label} · {selected ? monthLabel(selected.month) : period}
-            </p>
-            <p className="mt-2">
-              {current.unit} · {selected?.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}
-            </p>
-          </DetailBlock>
-          <DetailBlock title="Displayed coverage">
-            <p>
-              {total.available}/{total.total} months available. Missing observations are not zero.
-            </p>
-          </DetailBlock>
-          {evidence ? (
-            <>
-              <DetailBlock title="Formula">
-                <p>{evidence.formula}</p>
-              </DetailBlock>
-              <DetailBlock title="Source records">
-                <p>{evidence.sources.join(" · ") || "Unavailable"}</p>
-              </DetailBlock>
-              <DetailBlock title="Assumptions">
-                <p>{evidence.assumptions.join(" · ") || "None supplied"}</p>
-              </DetailBlock>
-              <DetailBlock title="Limitations">
-                <p>{evidence.limitations.join(" · ") || "None supplied"}</p>
-              </DetailBlock>
-            </>
-          ) : (
-            <DetailBlock title="Monthly evidence unavailable">
-              <p>
-                No {selected ? "month-specific" : "monthly"} formula, source records or allocation
-                assumptions have been supplied. Annual KPI evidence does not validate these monthly
-                points.
-              </p>
-            </DetailBlock>
-          )}
-        </DetailDrawer>
       </header>
-      <div className="grid grid-cols-1 border-y sm:grid-cols-2 lg:grid-cols-4">
-        {metrics.map((m) => {
-          const t = monthlyTotal(rows, m.key);
-          const comparison = monthlyComparison(rows, m.key);
-          return (
-            <Button
-              key={m.key}
-              variant="ghost"
-              disabled={t.value == null}
-              aria-pressed={metric === m.key}
-              onClick={() => {
-                setMetric(m.key);
-              }}
-              className={`h-auto min-h-28 flex-col items-start justify-center whitespace-normal rounded-none border-r p-4 text-left ${metric === m.key ? "bg-muted" : ""}`}
-            >
-              <span className="text-xs text-muted-foreground">{m.label}</span>
-              <span className="num mt-2 break-words text-xl font-semibold">
-                {t.value == null ? "Unavailable" : m.format(t.value)}
-              </span>
-              <span className="mt-2 text-[11px] font-normal text-muted-foreground">
-                {t.available}/{t.total} months ·{" "}
-                {m.key === "co2KgMarket" && !api.isDemo
-                  ? "covered activity subtotal"
-                  : t.available < t.total ? "available subtotal" : "historical period total"}
-              </span>
-              {comparison?.percentage != null && (
-                <span
-                  className={`mt-2 text-[11px] ${comparison.percentage >= 0 ? "text-success" : "text-warning"}`}
+      <div className="@container">
+        <div className="grid grid-cols-1 gap-x-3 @sm:grid-cols-2 @4xl:grid-cols-4">
+          {metrics.map((m) => {
+            const t = monthlyTotal(rows, m.key);
+            const comparison = monthlyComparison(rows, m.key);
+            return (
+              <div key={m.key} className="relative min-w-0">
+                <Button
+                  variant="ghost"
+                  aria-pressed={metric === m.key}
+                  onClick={() => setMetric(m.key)}
+                  className="grid h-full min-h-28 w-full auto-rows-min items-start justify-start gap-2 whitespace-normal rounded-none border-b-2 border-border p-3 pr-11 text-left aria-pressed:border-accent-ink aria-pressed:bg-primary/10"
                 >
-                  {Math.abs(comparison.percentage).toFixed(1)}%{" "}
-                  {comparison.percentage >= 0 ? "decrease" : "increase"} vs {comparison.period}
-                </span>
-              )}
-            </Button>
-          );
-        })}
+                  <span className="flex min-h-9 items-center text-xs font-medium">{m.label}</span>
+                  <span className="num break-words text-xl font-semibold">{m.format(t.value)}</span>
+                  <span className="text-[11px] font-normal text-muted-foreground">
+                    {t.available}/{t.total} months ·{" "}
+                    {m.key === "co2KgMarket" && !api.isDemo
+                      ? "covered activity subtotal"
+                      : t.available < t.total
+                        ? "available subtotal"
+                        : "historical period total"}
+                  </span>
+                  {comparison?.percentage != null && (
+                    <span
+                      className={`text-[11px] ${comparison.percentage >= 0 ? "text-success" : "text-warning"}`}
+                    >
+                      {Math.abs(comparison.percentage).toFixed(1)}%{" "}
+                      {comparison.percentage >= 0 ? "decrease" : "increase"} vs {comparison.period}
+                    </span>
+                  )}
+                </Button>
+                <div className="absolute right-1 top-3">
+                  <EvidenceInfoButton
+                    description={m.label}
+                    onClick={() => {
+                      setMetric(m.key);
+                      setEvidenceOpen(true);
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
+      <AnalyticalInspector
+        title={`${current.label} · historical evidence`}
+        description={`${selected ? monthLabel(selected.month) : period} · ${current.unit}/month`}
+        trigger={null}
+        open={evidenceOpen}
+        onOpenChange={setEvidenceOpen}
+        contentKey={`${metric}:${selected?.month ?? ""}`}
+      >
+        <DetailBlock title="Monthly observations">
+          <p>
+            {total.available}/{total.total} months available ·{" "}
+            {selected?.status ?? "Status unavailable"}
+          </p>
+          <p>{selected ? current.format(selected[metric]) : "No month selected"}</p>
+          {metric === "co2KgMarket" && selected?.marketCoverage && (
+            <p>{marketCoverageLabel(selected.marketCoverage)}</p>
+          )}
+        </DetailBlock>
+        {evidence ? (
+          <CalculationDetails key={`${metric}:${selected?.month}`} calc={evidence} />
+        ) : (
+          <p className="text-muted-foreground">
+            Month-specific calculation details are unavailable.
+          </p>
+        )}
+        {(metric === "co2Kg" || metric === "co2KgMarket") && (
+          <AnnualEmissionsEvidence
+            overview={overview}
+            market={metric === "co2KgMarket"}
+            projection={emissionsProjection}
+          />
+        )}
+      </AnalyticalInspector>
       {total.value != null ? (
         <>
           <div
+            data-inspector-interactive
             className="historical-plot mt-6 h-80 min-w-0"
             role="img"
             aria-label={`${current.label} monthly totals`}
@@ -175,19 +218,19 @@ export function HistoricalPerformance({
                 data={rows}
                 margin={{ top: 15, left: 5, right: 28, bottom: 10 }}
                 onClick={(state) => {
-                  if (typeof state?.activeLabel === "string") chooseMonth(state.activeLabel);
+                  if (typeof state?.activeLabel === "string") setSelectedMonth(state.activeLabel);
                 }}
               >
                 <XAxis
                   dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={monthLabel}
+                  tickFormatter={(month: string) => monthLabel(month)}
                   minTickGap={24}
                   tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 />
                 <YAxis
-                  width={95}
+                  width={110}
                   domain={domain}
                   tickCount={5}
                   axisLine={false}
@@ -215,7 +258,7 @@ export function HistoricalPerformance({
                         </p>
                         <p className="mt-1 text-muted-foreground">
                           {row.status ?? (api.isDemo ? "DEMO" : "Status not supplied")} ·{" "}
-                          {current.unit}
+                          {current.unit}/month
                         </p>
                         {metric === "co2KgMarket" && row.marketCoverage?.coveragePct != null && (
                           <p className="mt-1 text-muted-foreground">
@@ -224,7 +267,9 @@ export function HistoricalPerformance({
                         )}
                         {change != null && (
                           <p className={change >= 0 ? "text-success" : "text-warning"}>
-                            {change.toFixed(1)}% decrease vs {previous.period}
+                            {Math.abs(change).toFixed(1)}%{" "}
+                            {change > 0 ? "decrease" : change < 0 ? "increase" : "change"} vs{" "}
+                            {previous.period}
                           </p>
                         )}
                       </div>
@@ -260,109 +305,98 @@ export function HistoricalPerformance({
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <p className="num text-xs text-muted-foreground">
-              {current.unit} · observed min{" "}
+              {current.unit}/month · observed min{" "}
               {values.length ? current.format(Math.min(...values)) : "Unavailable"} · max{" "}
               {values.length ? current.format(Math.max(...values)) : "Unavailable"}
             </p>
-            <Button size="sm" variant="ghost" aria-pressed={zero} onClick={() => setZero(!zero)}>
-              {zero ? "Focused axis" : "Start at zero"}
-            </Button>
           </div>
-          <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className="w-6 border-t-2 border-chart-2" />
-            {current.label} · {current.unit} · solid line and points: supplied historical totals ·
-            gaps: unavailable
-          </p>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Select a month to inspect its results
-          </p>
-          <div
-            className="mt-3 flex gap-2 overflow-x-auto pb-2"
-            aria-label="Inspect a monthly observation"
-          >
-            {rows.map((r) => (
-              <Button
-                key={r.month}
-                size="sm"
-                variant={selectedMonth === r.month ? "secondary" : "outline"}
-                className="shrink-0"
-                aria-label={`${monthLabel(r.month)} ${current.label}: ${isAvailable(r[metric]) ? current.format(r[metric]) : "Unavailable"}`}
-                aria-pressed={selectedMonth === r.month}
-                onClick={() => chooseMonth(r.month)}
-              >
-                {monthLabel(r.month)}
-              </Button>
-            ))}
-          </div>
-          {selected && !executive && (
-            <section id={summaryId} role="status" className="mt-5 border-t pt-4">
-              <header className="mb-3 flex flex-wrap items-center gap-3">
-                <h3 className="font-semibold">{monthLabel(selected.month)}</h3>
-                <span className="text-xs text-muted-foreground">
-                  {selected.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}
-                </span>
-              </header>
-              <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {METRICS.map((m) => {
-                  const calculation = selected.evidence?.[m.key];
-                  return (
-                    <div key={m.key} className="min-w-0 border-b pb-3">
-                      <dt className="text-xs text-muted-foreground">{m.label}</dt>
-                      <dd className="num mt-2 break-words text-base">
-                        {isAvailable(selected[m.key]) ? m.format(selected[m.key]) : "Unavailable"}
-                      </dd>
-                      {calculation && <CalcInfo calc={calculation} />}
-                    </div>
-                  );
-                })}
-              </dl>
-            </section>
-          )}
         </>
       ) : (
-        <p className="py-12 text-muted-foreground">
-          Monthly {current.label} is unavailable. Annual totals cannot supply monthly observations.
-        </p>
+        <p className="py-8 text-muted-foreground">Monthly {current.label} is unavailable.</p>
       )}
-      {executive && selected && <SelectedMonthSummary id={summaryId} rows={rows} selected={selected} />}
+      {rows.length > 0 && (
+        <div
+          className="mt-3 flex gap-2 overflow-x-auto pb-2"
+          aria-label="Inspect a monthly observation"
+        >
+          {rows.map((r) => (
+            <Button
+              key={r.month}
+              size="sm"
+              variant={selected?.month === r.month ? "default" : "outline"}
+              className="shrink-0"
+              aria-label={`${monthLabel(r.month)} ${current.label}: ${isAvailable(r[metric]) ? current.format(r[metric]) : "Unavailable"}`}
+              aria-pressed={selected?.month === r.month}
+              onClick={() => setSelectedMonth(r.month)}
+            >
+              {monthLabel(r.month)}
+            </Button>
+          ))}
+        </div>
+      )}
+      {selected && (
+        <SelectedMonthSummary id={summaryId} rows={rows} selected={selected} overview={overview} />
+      )}
     </section>
   );
 }
 
-const executiveMetrics = [
-  { ...METRICS[0], label: "Digital spending", Icon: Wallet, color: "var(--chart-1)" },
-  { ...METRICS[1], label: "Location-based CO₂", Icon: Cloud, color: "var(--chart-2)" },
-  { ...METRICS[2], label: "Energy consumption", Icon: Zap, color: "var(--chart-4)" },
-  { ...METRICS[3], label: "Market-based CO₂", Icon: Leaf, color: "var(--chart-3)" },
-];
-
-export function SelectedMonthSummary({ id, rows, selected }: {
-  id: string; rows: MonthlyObservation[]; selected: MonthlyObservation;
+export function SelectedMonthSummary({
+  id,
+  rows,
+  selected,
+  overview,
+}: {
+  id: string;
+  rows: MonthlyObservation[];
+  selected: MonthlyObservation;
+  overview?: Overview;
 }) {
   const previous = rows.find((row) => row.month === priorCalendarMonth(selected.month));
   return (
     <section id={id} aria-label="Selected month summary" className="@container mt-5 border-t pt-4">
       <header className="mb-3 flex flex-wrap items-center gap-3">
-        <h3 className="font-semibold">{monthLabel(selected.month)}</h3>
-        <span className="text-xs text-muted-foreground">{selected.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}</span>
+        <h3 className="font-semibold">{monthLabel(selected.month, "long")} — Observed results</h3>
+        <span className="text-xs text-muted-foreground">
+          {selected.status ?? (api.isDemo ? "DEMO" : "Status not supplied")}
+        </span>
       </header>
       <dl className="grid gap-3 @md:grid-cols-2 @4xl:grid-cols-4">
-        {executiveMetrics.map(({ key, label, Icon, color, format }) => {
+        {monthlyMetrics(overview).map(({ key, label, Icon, color, format }) => {
           const value = selected[key];
           const before = previous?.[key];
-          const change = isAvailable(value) && isAvailable(before) ? percentDifference(before, value) : null;
+          const change =
+            isAvailable(value) && isAvailable(before) ? percentDifference(before, value) : null;
           return (
-            <div key={key} className="min-w-0 rounded-lg border bg-card p-3">
-              <dt className="flex items-center gap-2 text-xs"><Icon aria-hidden className="size-4 shrink-0" style={{ color }} />{label}</dt>
-              <dd className="num mt-2 break-words text-lg font-semibold">{isAvailable(value) ? format(value) : "Unavailable"}</dd>
-              <dd><ObservationSparkline rows={rows} metric={key} selected={selected.month} color={color} /></dd>
-              <dd className="text-xs text-muted-foreground">
-                {change == null ? "Monthly change unavailable" : `${change === 0 ? "0.0%" : `${Math.abs(change).toFixed(1)}% ${change > 0 ? "decrease" : "increase"}`} vs previous month`}
+            <div key={key} className="min-w-0 border-b px-2 pb-3 pt-1">
+              <dt className="flex items-center gap-2 text-xs">
+                <Icon aria-hidden className="size-4 shrink-0" style={{ color }} />
+                {label}
+              </dt>
+              <dd className="num mt-2 break-words text-lg font-semibold">
+                {isAvailable(value) ? format(value) : "Unavailable"}
               </dd>
-              {key === "co2KgMarket" && <dd className="mt-1 text-xs text-muted-foreground">
-                {selected.marketCoverage ? marketCoverageLabel(selected.marketCoverage) : "Market coverage unavailable."}
-                {selected.marketCoverage?.status === "partial" && " Covered subtotal."}
-              </dd>}
+              <dd>
+                <ObservationSparkline
+                  rows={rows}
+                  metric={key}
+                  selected={selected.month}
+                  color={color}
+                />
+              </dd>
+              <dd className="text-xs text-muted-foreground">
+                {change == null
+                  ? "Monthly change unavailable"
+                  : `${change === 0 ? "0.0%" : `${Math.abs(change).toFixed(1)}% ${change > 0 ? "decrease" : "increase"}`} vs previous month`}
+              </dd>
+              {key === "co2KgMarket" && (
+                <dd className="mt-1 text-xs text-muted-foreground">
+                  {selected.marketCoverage
+                    ? marketCoverageLabel(selected.marketCoverage)
+                    : "Market coverage unavailable."}
+                  {selected.marketCoverage?.status === "partial" && " Covered subtotal."}
+                </dd>
+              )}
             </div>
           );
         })}
@@ -377,29 +411,71 @@ function monthIndex(month: string) {
   return year * 12 + number;
 }
 
-function ObservationSparkline({ rows, metric, selected, color }: {
-  rows: MonthlyObservation[]; metric: HistoricalMetric; selected: string; color: string;
+function ObservationSparkline({
+  rows,
+  metric,
+  selected,
+  color,
+}: {
+  rows: MonthlyObservation[];
+  metric: HistoricalMetric;
+  selected: string;
+  color: string;
 }) {
   const values = rows.map((row) => row[metric]).filter(isAvailable);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const first = monthIndex(rows[0]?.month ?? selected);
   const span = monthIndex(rows.at(-1)?.month ?? selected) - first;
-  const x = (month: string) => span > 0 ? 6 + (monthIndex(month) - first) / span * 108 : 60;
-  const y = (value: number) => max > min ? 33 - (value - min) / (max - min) * 26 : 20;
+  const x = (month: string) => (span > 0 ? 6 + ((monthIndex(month) - first) / span) * 108 : 60);
+  const y = (value: number) => (max > min ? 33 - ((value - min) / (max - min)) * 26 : 20);
   return (
-    <svg viewBox="0 0 120 40" className="my-1 h-10 w-full" role="img" aria-label={values.length ? "Historical observations with selected month marked" : "Historical observations unavailable"}>
-      <line x1={x(selected)} x2={x(selected)} y1="3" y2="37" className="stroke-muted-foreground/50" strokeDasharray="2 2" />
+    <svg
+      viewBox="0 0 120 40"
+      className="my-1 h-10 w-full"
+      role="img"
+      aria-label={
+        values.length
+          ? "Historical observations with selected month marked"
+          : "Historical observations unavailable"
+      }
+    >
+      <line
+        x1={x(selected)}
+        x2={x(selected)}
+        y1="3"
+        y2="37"
+        className="stroke-muted-foreground/50"
+        strokeDasharray="2 2"
+      />
       {rows.map((row, index) => {
         const value = row[metric];
         if (!isAvailable(value)) return null;
         const previous = rows[index - 1];
         const before = previous?.[metric];
-        return <g key={row.month}>
-          {previous && previous.month === priorCalendarMonth(row.month) && isAvailable(before) &&
-            <line x1={x(previous.month)} y1={y(before)} x2={x(row.month)} y2={y(value)} stroke={color} strokeWidth="1.75" />}
-          <circle cx={x(row.month)} cy={y(value)} r={row.month === selected ? 3.5 : 1.75} fill={color} className={row.month === selected ? "stroke-foreground" : undefined} />
-        </g>;
+        return (
+          <g key={row.month}>
+            {previous &&
+              previous.month === priorCalendarMonth(row.month) &&
+              isAvailable(before) && (
+                <line
+                  x1={x(previous.month)}
+                  y1={y(before)}
+                  x2={x(row.month)}
+                  y2={y(value)}
+                  stroke={color}
+                  strokeWidth="1.75"
+                />
+              )}
+            <circle
+              cx={x(row.month)}
+              cy={y(value)}
+              r={row.month === selected ? 3.5 : 1.75}
+              fill={color}
+              className={row.month === selected ? "stroke-foreground" : undefined}
+            />
+          </g>
+        );
       })}
     </svg>
   );

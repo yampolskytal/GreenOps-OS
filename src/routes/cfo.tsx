@@ -1,159 +1,260 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Coins, PiggyBank, Hammer, ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/greenops/shell";
-import { ChartCard, KpiCard, Q } from "@/components/greenops/ui";
-import { ComparisonBoard } from "@/components/greenops/compare";
+import { CalcInfo, Q } from "@/components/greenops/ui";
+import { DetailBlock, DetailDrawer, EvidenceInfoButton } from "@/components/greenops/details";
+import { DashboardSections } from "@/components/greenops/dashboard-sections";
+import {
+  DashboardPerformanceContent,
+  useDashboardPerformanceData,
+} from "@/components/greenops/dashboard-performance";
+import { SpendingDonut, type SpendingSelection } from "@/components/greenops/spending-donut";
+import type { HistoricalSelection } from "@/components/greenops/historical-performance";
 import { ForecastChart } from "@/components/greenops/forecast-chart";
 import { Button } from "@/components/ui/button";
-import { useForecast, useOverview, useSimulation } from "@/lib/queries";
-import { useApp, useDisplayedPlan } from "@/lib/store";
-import { PlanningProjection } from "@/components/greenops/starting-plan-notice";
-import { chf, kchf } from "@/lib/format";
-import { HistoricalPerformance } from "@/components/greenops/historical-performance";
-import { TargetPanel } from "@/components/greenops/targets";
-import { EmissionsEvidence } from "@/components/greenops/emissions-evidence";
+import { useForecast } from "@/lib/queries";
+import { PlanningProjection, StartingPlanNotice } from "@/components/greenops/starting-plan-notice";
+import { chf, formatEvidenceText, formatNumber } from "@/lib/format";
+import type { MonthlyObservation } from "@/lib/api/types";
 import { seo } from "@/lib/seo";
-import { DemoExceptions } from "@/components/greenops/demo-exceptions";
-import { useMeasures } from "@/lib/queries";
+
 export const Route = createFileRoute("/cfo")({
   head: () =>
     seo(
       "Finance Dashboard — GreenOps OS",
-      "Financial snapshot, ranked spending drivers and implementation budget for the shared plan.",
+      "Digital spending, projected savings and implementation economics.",
     ),
   component: Cfo,
 });
+
+function sectionForHash(hash: string) {
+  if (hash === "monthly") return "performance";
+  if (hash === "spending" || hash === "compare") return "spending";
+  return "overview";
+}
+
 function Cfo() {
-  const ov = useOverview(true),
-    sim = useSimulation(),
-    fc = useForecast(
-      "cost",
-      3,
-      !!ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)),
-    );
-  const { s } = useApp();
-  const plan = useDisplayedPlan();
-  const measures = useMeasures();
+  const data = useDashboardPerformanceData();
+  const [spending, setSpending] = useState<SpendingSelection>();
+  const [historical, setHistorical] = useState<HistoricalSelection>();
+  const [outlookOpen, setOutlookOpen] = useState(false);
   return (
     <AppShell
-      kicker="Finance · Dashboard"
-      title="Make spending work harder"
-      subtitle="Annual spending, financial opportunities and the cost of your selected plan."
+      title="Finance Dashboard"
+      subtitle="Historical digital spending, projected savings and implementation costs."
+      showStartingPlan={false}
     >
-      <div className="grid gap-6 border-b pb-6 md:grid-cols-3">
-        <KpiCard
-          label="Annual digital spending"
-          value={ov.data?.cost.value.mid ?? null}
-          format={kchf}
-          sub={ov.data?.baselinePeriod ?? "Loading reporting period"}
-          {...(ov.data ? { calc: ov.data.cost.calc } : {})}
-          icon={<Coins className="size-4" />}
-        />
-        <KpiCard
-          label="Potential annual savings"
-          value={plan.ready ? sim.data?.savingsChf ?? null : null}
-          format={kchf}
-          sub={`Projected · ${plan.label}`}
-          tone="good"
-          icon={<PiggyBank className="size-4" />}
-        />
-        <KpiCard
-          label="Implementation budget used"
-          value={plan.ready ? sim.data?.effortChf ?? null : null}
-          format={chf}
-          sub={plan.ready ? `${plan.measureIds.length} measures selected` : "Awaiting recommendation"}
-          icon={<Hammer className="size-4" />}
-        />
-      </div>
-      <Q q={ov}>
-        {(o) => (
-          <>
-            <HistoricalPerformance overview={o} />
-            <div className="mt-4">
-              <EmissionsEvidence overview={o} />
-            </div>
-          </>
-        )}
-      </Q>
-      <div className="mt-6 grid gap-10 xl:grid-cols-[1.35fr_.8fr]">
-        <ChartCard
-          title="Where the money goes"
-          subtitle="Ranked annual spending, one comparison at a time"
-        >
-          <ComparisonBoard finance />
-        </ChartCard>
-        <ChartCard title="Budget & optimization">
-          <PlanningProjection>
-          <Q q={sim}>
+      <DashboardSections
+        label="Finance dashboard"
+        sectionForHash={sectionForHash}
+        sections={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <FinanceOverview
+                {...data}
+                outlookOpen={outlookOpen}
+                onOutlookChange={setOutlookOpen}
+              />
+            ),
+          },
+          {
+            id: "spending",
+            label: "Spending Drivers",
+            content: <SpendingDonut initial={spending} onSelectionChange={setSpending} />,
+          },
+          {
+            id: "performance",
+            label: "Performance",
+            content: (
+              <DashboardPerformanceContent
+                {...data}
+                selection={historical}
+                onSelectionChange={setHistorical}
+              />
+            ),
+          },
+        ]}
+      />
+    </AppShell>
+  );
+}
+
+function FinanceOverview({
+  overview,
+  simulation,
+  plan,
+  outlookOpen,
+  onOutlookChange,
+}: ReturnType<typeof useDashboardPerformanceData> & {
+  outlookOpen: boolean;
+  onOutlookChange: (open: boolean) => void;
+}) {
+  const baseline = overview.data;
+  const result = plan.ready ? simulation.data : undefined;
+  const kpis = [
+    {
+      label: "Annual digital spending",
+      value: baseline?.cost.value.mid,
+      description: baseline?.baselinePeriod ?? "Reporting period unavailable",
+      Icon: Coins,
+      info: baseline ? <CalcInfo calc={baseline.cost.calc} /> : null,
+    },
+    {
+      label: "Potential annual savings",
+      value: result?.savingsChf,
+      description: `Projected · ${plan.label}`,
+      Icon: PiggyBank,
+      info: result ? projectionInfo("Potential annual savings") : null,
+    },
+    {
+      label: "Implementation budget used",
+      value: result?.effortChf,
+      description: plan.ready ? `Plan budget · ${chf(plan.budgetChf)}` : "Awaiting recommendation",
+      Icon: Hammer,
+      info: result ? projectionInfo("Implementation budget used") : null,
+    },
+  ];
+  function projectionInfo(label: string) {
+    if (!result) return null;
+    return (
+      <DetailDrawer title={label} trigger={<EvidenceInfoButton description={label} />}>
+        <DetailBlock title={plan.label}>
+          <p>Projected annual savings · {chf(result.savingsChf)}</p>
+          <p>Implementation expenditure · {chf(result.effortChf)}</p>
+          <p>Modeled effort · {formatNumber(result.effortDays)} person-days</p>
+        </DetailBlock>
+        <DetailBlock title="Calculation notes">
+          {result.reasons.length ? (
+            result.reasons.map((reason) => <p key={reason}>{formatEvidenceText(reason)}</p>)
+          ) : (
+            <p>Savings are projected for the selected strategy.</p>
+          )}
+          {result.excluded.map(({ id, reason }) => (
+            <p key={id}>
+              {id} · {formatEvidenceText(reason)}
+            </p>
+          ))}
+        </DetailBlock>
+      </DetailDrawer>
+    );
+  }
+  return (
+    <div className="@container space-y-5">
+      <StartingPlanNotice compact />
+      <dl
+        aria-label="Financial indicators"
+        className="grid grid-cols-1 gap-x-6 gap-y-1 @2xl:grid-cols-3"
+      >
+        {kpis.map(({ label, value, description, Icon, info }) => (
+          <div key={label} className="row-span-3 grid min-w-0 grid-rows-subgrid border-b py-2">
+            <dt className="grid min-h-9 grid-cols-[1rem_minmax(0,1fr)_2.25rem] items-center gap-2 text-sm">
+              <Icon aria-hidden className="size-4 text-muted-foreground" />
+              <span>{label}</span>
+              <span>{info}</span>
+            </dt>
+            <dd className="num break-words text-2xl font-semibold">{chf(value)}</dd>
+            <dd className="pb-1 text-xs text-muted-foreground">{description}</dd>
+          </div>
+        ))}
+      </dl>
+      {overview.isError && <Q q={overview}>{() => null}</Q>}
+      <section className="max-w-3xl space-y-3">
+        <header className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="font-semibold">Budget &amp; economics</h2>
+            <p className="text-xs text-muted-foreground">{plan.label}</p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/studio">
+              Open Optimization Studio <ArrowRight />
+            </Link>
+          </Button>
+        </header>
+        <PlanningProjection>
+          <Q q={simulation}>
             {(r) => (
-              <div className="space-y-5">
-                <div>
-                  <p className="text-xs text-muted-foreground">{plan.label}</p>
-                  <p className="mt-1 font-semibold">{plan.measureIds.length} proposed measures</p>
-                </div>
+              <dl className="grid grid-cols-[minmax(0,1fr)_auto] text-sm">
                 {[
                   ["Implementation expenditure", chf(r.effortChf)],
-                  ["Annual savings", chf(r.savingsChf)],
-                  ["Remaining budget", chf(s.budgetChf - r.effortChf)],
+                  ["Projected annual savings", chf(r.savingsChf)],
+                  ["Remaining implementation budget", chf(plan.budgetChf - r.effortChf)],
                   [
                     "Payback period",
                     r.paybackMonths == null
                       ? "Unavailable"
-                      : `${r.paybackMonths.toFixed(1)} months`,
+                      : `${formatNumber(r.paybackMonths, { maximumFractionDigits: 1 })} months`,
                   ],
-                ].map(([l, v]) => (
-                  <div key={l} className="flex justify-between gap-3 border-b pb-3 text-sm">
-                    <span className="text-muted-foreground">{l}</span>
-                    <span className="num text-right">{v}</span>
+                  ["Selected measures", formatNumber(plan.measureIds.length)],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="col-span-2 grid grid-cols-subgrid gap-x-3 border-b py-2"
+                  >
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className="num text-right">{value}</dd>
                   </div>
                 ))}
-                <p className="text-xs text-muted-foreground">
-                  Budget limit: {chf(s.budgetChf)}. Savings are projected, not realized.
-                </p>
-                <Button asChild>
-                  <Link to="/studio">
-                    Open Optimization Studio
-                    <ArrowRight />
-                  </Link>
-                </Button>
-              </div>
+              </dl>
             )}
           </Q>
-          </PlanningProjection>
-        </ChartCard>
-      </div>
-      <section className="mt-8 border-t pt-6">
-        <h2 className="mb-5 text-lg font-semibold">Challenge Targets · {plan.label}</h2>
-        <PlanningProjection>
-        <Q q={sim}>{(r) => <TargetPanel r={r} compact />}</Q>
         </PlanningProjection>
       </section>
-      <section className="mt-8 border-t pt-6">
-        <ChartCard
-          title="Financial outlook"
-          action={
-            <Button asChild variant="link">
+      <section className="border-t pt-3">
+        <header className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-semibold">Financial outlook</h2>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              aria-expanded={outlookOpen}
+              aria-controls="finance-outlook"
+              onClick={() => onOutlookChange(!outlookOpen)}
+            >
+              {outlookOpen ? "Hide three-year outlook" : "Show three-year outlook"}
+            </Button>
+            <Button asChild size="sm" variant="link">
               <Link to="/forecast">
-                Full forecasts
-                <ArrowRight />
+                Full forecasts <ArrowRight />
               </Link>
             </Button>
-          }
-        >
-          {ov.data?.forecastSupport?.some((x) => x.metric === "cost" && x.horizons.includes(3)) ? (
-            <Q q={fc}>
-              {(f) => (
-                <ForecastChart f={f} format={kchf} height={260} history={ov.data?.monthly ?? []} planLabel={plan.label} />
-              )}
-            </Q>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Three-year cost projections are not available from this provider.
-            </p>
-          )}
-        </ChartCard>
+          </div>
+        </header>
+        <div id="finance-outlook">
+          {outlookOpen &&
+            (baseline?.forecastSupport?.some(
+              (item) => item.metric === "cost" && item.horizons.includes(3),
+            ) ? (
+              <PlanningProjection>
+                <FinancialOutlook history={baseline.monthly} planLabel={plan.label} />
+              </PlanningProjection>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Three-year cost projections are unavailable.
+              </p>
+            ))}
+        </div>
       </section>
-      <Q q={measures}>{(all) => <DemoExceptions measures={all} />}</Q>
-    </AppShell>
+    </div>
+  );
+}
+
+function FinancialOutlook({
+  history,
+  planLabel,
+}: {
+  history: MonthlyObservation[];
+  planLabel: string;
+}) {
+  const forecast = useForecast("cost", 3);
+  return (
+    <Q q={forecast}>
+      {(f) => (
+        <ForecastChart f={f} format={chf} height={260} history={history} planLabel={planLabel} />
+      )}
+    </Q>
   );
 }

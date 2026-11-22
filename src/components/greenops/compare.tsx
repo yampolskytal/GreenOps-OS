@@ -1,143 +1,123 @@
 import { useState } from "react";
-import { useBreakdowns, useResources } from "@/lib/queries";
-import { chf, kg, kwh } from "@/lib/format";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Q } from "./ui";
-import { LeaderboardBars } from "./leaderboard-bars";
+import type { Breakdown, HistoricalMetric } from "@/lib/api/types";
+import { useResources } from "@/lib/queries";
+import { EvidenceInfoButton } from "./details";
 import { ResourceDetails } from "./resource-details";
-type Category = "byDepartment" | "byProvider" | "byTool" | "byService" | "servers";
-export function comparisonFromHash(hash: string) {
-  const match = /^compare-(byDepartment|byProvider|byTool|byService)-(costChf|energyKwh|co2KgMarket|co2Kg)$/.exec(hash);
-  return match ? { category: match[1] as Category, metric: match[2]! } : undefined;
+import { DonutBreakdown, SpendingDonut, type SpendingSelection } from "./spending-donut";
+import { Q } from "./ui";
+
+export function comparisonFromHash(hash: string): SpendingSelection | undefined {
+  const match =
+    /^compare-(byDepartment|byProvider|byTool|byService)-(costChf|energyKwh|co2KgMarket|co2Kg)$/.exec(
+      hash,
+    );
+  return match
+    ? { category: match[1] as SpendingSelection["category"], metric: match[2] as HistoricalMetric }
+    : undefined;
 }
+
+const serverMetrics = [
+  ["runtimeH30d", "Runtime", "h"],
+  ["cpuAvgPct", "CPU utilization", "%"],
+  ["gpuAvgPct", "GPU utilization", "%"],
+  ["idleCostChfYear", "Estimated idle cost", "CHF"],
+] as const;
+
+export type ComparisonSelection = {
+  spending?: SpendingSelection;
+  servers: boolean;
+  serverMetric: (typeof serverMetrics)[number][0];
+  search: string;
+};
+
 export function ComparisonBoard({
-  finance = false,
-  initial,
-}: { finance?: boolean; initial?: ReturnType<typeof comparisonFromHash> }) {
-  const [category, setCategory] = useState<Category>(initial?.category ?? "byDepartment");
-  const [metric, setMetric] = useState(initial?.metric ?? "costChf");
-  const b = useBreakdowns();
-  const rs = useResources();
-  const operational = category === "servers";
-  const metrics = operational
-    ? [
-        ["runtimeH30d", "Runtime (h)"],
-        ["cpuAvgPct", "CPU utilization (%)"],
-        ["gpuAvgPct", "GPU utilization (%)"],
-        ["idleCostChfYear", "Estimated idle cost (CHF)"],
-      ]
-    : [
-        ["costChf", "Annual cost (CHF)"],
-        ["co2Kg", "CO₂ — Location-based (kg)"],
-        ["co2KgMarket", "CO₂ — Market-based (kg)"],
-        ["energyKwh", "Energy (kWh)"],
-      ];
-  const effective = metrics.some((m) => m[0] === metric)
-    ? metric
-    : operational
-      ? "runtimeH30d"
-      : "costChf";
-  const fmt =
-    effective.includes("Cost") || effective === "costChf"
-      ? chf
-      : effective === "co2Kg" || effective === "co2KgMarket"
-        ? kg
-        : effective === "energyKwh"
-          ? kwh
-          : (n: number) => `${n.toFixed(1)}${effective.endsWith("Pct") ? "%" : " h"}`;
+  selection,
+  onChange,
+}: {
+  selection: ComparisonSelection;
+  onChange: (selection: ComparisonSelection) => void;
+}) {
+  const { spending, servers, serverMetric, search } = selection;
+  const activeMetric = serverMetrics.find(([key]) => key === serverMetric) ?? serverMetrics[0];
   return (
-    <div>
-      <div className="mb-6 flex flex-wrap gap-3">
-        <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
-          <SelectTrigger aria-label="Comparison category" className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {[
-              ["byDepartment", "Departments"],
-              ["byProvider", "Providers"],
-              ["byTool", "Tools"],
-              ["byService", "Service categories"],
-              ...(!finance ? [["servers", "Servers"]] : []),
-            ].map(([v, l]) => (
-              <SelectItem key={v} value={v ?? ""}>
-                {l}
-              </SelectItem>
+    <SpendingDonut
+      initial={spending}
+      onSelectionChange={(value) => onChange({ ...selection, spending: value, servers: false })}
+      search={search}
+      onSearchChange={(value) => onChange({ ...selection, search: value })}
+      servers={{
+        active: servers,
+        onChange: (active) => onChange({ ...selection, servers: active }),
+        metricSelector: (
+          <select
+            aria-label="Comparison metric"
+            className="h-9 max-w-full rounded-md border bg-card px-2 text-sm"
+            value={serverMetric}
+            onChange={(event) =>
+              onChange({ ...selection, serverMetric: event.target.value as typeof serverMetric })
+            }
+          >
+            {serverMetrics.map(([key, label, unit]) => (
+              <option value={key} key={key}>
+                {label} ({unit})
+              </option>
             ))}
-          </SelectContent>
-        </Select>
-        <Select value={effective} onValueChange={setMetric}>
-          <SelectTrigger aria-label="Ranking metric" className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {metrics.map(([v, l]) => (
-              <SelectItem key={v} value={v ?? ""}>
-                {l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {!operational && !b.data?.[category].some((d) => d.co2KgMarket != null) && (
-        <p className="mb-4 text-xs text-muted-foreground">
-          Market-based comparison unavailable at this entity level; annual totals cannot supply
-          entity values.
-        </p>
-      )}
-      {operational ? (
-        <Q q={rs}>
-          {(data) => (
-            <LeaderboardBars
-              label="Last 30 days · source-reported utilization"
-              format={fmt}
-              items={data.map((r) => ({
-                id: r.id,
-                label: r.name,
-                value:
-                  effective === "cpuAvgPct"
-                    ? (r.cpuAvgPct ?? null)
-                    : effective === "gpuAvgPct"
-                      ? (r.gpuAvgPct ?? null)
-                      : effective === "idleCostChfYear"
-                        ? r.idleCostChfYear
-                        : r.runtimeH30d,
-                content: <ResourceDetails resource={r} />,
-              }))}
+          </select>
+        ),
+        chart: <ServerComparison metric={activeMetric} search={search} />,
+      }}
+    />
+  );
+}
+
+function ServerComparison({
+  metric: [metric, _label, unit],
+  search,
+}: {
+  metric: (typeof serverMetrics)[number];
+  search: string;
+}) {
+  const resources = useResources();
+  const [selection, setSelection] = useState<{ label: string } | "methodology" | null>(null);
+  return (
+    <>
+      <EvidenceInfoButton
+        description="server comparison"
+        onClick={() => setSelection("methodology")}
+      />
+      <Q q={resources}>
+        {(data) => {
+          const entities = new Map(
+            data.map((resource) => [`${resource.name} · ${resource.id}`, resource]),
+          );
+          const rows: Breakdown[] = Array.from(entities.keys(), (label) => ({
+            label,
+            costChf: null,
+            energyKwh: null,
+            co2Kg: null,
+          }));
+          return (
+            <DonutBreakdown
+              rows={rows}
+              metric="costChf"
+              unit={unit}
+              search={search}
+              rule={
+                metric === "idleCostChfYear"
+                  ? "Estimated annual idle cost supplied for the resources in view."
+                  : "Source-reported resource utilization for the last 30 days."
+              }
+              comparisonOnly={unit === "%"}
+              valueFor={({ label }) => entities.get(label)?.[metric] ?? null}
+              entityDetails={({ label }) => {
+                const resource = entities.get(label);
+                return resource ? <ResourceDetails key={resource.id} resource={resource} /> : null;
+              }}
+              inspector={{ selection, setSelection }}
             />
-          )}
-        </Q>
-      ) : (
-        <Q q={b}>
-          {(data) => (
-            <LeaderboardBars
-              label={data.allocationRule}
-              format={fmt}
-              items={data[category].map((d) => ({
-                id: d.label,
-                label: d.label,
-                value:
-                  effective === "co2KgMarket"
-                    ? (d.co2KgMarket ?? null)
-                    : effective === "co2Kg"
-                      ? d.co2Kg
-                      : effective === "energyKwh"
-                        ? d.energyKwh
-                        : d.costChf,
-                detail: effective === "co2KgMarket" && d.marketCoverage
-                  ? [`Covered activity · ${d.marketCoverage.coveragePct == null ? "coverage unavailable" : `${d.marketCoverage.coveragePct.toFixed(1)}% of modeled kWh`}`, ...d.marketCoverage.missingInputs].join(" · ")
-                  : `Annual cost: ${chf(d.costChf)} · CO₂: ${kg(d.co2Kg)} · energy: ${kwh(d.energyKwh)}. ${data.allocationRule}`,
-              }))}
-            />
-          )}
-        </Q>
-      )}
-    </div>
+          );
+        }}
+      </Q>
+    </>
   );
 }

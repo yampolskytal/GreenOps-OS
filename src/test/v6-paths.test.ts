@@ -85,15 +85,15 @@ describe("V6 scenario chart data", () => {
     const c = buildScenarioChart(months(6), "cost", [{ key: "plan", forecast: forecast("annual") }]);
     expect(c.granularity).toBe("annual");
     const projected = c.rows.filter((r) => r["plan"] != null);
-    expect(projected).toHaveLength(2);
-    expect(projected.map((r) => r["plan"])).toEqual([100, 90]);
-    expect(projected.map((r) => r["noChange"])).toEqual([100, 100]);
+    expect(projected).toHaveLength(1);
+    expect(projected.map((r) => r["plan"])).toEqual([90]);
+    expect(projected.map((r) => r["noChange"])).toEqual([100]);
   });
   it("shows no history when none is supplied", () => {
     const c = buildScenarioChart([], "cost", [{ key: "plan", forecast: forecast("annual") }]);
     expect(c.historyCount).toBe(0);
   });
-  it("preserves a changing plan gap across all twelve projected quarters", () => {
+  it("preserves every supplied month and the changing plan gap across three years", () => {
     const c = buildScenarioChart([], "cost", [{ key: "plan", forecast: {
       ...forecast("monthly"),
       points: Array.from({ length: 36 }, (_, i) => {
@@ -104,9 +104,10 @@ describe("V6 scenario chart data", () => {
           optimized: { low: plan, mid: plan, high: plan } };
       }),
     } }]);
-    expect(c.granularity).toBe("quarterly");
-    expect(c.rows).toHaveLength(12);
-    expect(c.rows.map((r) => Number(r["noChange"]) - Number(r["plan"])))
-      .toEqual(Array.from({ length: 12 }, (_, i) => 5 + i * 2));
+    expect(c.granularity).toBe("monthly");
+    const projected = c.rows.filter((row) => row.kind === "projected");
+    expect(projected).toHaveLength(36);
+    expect(projected.map((r) => Number(r["noChange"]) - Number(r["plan"])))
+      .toEqual(Array.from({ length: 36 }, (_, i) => 5 + Math.floor(i / 3) * 2));
   });
 });

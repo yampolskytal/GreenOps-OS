@@ -75,7 +75,7 @@ export function PathMembership({
         measureIds,
         checked,
         trimmed,
-        { budgetChf: s.budgetChf, priority: s.priority },
+        s.studioSettings ?? { budgetChf: s.budgetChf, priority: s.priority },
         newId,
       );
       set((state) => ({
@@ -84,7 +84,7 @@ export function PathMembership({
           measureIds,
           checked,
           trimmed,
-          { budgetChf: state.budgetChf, priority: state.priority },
+          state.studioSettings ?? { budgetChf: state.budgetChf, priority: state.priority },
           newId,
         ).paths,
       }));
