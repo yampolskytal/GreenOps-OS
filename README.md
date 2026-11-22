@@ -4,11 +4,18 @@
 
 **[Open the live dashboard →](https://greenops-os.lovable.app/)**
 
-GreenOps OS helps a CEO, CFO and IT manager decide which changes to cloud infrastructure, software subscriptions and AI usage are worth making. Built for the sprintd Basel Green AI challenge, it uses the same case data across all three dashboards so each role can trace a proposed saving back to its evidence.
+A Basel SME pays for cloud services, servers, AI and software licences. The electricity is used in Zurich, Frankfurt or Dublin, but the purchasing and operating decisions are made in Basel. GreenOps OS brings those bills and usage records together so IT, management and finance can see which departments and tools drive spending, electricity use and indirect (Scope 3) emissions.
+
+Built for the **ALTYCA and Basel 2037** case at sprintd Basel, the prototype uses synthetic exports for a fictional consultancy of about 112 people: 13 core files and 15 bonus files, with bills in CHF, EUR and USD. Location-based carbon estimates use the grid mix where the service runs. For Switzerland, the [factor register](backend/factors.json) uses a consumption mix that accounts for imports and documents its source and range.
 
 [![GreenOps dashboard comparing projected carbon and cost reductions against their targets alongside the implementation budget](docs/screenshots/dashboard.webp)](https://greenops-os.lovable.app/ceo)
 
-For the bundled case, the seven recommended measures are projected to cut annual spending by **25.1%** and location-based carbon emissions by **43.5%**, using the full CHF 16,500 budget and 15 person-days.
+For the September 2025–August 2026 baseline shown above, the seven recommended measures are projected to cut **location-based emissions by 43.5%** (target: 40%) and **annual spending by 25.1%** (target: 25%). Implementation uses the full **CHF 16,500**, or 15 person-days at CHF 1,100 each. These are estimates against the team’s baseline; the jury also checks submissions against its own reference baseline.
+
+### One finding, one limit
+
+- **Review unused licences.** The [August 2026 AI subscription export](backend/inputs/sprintd-basel-green-ai-data-main/ai_subscriptions.csv) lists 14 paid Microsoft Copilot seats for cost centre 4500, with nine active in the prior 30 days. At USD 21 per seat, the five inactive seats represent USD 105 per month to review. That is a candidate saving, subject to owner confirmation and contract terms.
+- **Keep the idle recovery server.** [Ticket T-1094](backend/inputs/sprintd-basel-green-ai-data-main/it_tickets.csv) explicitly requires `dr-failover` to keep running even without load. Low utilization alone would give the wrong recommendation.
 
 ## Try a planning session
 
@@ -22,6 +29,8 @@ For the bundled case, the seven recommended measures are projected to cut annual
 1. **Start on the CEO dashboard.** Compare the cost and carbon targets with the recommended starting plan. Switch to CFO or IT Manager to inspect spending or resource usage behind the totals.
 2. **Open Studio.** Change the budget or selection of measures and compare alternatives. Save an alternative as a Path to revisit it later.
 3. **Adopt a Current Plan**, then open **Submission** to check and export the baseline and measures CSVs. Savings are projections for a fictional company; saving a plan on this device does not approve or execute infrastructure changes.
+
+**From prototype to operations:** Pilot with one SME using read-only exports. Have finance reconcile the baseline against invoices and IT confirm protection windows and disputed records. Trial one approved measure, then compare subsequent bills and workload metrics with the estimate before expanding the rollout.
 
 ## Run locally
 
