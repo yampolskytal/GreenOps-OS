@@ -38,7 +38,6 @@ function It() {
   const resources = useResources();
   const hash = useRouterState({ select: (state) => state.location.hash });
   const [selected, setSelected] = useState<{ id: string; hash: string }>();
-  const [recommendationsOpen, setRecommendationsOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [historical, setHistorical] = useState<HistoricalSelection>();
   const resourceHash = /^#?res-(.+)$/.exec(hash);
@@ -57,13 +56,7 @@ function It() {
           {
             id: "overview",
             label: "Overview",
-            content: (
-              <ItOverview
-                resources={resources}
-                recommendationsOpen={recommendationsOpen}
-                onRecommendationsChange={setRecommendationsOpen}
-              />
-            ),
+            content: <ItOverview resources={resources} />,
           },
           {
             id: "infrastructure",
@@ -114,15 +107,7 @@ function It() {
   );
 }
 
-function ItOverview({
-  resources,
-  recommendationsOpen,
-  onRecommendationsChange,
-}: {
-  resources: ReturnType<typeof useResources>;
-  recommendationsOpen: boolean;
-  onRecommendationsChange: (open: boolean) => void;
-}) {
+function ItOverview({ resources }: { resources: ReturnType<typeof useResources> }) {
   const plan = useDisplayedPlan();
   const simulation = useSimulation();
   return (
@@ -204,16 +189,6 @@ function ItOverview({
           <h2 className="font-semibold">Recommended operational changes</h2>
           <div className="flex flex-wrap gap-2">
             <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              aria-expanded={recommendationsOpen}
-              aria-controls="it-recommendations"
-              onClick={() => onRecommendationsChange(!recommendationsOpen)}
-            >
-              {recommendationsOpen ? "Hide recommendations" : "Show recommendations"}
-            </Button>
-            <Button
               asChild
               variant="link"
               size="sm"
@@ -225,7 +200,9 @@ function ItOverview({
             </Button>
           </div>
         </header>
-        <div id="it-recommendations">{recommendationsOpen && <OperationalRecommendations />}</div>
+        <div id="it-recommendations">
+          <OperationalRecommendations />
+        </div>
       </section>
     </div>
   );

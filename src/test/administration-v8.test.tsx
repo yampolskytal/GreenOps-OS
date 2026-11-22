@@ -215,10 +215,9 @@ describe("Administration scorecard, decisions and analysis", () => {
       },
     ]);
     expect(screen.getByRole("button", { name: "1 Blocked" })).toBeVisible();
-    expect(screen.getByText(/Unblock is unavailable because/)).toBeVisible();
-    expect(
-      screen.queryByRole("button", { name: /Unblock for simulation/ }),
-    ).not.toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "Unblock for simulation" });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAccessibleDescription(/backend safety restriction/);
   });
 
   it("uses unrounded values for four target indicators and renders the projection before baseline", () => {

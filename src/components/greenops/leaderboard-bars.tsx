@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Search, Boxes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DetailDrawer } from "./details";
+import { DetailDrawer, EvidenceInfoButton } from "./details";
 export interface ComparisonItem {
   id: string;
   label: string;
@@ -16,10 +16,12 @@ export function LeaderboardBars({
   items,
   format,
   label,
+  methodologyIcon = false,
 }: {
   items: ComparisonItem[];
   format: (n: number) => string;
   label: string;
+  methodologyIcon?: boolean;
 }) {
   const [search, setSearch] = useState("");
   const sorted = useMemo(
@@ -42,9 +44,13 @@ export function LeaderboardBars({
         <DetailDrawer
           title="Attribution methodology"
           trigger={
-            <Button variant="ghost" size="sm">
-              Methodology
-            </Button>
+            methodologyIcon ? (
+              <EvidenceInfoButton description="regional attribution" />
+            ) : (
+              <Button variant="ghost" size="sm">
+                Methodology
+              </Button>
+            )
           }
         >
           <p>{label}</p>

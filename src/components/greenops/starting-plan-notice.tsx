@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Check, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useApp, useDisplayedPlan } from "@/lib/store";
 import { useMeasures } from "@/lib/queries";
 import { useCommitPlan } from "@/lib/use-commit";
+import { CommitPlanDialog } from "./commit-plan-dialog";
 
 export function PlanningProjection({ children }: { children: ReactNode }) {
   const plan = useDisplayedPlan();
@@ -15,6 +16,7 @@ export function StartingPlanNotice({ compact = false }: { compact?: boolean }) {
   const plan = useDisplayedPlan();
   const measures = useMeasures();
   const commit = useCommitPlan(measures.data);
+  const [confirming, setConfirming] = useState(false);
   if (!hydrated || ["new", "loading"].includes(s.initialization.status))
     return (
       <section aria-busy="true" className="mb-6 border-y py-5">
@@ -91,14 +93,10 @@ export function StartingPlanNotice({ compact = false }: { compact?: boolean }) {
       <div className={compact ? "flex flex-wrap gap-2" : "mt-4 flex flex-wrap gap-2"}>
         <Button
           disabled={commit.pending || !measures.data}
-          onClick={() =>
-            void commit.commit({
-              name: "Recommended starting plan",
-              measureIds: candidate.measureIds,
-              budgetChf: 16500,
-              priority: "balanced",
-            })
-          }
+          onClick={() => {
+            commit.setError(null);
+            setConfirming(true);
+          }}
         >
           <Check />
           {commit.pending ? "Validating…" : "Adopt recommended plan"}
@@ -110,7 +108,31 @@ export function StartingPlanNotice({ compact = false }: { compact?: boolean }) {
           </Link>
         </Button>
       </div>
-      {(commit.error || measures.isError) && (
+      {confirming && (
+        <CommitPlanDialog
+          title="Commit recommended plan?"
+          description="This will save the recommended strategy as your Current Plan. Are you sure you want to continue?"
+          result={candidate.result}
+          pending={commit.pending}
+          error={commit.error}
+          cancelLabel="Cancel"
+          confirmLabel="Commit as Current Plan"
+          onCancel={() => {
+            commit.setError(null);
+            setConfirming(false);
+          }}
+          onConfirm={async () => {
+            const ok = await commit.commit({
+              name: "Recommended starting plan",
+              measureIds: candidate.measureIds,
+              budgetChf: 16500,
+              priority: "balanced",
+            });
+            if (ok) setConfirming(false);
+          }}
+        />
+      )}
+      {!confirming && (commit.error || measures.isError) && (
         <p role="alert" className="mt-3 text-sm text-destructive">
           {commit.error ?? measures.error?.message}
         </p>

@@ -1,4 +1,6 @@
-import { useId, useRef, useState, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { Cloud, Wallet, Zap } from "lucide-react";
+import { geographicDots } from "@/lib/geographic-dots";
 import { COUNTRY_VIEWS, EUROPE_BOUNDARIES, europePoint } from "@/lib/europe-boundaries";
 import { GeographicBreakdowns } from "./geographic-breakdowns";
 import type { LocationSummary } from "@/lib/api/types";
@@ -10,15 +12,17 @@ import { DetailBlock, EvidenceInfoButton } from "./details";
 import { Q } from "./ui";
 
 const METRICS = [
-  { key: "costChf", label: "Cost", format: chf },
+  { key: "costChf", label: "Cost", format: chf, icon: Wallet },
   {
     key: "co2KgLocation",
     label: "Emissions",
+    icon: Cloud,
     format: (value: number | null) => carbonMass(value, "kg CO₂e"),
   },
   {
     key: "energyKwh",
     label: "Energy consumption",
+    icon: Zap,
     format: (value: number | null) =>
       value == null ? "Unavailable" : `${formatNumber(value, { maximumFractionDigits: 3 })} kWh`,
   },
@@ -32,7 +36,7 @@ const REGIONS = [
     city: "Zurich",
     country: "Switzerland",
     code: "CHE",
-    color: "#bdd681",
+    color: "#238A57",
     pitch: 1.35,
   },
   {
@@ -40,60 +44,77 @@ const REGIONS = [
     city: "Frankfurt",
     country: "Germany",
     code: "DEU",
-    color: "#86b888",
-    pitch: 2.35,
+    color: "#72C565",
+    pitch: 2.7,
   },
-  { id: "dublin", city: "Dublin", country: "Ireland", code: "IRL", color: "#d0d88b", pitch: 1.7 },
+  { id: "dublin", city: "Dublin", country: "Ireland", code: "IRL", color: "#C5E66B", pitch: 1.7 },
 ] as const;
 
-function DottedOutline({
-  code,
-  color,
+const EUROPE_VIEW = [101, 150, 292, 291] as const;
+const EUROPE_PITCH = 2.65;
+const LAND_COLOR = "#73777D";
+const BORDER_COLOR = "#292C30";
+
+function BackgroundDots({
   pitch,
-  radius = pitch * 0.33,
+  bounds,
 }: {
-  code?: string;
-  color: string;
   pitch: number;
-  radius?: number;
+  bounds: readonly [number, number, number, number];
 }) {
-  const pattern = useId();
+  const id = useId();
+  const [x, y, width, height] = bounds;
   return (
     <>
       <defs>
-        <pattern id={pattern} width={pitch} height={pitch} patternUnits="userSpaceOnUse">
-          <circle cx={pitch / 2} cy={pitch / 2} r={radius} fill={color} />
+        <pattern id={id} width={pitch} height={pitch} patternUnits="userSpaceOnUse">
+          <circle cx={pitch / 2} cy={pitch / 2} r={pitch * 0.055} fill="var(--geo-grid)" />
         </pattern>
       </defs>
-      {code ? (
-        <path d={EUROPE_BOUNDARIES[code]} fill={`url(#${pattern})`} fillRule="evenodd" />
-      ) : (
-        <rect x="-1000" y="-1000" width="2500" height="2500" fill={`url(#${pattern})`} />
-      )}
+      <rect x={x} y={y} width={width} height={height} fill={`url(#${id})`} />
     </>
   );
 }
 
-function EuropeanOutline({ attributed }: { attributed: LocationSummary["id"][] }) {
-  const pattern = useId();
+function CountryDots({
+  code,
+  color,
+  pitch,
+  bounds,
+}: {
+  code: string;
+  color: string;
+  pitch: number;
+  bounds: readonly [number, number, number, number];
+}) {
+  const outline = EUROPE_BOUNDARIES[code] ?? "";
+  const dots = useMemo(() => geographicDots(outline, bounds, pitch), [outline, bounds, pitch]);
+  if (!dots) return null;
+  return (
+    <g data-country={code} fill="none">
+      <path d={outline} stroke={BORDER_COLOR} strokeWidth={pitch * 0.32} />
+      <path d={dots} stroke={color} strokeWidth={pitch * 0.59} strokeLinecap="round" />
+    </g>
+  );
+}
+
+const countryBounds = Object.fromEntries(
+  REGIONS.map(({ code }) => [code, COUNTRY_VIEWS[code].split(" ").map(Number)]),
+) as Record<(typeof REGIONS)[number]["code"], [number, number, number, number]>;
+
+function EuropeanOutline() {
   return (
     <>
-      <DottedOutline color="var(--geo-grid)" pitch={5} radius={0.65} />
-      <defs>
-        <pattern id={pattern} width="5" height="5" patternUnits="userSpaceOnUse">
-          <circle cx="2.5" cy="2.5" r="1.55" fill="var(--geo-land)" />
-        </pattern>
-      </defs>
-      {Object.entries(EUROPE_BOUNDARIES).map(([code, path]) => {
-        const region = REGIONS.find(
-          (entry) => entry.code === code && attributed.includes(entry.id),
-        );
-        return region ? (
-          <DottedOutline key={code} code={code} color={region.color} pitch={5} />
-        ) : (
-          <path key={code} d={path} fill={`url(#${pattern})`} fillRule="evenodd" />
-        );
-      })}
+      <BackgroundDots pitch={EUROPE_PITCH} bounds={EUROPE_VIEW} />
+      {Object.keys(EUROPE_BOUNDARIES).map((code) => (
+        <CountryDots
+          key={code}
+          code={code}
+          color={REGIONS.find((entry) => entry.code === code)?.color ?? LAND_COLOR}
+          pitch={EUROPE_PITCH}
+          bounds={EUROPE_VIEW}
+        />
+      ))}
     </>
   );
 }
@@ -105,6 +126,7 @@ function suppliedValue(location: LocationSummary, metric: GeoMetric) {
 
 export function geographicRows(locations: LocationSummary[], metric: GeoMetric) {
   const values = locations.flatMap((location) => {
+    if (!REGIONS.some(({ id }) => id === location.id)) return [];
     const value = suppliedValue(location, metric);
     return value == null ? [] : [value];
   });
@@ -113,9 +135,9 @@ export function geographicRows(locations: LocationSummary[], metric: GeoMetric) 
   return locations.map((location) => {
     const value = suppliedValue(location, metric);
     const index =
-      value == null || low === high
+      value == null || low === high || !Number.isFinite(low)
         ? 2
-        : Math.min(4, Math.floor(((value - low) / (high - low)) * 5));
+        : Math.max(0, Math.min(4, Math.floor(((value - low) / (high - low)) * 5)));
     return {
       location,
       city: REGIONS.find(({ id }) => id === location.id)?.city,
@@ -170,7 +192,7 @@ export function GeographicView({
   const format = selectedMetric.format;
   const rows = geographicRows(locations, metric);
   const selected = rows.find(({ location }) => location.id === active);
-  const values = rows.flatMap(({ value }) => (value == null ? [] : [value]));
+  const values = rows.flatMap(({ value, city }) => (value == null || !city ? [] : [value]));
   const low = Math.min(...values);
   const high = Math.max(...values);
 
@@ -201,11 +223,11 @@ export function GeographicView({
       <div className="grid items-start gap-4 @3xl:grid-cols-[minmax(0,1fr)_minmax(15rem,0.65fr)]">
         <div className="geographic-map rounded-lg border p-3" data-inspector-interactive>
           <svg
-            viewBox="94 179 250 150"
+            viewBox={EUROPE_VIEW.join(" ")}
             className="mx-auto block w-full max-w-2xl"
             aria-label="Dotted map of European reporting regions"
           >
-            <EuropeanOutline attributed={locations.map(({ id }) => id)} />
+            <EuropeanOutline />
             {rows.map(({ city, location, value, color }) => {
               if (!city || !Number.isFinite(location.lat) || !Number.isFinite(location.lng))
                 return null;
@@ -231,20 +253,20 @@ export function GeographicView({
                     {location.label} · {format(value)}
                   </title>
                   <circle
-                    r="5"
+                    r="3.5"
                     fill={color ?? "var(--geo-background)"}
-                    stroke={highlightedCity === location.id ? "#f9da7d" : "#f8f2df"}
-                    strokeWidth={highlightedCity === location.id ? 2.5 : 1.25}
+                    stroke={highlightedCity === location.id ? "#f9da7d" : "currentColor"}
+                    strokeWidth={highlightedCity === location.id ? 1.6 : 1}
                     strokeDasharray={color == null ? "2 2" : undefined}
                   />
                   <text
-                    x="7"
-                    y="4"
+                    x="6"
+                    y="2.5"
                     fill="currentColor"
                     stroke="var(--geo-background)"
-                    strokeWidth="3"
+                    strokeWidth="2"
                     paintOrder="stroke"
-                    fontSize="8.5"
+                    fontSize="6.6"
                     fontWeight="600"
                   >
                     {city}
@@ -255,6 +277,7 @@ export function GeographicView({
           </svg>
           <div className="mx-auto max-w-xs text-xs">
             <p className="mb-1">
+              City markers ·{" "}
               {metric === "co2KgLocation" ? "Location-based emissions" : selectedMetric.label}
             </p>
             {values.length > 0 ? (
@@ -327,7 +350,7 @@ export function GeographicView({
         <h3 id="city-comparison" className="font-semibold">
           City-area comparison
         </h3>
-        <div className="grid gap-4 @lg:grid-cols-3">
+        <div className="grid gap-3 @4xl:grid-cols-3">
           {REGIONS.map(({ id, city, country, code, color, pitch }) => {
             const location = locations.find((row) => row.id === id);
             const coordinates =
@@ -338,44 +361,53 @@ export function GeographicView({
               <article
                 key={id}
                 data-city-selected={highlightedCity === id}
-                className="min-w-0 rounded-md border border-transparent p-1 data-[city-selected=true]:border-accent-ink data-[city-selected=true]:bg-accent/40"
+                className="grid min-w-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-3 rounded-md border bg-card p-3 data-[city-selected=true]:border-accent-ink"
               >
                 <svg
                   viewBox={COUNTRY_VIEWS[code]}
                   aria-hidden="true"
-                  className="geographic-map h-36 w-full rounded-md border p-2"
+                  className="geographic-map h-32 w-full rounded-sm"
                 >
-                  <DottedOutline color="var(--geo-grid)" pitch={pitch} radius={pitch * 0.14} />
-                  <DottedOutline code={code} color={color} pitch={pitch} />
+                  <BackgroundDots pitch={pitch} bounds={countryBounds[code]} />
+                  <CountryDots
+                    code={code}
+                    color={color}
+                    pitch={pitch}
+                    bounds={countryBounds[code]}
+                  />
                   {coordinates && (
                     <circle
                       cx={coordinates[0]}
                       cy={coordinates[1]}
-                      r={pitch * 1.35}
+                      r={pitch * 1.05}
                       fill="#f9da7d"
                       stroke="var(--geo-background)"
-                      strokeWidth={pitch * 0.55}
+                      strokeWidth={pitch * 0.45}
                     />
                   )}
                 </svg>
-                <h4 className="mt-2 min-h-8 text-sm font-semibold">
-                  {city}, {country}
-                </h4>
-                <dl className="divide-y border-y">
-                  {METRICS.map(({ key, label, format }) => (
-                    <div
-                      key={key}
-                      className="flex min-h-12 items-center justify-between gap-2 py-2 text-xs"
-                    >
-                      <dt className="text-muted-foreground">
-                        {key === "co2KgLocation" ? "Location-based CO₂" : label}
-                      </dt>
-                      <dd className="num text-right font-medium">
-                        {format(location ? suppliedValue(location, key) : null)}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
+                <div className="min-w-0 self-start">
+                  <h4 className="text-sm font-semibold">{country}</h4>
+                  <p className="text-xs text-muted-foreground">{city}</p>
+                  <dl className="mt-2 space-y-1.5">
+                    {METRICS.map(({ key, label, format, icon: Icon }) => (
+                      <div
+                        key={key}
+                        className="grid min-h-10 grid-cols-[0.8rem_minmax(0,1fr)] items-baseline gap-x-1.5 text-xs"
+                      >
+                        <Icon aria-hidden className="size-3 self-start text-muted-foreground" />
+                        <div>
+                          <dt className="text-muted-foreground">
+                            {key === "co2KgLocation" ? "Location-based CO₂" : label}
+                          </dt>
+                          <dd className="num font-medium">
+                            {format(location ? suppliedValue(location, key) : null)}
+                          </dd>
+                        </div>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
               </article>
             );
           })}

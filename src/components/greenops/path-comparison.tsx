@@ -29,6 +29,7 @@ import { usePathSimulation } from "@/lib/path-queries";
 import { useCommitPlan } from "@/lib/use-commit";
 import { reveal } from "@/lib/reveal";
 import { chf, kg, pct } from "@/lib/format";
+import { CommitPlanDialog } from "./commit-plan-dialog";
 import { TargetPanel } from "./targets";
 import { AnalyticalInspector } from "./analytical-inspector";
 import { ScenarioForecastPanel, type ScenarioSettings } from "./scenario-forecast";
@@ -36,7 +37,7 @@ import { DetailDrawer, EvidenceInfoButton } from "./details";
 import { MarketSavingsSummary, PackageEvidence } from "./package-evidence";
 import { RiskBadge } from "./ui";
 import { cn } from "@/lib/utils";
-import { approvedDemoIds, isImplementableProposal, numericalWarnings } from "@/lib/proposals";
+import { approvedDemoIds, isImplementableProposal } from "@/lib/proposals";
 
 export function PathComparison({
   scenarioSettings,
@@ -270,57 +271,16 @@ function CommitPathDialog({
   onConfirm: () => void;
 }) {
   const sim = usePathSimulation(path);
-  const r = sim.data;
   return (
-    <Dialog open onOpenChange={(o) => !o && !pending && onCancel()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Commit “{path.name}” to Current Plan?</DialogTitle>
-          <DialogDescription>
-            This replaces your current saved strategy ({committedCount} measures) with{" "}
-            {path.measureIds.length} measures. The Path stays saved as an alternative. Nothing is
-            approved or executed.
-          </DialogDescription>
-        </DialogHeader>
-        {r && (
-          <ul className="num space-y-1 text-sm">
-            <li>
-              Annual savings: {chf(r.savingsChf)} ({pct(r.costReductionPct)})
-            </li>
-            <li>
-              Location-based CO₂ reduction: {kg(r.savingsCo2Kg)} ({pct(r.co2ReductionPct)})
-            </li>
-            <li>
-              Effort: {r.effortDays.toFixed(1)} person-days · budget {chf(r.effortChf)}
-            </li>
-          </ul>
-        )}
-        {r && !r.feasible && (
-          <p className="text-sm text-warning">
-            Not submission-ready:{" "}
-            {numericalWarnings(r).join("; ") || r.reasons.join(" ") || "misses numerical targets."}{" "}
-            It can still be saved as a proposal.
-          </p>
-        )}
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="outline" disabled={pending} onClick={onCancel}>
-            Keep editing
-          </Button>
-          <Button disabled={pending || !r} onClick={onConfirm}>
-            {pending
-              ? "Validating…"
-              : r && numericalWarnings(r).length
-                ? "Save as non-compliant Current Plan"
-                : "Confirm commit"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <CommitPlanDialog
+      title={`Commit “${path.name}” to Current Plan?`}
+      description={`This replaces your current saved strategy (${committedCount} measures) with ${path.measureIds.length} measures. The Path stays saved as an alternative. Nothing is approved or executed.`}
+      result={sim.data}
+      pending={pending}
+      error={error}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   );
 }
 export { CommitPathDialog };

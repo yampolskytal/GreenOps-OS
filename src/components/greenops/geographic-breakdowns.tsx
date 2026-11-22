@@ -10,7 +10,7 @@ import { LeaderboardBars } from "./leaderboard-bars";
 import { categoryShares } from "@/lib/administration";
 import { carbonMass, chf, formatNumber, pct } from "@/lib/format";
 
-const groups = [...spendingCategories, ["servers", "Servers"]] as const;
+const groups = spendingCategories.filter(([id]) => id === "byDepartment" || id === "byProvider");
 type Group = (typeof groups)[number][0];
 type Metric = "costChf" | "co2KgLocation" | "energyKwh";
 
@@ -76,7 +76,7 @@ export function GeographicBreakdowns({
               value={category}
               onChange={(event) => {
                 const group = groups.find(([id]) => id === event.target.value);
-                if (group) setCategory(group[0]);
+                setCategory(group?.[0] ?? "byProvider");
               }}
             >
               {groups.map(([id, label]) => (
@@ -87,19 +87,11 @@ export function GeographicBreakdowns({
             </select>
           </label>
         </div>
-        {category === "byProvider" || category === "byDepartment" ? (
-          <ScopedBreakdown
-            region={selected}
-            category={category === "byProvider" ? "provider" : "department"}
-            metric={metric}
-          />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            {category === "servers"
-              ? "Regional server totals are unavailable. Resource locations identify a primary region, and the provider does not split resource values by region."
-              : `${groups.find(([id]) => id === category)?.[1]} are unavailable by region. The provider does not support this grouping for regional totals.`}
-          </p>
-        )}
+        <ScopedBreakdown
+          region={selected}
+          category={category === "byDepartment" ? "department" : "provider"}
+          metric={metric}
+        />
       </div>
     </section>
   );
@@ -225,6 +217,7 @@ export function RegionalBars({
       }))}
       format={format}
       label={rule}
+      methodologyIcon
     />
   );
 }

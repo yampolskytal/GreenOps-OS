@@ -225,6 +225,11 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
               <Button size="sm" variant="outline" onClick={() => setEvidenceOpen(true)}>
                 More information
               </Button>
+              {s.role === "ceo" && selection.effective === "blocked" && !selection.actionable && (
+                <Button size="sm" disabled aria-describedby="protected-unblock-reason">
+                  Unblock for simulation
+                </Button>
+              )}
               {s.role === "ceo" && selection.actionable && (
                 <>
                   {selection.effective !== "blocked" &&
@@ -272,7 +277,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
             {s.role === "ceo" &&
               !selection.actionable &&
               selected.decision?.status === "protected" && (
-                <p className="text-sm text-muted-foreground">
+                <p id="protected-unblock-reason" className="text-sm text-muted-foreground">
                   Unblock is unavailable because this measure has a backend safety restriction.
                 </p>
               )}

@@ -6,7 +6,7 @@ import { Route as Finance } from "@/routes/cfo";
 import { Route as IT } from "@/routes/it";
 import { Route as CurrentPlan } from "@/routes/current-plan";
 import { InspectorProvider } from "@/components/greenops/analytical-inspector";
-import { demoOverview, demoBreakdowns, demoResources } from "@/lib/api/demo-data";
+import { demoOverview, demoBreakdowns, demoResources, demoMeasures } from "@/lib/api/demo-data";
 
 const routeState = vi.hoisted(() => ({ hash: "" }));
 const readBreakdowns = vi.fn(() => ({ data: demoBreakdowns }));
@@ -28,19 +28,21 @@ vi.mock("@/components/greenops/shell", () => ({
 }));
 vi.mock("@/components/greenops/starting-plan-notice", () => ({
   StartingPlanNotice: () => null,
-  PlanningProjection: () => null,
+  PlanningProjection: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 vi.mock("recharts", async (original) => ({
   ...(await original<typeof import("recharts")>()),
   ResponsiveContainer: () => null,
 }));
 vi.mock("@/lib/queries", () => ({
-  useOverview: () => ({ data: demoOverview }),
+  useOverview: () => ({
+    data: { ...demoOverview, forecastSupport: [{ metric: "cost", horizons: [3] }] },
+  }),
   useSimulation: () => ({ isPending: true }),
   useForecast: () => readForecast(),
-  useResources: () => ({ data: demoResources }),
+  useResources: () => ({ data: demoResources, demoMeasures }),
   useBreakdowns: () => readBreakdowns(),
-  useMeasures: () => ({ data: [], isPending: false }),
+  useMeasures: () => ({ data: demoMeasures, isPending: false }),
 }));
 
 afterEach(() => {
@@ -89,7 +91,12 @@ it("mounts Finance spending only when active and restores both breakdown filters
     within(screen.getByLabelText("Financial indicators")).getByText("CHF 428,000"),
   ).toBeVisible();
   expect(readBreakdowns).not.toHaveBeenCalled();
-  expect(readForecast).not.toHaveBeenCalled();
+  expect(readForecast).toHaveBeenCalled();
+  expect(screen.getByRole("heading", { name: "Financial outlook" })).toBeVisible();
+  expect(screen.getByRole("link", { name: "Full forecasts" })).toBeVisible();
+  expect(
+    screen.queryByRole("button", { name: /(?:Show|Hide) three-year outlook/ }),
+  ).not.toBeInTheDocument();
   activate("Spending Drivers");
   expect(screen.getByLabelText("Category share donut")).toBeInTheDocument();
   expect(screen.queryByText("Budget & economics")).not.toBeInTheDocument();
@@ -191,3 +198,14 @@ it.each([Administration, Finance, IT])(
     }
   },
 );
+
+it("displays operational recommendations on the IT Overview without expanding the section", () => {
+  const Page = IT.options.component!;
+  const { container } = render(<Page />);
+  expect(screen.getByRole("heading", { name: "Recommended operational changes" })).toBeVisible();
+  expect(container.querySelectorAll("#it-recommendations .recommendation")).toHaveLength(4);
+  expect(
+    screen.queryByRole("button", { name: /(?:Show|Hide) recommendations/ }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Detailed infrastructure analysis" })).toBeVisible();
+});

@@ -1286,7 +1286,7 @@ export default function ContributionSkyline({
       )}
 
       <div className="relative" style={{ borderColor: "var(--border)" }}>
-        <div className="relative px-3 pt-3 sm:px-4 sm:pt-4">
+        <div data-skyline-padding className="relative px-3 pt-3 sm:px-4 sm:pt-4">
           <div
             ref={stageRef}
             className="relative w-full overflow-hidden rounded-md outline-offset-4 has-[:focus-visible]:outline-2"

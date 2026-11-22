@@ -38,7 +38,6 @@ function Cfo() {
   const data = useDashboardPerformanceData();
   const [spending, setSpending] = useState<SpendingSelection>();
   const [historical, setHistorical] = useState<HistoricalSelection>();
-  const [outlookOpen, setOutlookOpen] = useState(false);
   return (
     <AppShell
       title="Finance Dashboard"
@@ -52,13 +51,7 @@ function Cfo() {
           {
             id: "overview",
             label: "Overview",
-            content: (
-              <FinanceOverview
-                {...data}
-                outlookOpen={outlookOpen}
-                onOutlookChange={setOutlookOpen}
-              />
-            ),
+            content: <FinanceOverview {...data} />,
           },
           {
             id: "spending",
@@ -86,12 +79,7 @@ function FinanceOverview({
   overview,
   simulation,
   plan,
-  outlookOpen,
-  onOutlookChange,
-}: ReturnType<typeof useDashboardPerformanceData> & {
-  outlookOpen: boolean;
-  onOutlookChange: (open: boolean) => void;
-}) {
+}: ReturnType<typeof useDashboardPerformanceData>) {
   const baseline = overview.data;
   const result = plan.ready ? simulation.data : undefined;
   const kpis = [
@@ -206,16 +194,6 @@ function FinanceOverview({
         <header className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-semibold">Financial outlook</h2>
           <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              aria-expanded={outlookOpen}
-              aria-controls="finance-outlook"
-              onClick={() => onOutlookChange(!outlookOpen)}
-            >
-              {outlookOpen ? "Hide three-year outlook" : "Show three-year outlook"}
-            </Button>
             <Button asChild size="sm" variant="link">
               <Link to="/forecast">
                 Full forecasts <ArrowRight />
@@ -224,18 +202,15 @@ function FinanceOverview({
           </div>
         </header>
         <div id="finance-outlook">
-          {outlookOpen &&
-            (baseline?.forecastSupport?.some(
-              (item) => item.metric === "cost" && item.horizons.includes(3),
-            ) ? (
-              <PlanningProjection>
-                <FinancialOutlook history={baseline.monthly} planLabel={plan.label} />
-              </PlanningProjection>
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Three-year cost projections are unavailable.
-              </p>
-            ))}
+          {baseline?.forecastSupport?.some(
+            (item) => item.metric === "cost" && item.horizons.includes(3),
+          ) ? (
+            <FinancialOutlook history={baseline.monthly} planLabel={plan.label} />
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Three-year cost projections are unavailable.
+            </p>
+          )}
         </div>
       </section>
     </div>

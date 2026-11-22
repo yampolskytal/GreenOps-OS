@@ -276,7 +276,12 @@ export function FootprintCalendar({
         </div>
       )}
       {validRange && grid.cells.length > 0 && (
-        <div ref={frame} className="calendar-chart-frame" data-view={view}>
+        <div
+          ref={frame}
+          className="calendar-chart-frame"
+          data-view={view}
+          data-compact={compact && view === "2d" ? "" : undefined}
+        >
           {view === "3d" && (
             <div className="calendar-floating-legend">
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -297,15 +302,15 @@ export function FootprintCalendar({
             </div>
           )}
           {view === "2d" && (
-            <div className="mb-3">
+            <div className="calendar-chart-note mb-3">
               <ColorLegend metric={color} scale={grid.colorDomain} />
             </div>
           )}
-          <p className="mb-3 text-xs text-muted-foreground">
+          <p className="calendar-chart-note mb-3 text-xs text-muted-foreground">
             {comparing && "Height shows cost and color shows CO₂. "}
             Select a day for its exact values.
           </p>
-          <p className="mb-3 text-xs">
+          <p className="calendar-chart-note mb-3 text-xs">
             Selected day:{" "}
             {selectedInRange
               ? `${selectedDate} · ${sel ? display(sel, color) : "Unavailable"}`

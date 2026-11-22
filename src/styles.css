@@ -391,8 +391,14 @@ html.light {
   padding: 12px;
 }
 .calendar-renderer[data-compact] {
-  width: min(100%, 28rem);
+  width: min(100%, 31rem);
   margin-inline: auto;
+}
+.calendar-chart-frame[data-compact] .calendar-chart-note {
+  margin-bottom: 0.3rem;
+}
+.calendar-renderer[data-compact] [data-skyline-padding] {
+  padding-top: 0.15rem;
 }
 .calendar-floating-legend {
   margin-bottom: 16px;
@@ -533,14 +539,12 @@ html.light .welcome-accent {
 
 .geographic-map {
   --geo-background: #1b1c1e;
-  --geo-grid: #353638;
-  --geo-land: #727477;
+  --geo-grid: #292c30;
   background: var(--geo-background);
   color: #f2f2f2;
 }
 html.light .geographic-map {
   --geo-background: #e8e9eb;
-  --geo-grid: #c3c5c9;
-  --geo-land: #818489;
+  --geo-grid: #cfd1d4;
   color: #202124;
 }
