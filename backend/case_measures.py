@@ -186,6 +186,25 @@ def case_candidates(r, existing):
                     members=sorted(inventory), meter_scope=("owner-confirmed" if attestation else "inferred") if pool else None)
         candidates.append(item)
 
+    expansion = cfg.get("temporary_test_capacity")
+    if expansion:
+        rid = expansion["resource"]
+        ticket = next((t for t in r.tickets[rid] if t.get("ticket_id") == expansion["ticket"]), None)
+        capacity = expansion["expanded_vcpu"]
+        # Look for sustained billing at the expanded level in the final baseline month.
+        rows = [line for line in r.by_resource.get(rid, []) if line["month"] == "2026-08"
+                and line["unit"] == "vcpu-hour" and (line["quantity"] or 0) >= 24 * capacity
+                and not r.protection_day(rid, line["day"])]
+        dates = {line["day"] for line in rows}
+        if ticket and len(dates) >= 14:
+            check = "Confirm portal go-live, identify the temporary workers on the shared meter and test the capacity floor with the owner. Preserve the disaster-recovery server."
+            item = r.measure(rid, "Review temporary portal test capacity after go-live",
+                             "Check whether the temporary capacity increase can be reversed.", rows, 0, 1,
+                             [check], [ticket["ref"], *(line["ref"] for line in rows)],
+                             f"{expansion['ticket']} planned a scale-back after go-live. On {len(dates)} August dates the meter still billed at least {capacity * 24} vCPU-hours. The bill does not establish which workers can be removed.")
+            item["attribution_check"] = check
+            candidates.append(item)
+
     idle = next((m for m in existing if m["resource"] == "dp-dev" and m["name"] == "Reduce cluster idle runtime"), None)
     if idle and a.factors["grid"].get("ch"):
         rows = [row for row in r.by_resource["dp-dev"] if row["unit"] == "node-hour" and row["region"] == "de"

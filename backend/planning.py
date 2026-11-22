@@ -118,13 +118,15 @@ def additional_candidates(reports):
     a, d = reports.a, reports.d
     candidates = []
 
-    def add(name, resource, rows, share, effort, change, evidence, method, energy_share=None):
+    def add(name, resource, rows, share, effort, change, evidence, method, energy_share=None, attribution_check=None):
         if not rows or not share:
             return
         item = reports.measure(resource, name, change, rows, min(.85, share), effort,
                                ["Requires scoped workload-owner review and a measured pilot"], evidence, method,
                                energy_fraction=energy_share)
         if item["chf"] or any(item["kg"]):
+            if attribution_check:
+                item["attribution_check"] = attribution_check
             candidates.append(item)
             return item
         return None
@@ -157,6 +159,14 @@ def additional_candidates(reports):
     routes = {(key(r["from_provider"]), key(r["from_model"])): r for r in routing.get("routes", [])}
     energy = a.factors["energy"]
     small_energy = energy["token-small"]["values"][1] / energy["token-large"]["values"][1]
+    agent_runs = defaultdict(list)
+    for run in d["ai_agent_runs"]:
+        if inside(run.get("start")):
+            agent_runs[key(run.get("agent"))].append(run)
+    meters_by_tool = defaultdict(set)
+    for meter, usage in ai.items():
+        for row in usage:
+            meters_by_tool[key(row.get("tool"))].add(meter)
     for rid, raw in ai.items():
         rows = reports.by_resource[rid]
         linked = {r["ref"]: r for r in rows}
@@ -191,14 +201,35 @@ def additional_candidates(reports):
         add("Increase safe prompt-cache reuse", rid, cached, .10, 3,
             "Reuse approved invariant prefixes with tenant isolation, expiration and measured cache-hit uplift.",
             [r["ref"] for r in cached], "Scenario recovers 10% of gateway spend with existing cache use. Validate actual token tariff and incremental hit rate.", energy_share=.03)
-        if "agent" in rid:
-            runs = [r for r in d["ai_agent_runs"] if inside(r.get("start"))]
-            retried = [r for r in runs if (natural(r.get("retries")) or 0) > 0]
+        tool = key(a.mapping.get(rid, {}).get("tool"))
+        if tool and agent_runs.get(tool) and meters_by_tool[tool] == {rid}:
+            billed = [r for r in raw if key(r.get("tool")) == tool and r["ref"] in linked]
+            billed_days = {day(r["date"]) for r in billed}
+            runs = [r for r in agent_runs[tool] if day(r["start"]) in billed_days]
+            if tool == "report-agent":
+                delivered = [r for r in runs if key(r.get("trigger")) == "schedule" and key(r.get("outcome")) == "delivered"]
+                unopened = [r for r in delivered if str(r.get("report_opened")) == "0"]
+                # Missing open events are unknown. Require repeated, explicit non-opens
+                # on at least 30 distinct days and a majority of all scheduled deliveries.
+                if len({day(r["start"]) for r in unopened}) >= 30 and len(unopened) > len(delivered) / 2:
+                    check = "Ask Finance which reports support closing, audit or downstream processes, then pilot on-demand delivery for optional reports."
+                    item = reports.measure(rid, "Review scheduled AI reports that go unopened",
+                                           "Offer on-demand delivery or a digest for optional reports.", [], 0, 1,
+                                           [check], [r["ref"] for r in delivered] + [r["ref"] for r in billed],
+                                           f"{len(unopened)} of {len(delivered)} scheduled deliveries on dates with matching gateway usage were marked unopened. Opening telemetry does not capture forwarded copies or automated consumers.")
+                    item["attribution_check"] = check
+                    candidates.append(item)
+            runs = [r for r in runs if natural(r.get("retries")) is not None]
+            observed_days = {day(r["start"]) for r in runs}
+            scope = [linked[r["ref"]] for r in billed if day(r["date"]) in observed_days]
+            retried = [r for r in runs if natural(r["retries"]) > 0]
             share = .20 * len(retried) / max(1, len(runs))
-            add("Reduce agent retry waste", rid, rows, share, 3,
+            add("Reduce agent retry waste", rid, scope, share, 3,
                 "Set task-specific retry budgets and preserve escalation and telemetry.",
-                [r["ref"] for r in retried[:200]] + [r["ref"] for r in rows],
-                "Scenario scales the gateway baseline by 20% of the retry incidence. Confirm a run-to-gateway join and successful completion rates before approval.")
+                [r["ref"] for r in runs + scope],
+                f"{len(retried)} of {len(runs)} {tool} runs retried on dates with matching gateway usage. "
+                "Sensitivity applies 20% of that incidence to the matched usage. Per-retry costs are unknown.",
+                attribution_check="Trace the extra tokens to avoidable retries and verify successful completion before changing retry limits.")
 
     views = defaultdict(list)
     for row in d["powerbi_usage"]:
@@ -212,14 +243,6 @@ def additional_candidates(reports):
             add("Reduce unused report refreshes", rid, rows, .45, 2, "Switch eligible operational refreshes to owner-confirmed demand windows.",
                 [r["ref"] for r in report + rows], "Scenario reduces metered refresh-related cost and energy by 45%; preserve closing, audit, and data-freshness needs.")
         storage = [r for r in rows if r["unit"] == "gb-day"]
-        if storage and not any(word in rid for word in ("backup", "archive", "logs")):
-            catalog = [r for r in d["data_catalog_tables"] if key(r.get("retention_required")) == "no"
-                       and key(r.get("data_class")) in ("internal", "public") and day(r.get("last_read"))
-                       and day(r["last_read"]) < a.as_of - timedelta(days=90)]
-            if catalog:
-                add("Tier cold data storage", rid, storage, .12, 3,
-                    "Pilot reversible tiering for verified cold datasets and test restore latency.",
-                    [r["ref"] for r in storage + catalog[:50]], "12% sensitivity on metered storage. Validate table-to-bucket links, deletion protection, retrieval fees, and retention.")
         if storage and "logs" in rid and d["log_volume"] and a.policy.get("log_retention"):
             item = log_retention(reports, rid, storage, a.policy["log_retention"])
             if item:
@@ -233,7 +256,7 @@ def additional_candidates(reports):
                 "Reduce duplicate processing after successful restore and isolation tests while keeping required copies and retention.",
                 [r["ref"] for r in storage + d["backup_chains"][:50]], "8% scenario on billed backup storage. Requires immutable-copy and retention evidence.")
         traffic = [r for r in rows if r["unit"] == "gb"]
-        if traffic and d["web_traffic"]:
+        if traffic and key(a.mapping.get(rid, {}).get("tool")) == "web hosting and cdn" and d["web_traffic"]:
             web = [r for r in d["web_traffic"] if inside(r.get("time_utc")) and (natural(r.get("bot_share_pct")) or 0) <= 100]
             sampled = sum((natural(r.get("requests")) or 0) * (natural(r.get("sample_rate")) or 0) for r in web)
             bots = sum((natural(r.get("requests")) or 0) * (natural(r.get("sample_rate")) or 0) *
@@ -241,10 +264,12 @@ def additional_candidates(reports):
             if sampled:
                 add("Reduce avoidable automated web traffic", rid, traffic, .35 * bots / sampled, 2,
                     "Pilot response caching and owner-approved bot controls with accessibility and monitoring checks.",
-                    [r["ref"] for r in traffic + web[:50]], "Scenario captures 35% of the sample-adjusted bot share. Confirm the matching bill and legitimate automated consumers.")
+                    [r["ref"] for r in traffic + web[:50]], "Scenario captures 35% of the sample-adjusted bot share. Confirm the matching bill and legitimate automated consumers.",
+                    attribution_check="Match the traffic sample to this billed endpoint before estimating avoidable transfer.")
     for option in a.policy.get("region_options", []):
         rid, destination = option.get("resource"), option.get("destination")
-        rows = [r for r in reports.by_resource[rid] if r["kwh"] is not None and r["region"] != destination]
+        rows = [r for r in reports.by_resource[rid] if r["kwh"] is not None and r["region"] != destination
+                and not reports.protection_day(rid, r["day"])]
         factor = a.factors["grid"].get(destination)
         effort = natural(option.get("days"))
         if not (rows and factor and effort and effort.is_integer() and option.get("source")):
@@ -253,7 +278,7 @@ def additional_candidates(reports):
         item = reports.measure(rid, "Move noncritical workloads to a lower-carbon region",
                                "Rehearse migration, validate contracts and data residency, and retain rollback capacity.",
                                rows, 0, int(effort), ["Requires a destination quote, residency clearance and load test"],
-                               [r["ref"] for r in rows], f"Source: {option['source']}. Compare destination and origin factors at unchanged energy. No financial saving assumed without a quote.")
+                                [r["ref"] for r in rows], f"Source: {option['source'].rstrip('.')}. Compare destination and origin factors at unchanged energy outside protected dates. No financial saving assumed without a quote.")
         b = item["baseline"]
         item["kg"] = [round(b["kg"][i] - b["kwh"][i] * factor["values"][i], 5) for i in range(3)]
         item["market_effect"] = market_relocation(a, rows, destination, 1, option.get("destination_provider", ""))
@@ -290,6 +315,9 @@ def measure_decisions(items):
         elif m.get("quote_status") == "quote required":
             status, reason = "evidence-needed", "Savings are unquantified until procurement supplies a comparable quote."
             next_step = "Obtain a dated quote for the same billed scope and service level."
+        elif m.get("attribution_check"):
+            status, reason = "evidence-needed", "The available records do not establish how much of this resource's usage can be avoided."
+            next_step = m["attribution_check"]
         elif any(v is not None and v > 0 for v in impacts.values()):
             status, reason = "candidate", "At least one modeled impact is positive."
             if m["chf"] > 0 and m.get("energy_fraction") == 0 and not any(

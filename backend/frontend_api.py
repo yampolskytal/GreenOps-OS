@@ -194,6 +194,8 @@ class FrontendApi:
 
     def to_measure(self, m):
         level = "blocked" if m["hard_blockers"] else "review" if (m["blockers"] or m.get("requires_approval")) else "low"
+        decision = self.decisions[m["id"]]
+        pending = decision["status"] == "evidence-needed"
         market = m.get("market_effect") or market_reduction([], 1)
         return {
             "id": m["id"], "title": m["name"], "description": m["method"], "resource": m["resource"], "change": m["change"],
@@ -203,16 +205,16 @@ class FrontendApi:
             "savingsCo2KgLocation": mid(m["kg"]), "savingsCo2KgMarket": mid(market["range"]),
             "savingsCo2KgMarketRange": rng(market["range"]) if market["range"] is not None else None,
             "marketCoverage": market["coverage"],
-            "risk": {"level": level, "why": "; ".join(m["hard_blockers"] or m["blockers"]) or m["status"],
-                     "consequences": f"Status: {m['status']}. Phase: {m['phase']}.",
+            "risk": {"level": level, "why": " ".join(s.rstrip(".;") + "." for s in (m["hard_blockers"] or m["blockers"])) or m["status"],
+                     "consequences": "Excluded from planning until the evidence is supplied." if pending else f"Status: {m['status']}. Phase: {m['phase']}.",
                      "protectionWindows": [p["source"] for p in m.get("protection", [])],
                      "conflicts": [*m.get("requires", []), *([f"Exclusive group: {m['exclusive']}"] if m.get("exclusive") else [])],
                      "approver": m.get("approval")},
             "evidence": files_of(m.get("evidence", [])),
-            "assumptions": [f"Implementation CHF {m['implementation_chf']:,}; first-year net CHF {m['first_year_net_chf']:,}.",
+            "assumptions": ["Comparable quote outstanding; first-year net savings are unknown."] if m.get("quote_status") == "quote required" else [f"Implementation CHF {m['implementation_chf']:,}; first-year net CHF {m['first_year_net_chf']:,}.",
                             f"Savings ranges: kWh {[round(x, 1) for x in m['kwh']]}, kg CO2e {[round(x, 1) for x in m['kg']]}."],
-            "includable": self.decisions[m["id"]]["status"] in PLAN_DECISIONS,
-            "decision": self.decisions[m["id"]],
+            "includable": decision["status"] in PLAN_DECISIONS,
+            "decision": decision,
         }
 
     # ---------- routes

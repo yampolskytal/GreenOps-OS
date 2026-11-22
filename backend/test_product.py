@@ -225,6 +225,24 @@ class ProductTest(unittest.TestCase):
     def test_official_challenge_safety_and_shape(self):
         policy = json.loads((ROOT / "challenge-policy.json").read_text(encoding="utf-8"))
         work = Workspace(CHALLENGE, ROOT / "factors.json", ROOT / "dist", date(2026, 9, 6), policy=policy)
+        api = FrontendApi(work)
+        report_id = "Review scheduled AI reports that go unopened:ai-report"
+        report = next(m for m in api.measure_list(frontend_query({})) if m["id"] == report_id)
+        self.assertIn("329 of 361 scheduled deliveries", report["description"])
+        self.assertEqual(report["decision"]["status"], "evidence-needed")
+        simulation = api.simulate(frontend_query({}), {"measureIds": [report_id]})
+        self.assertEqual(simulation["includedMeasureIds"], [])
+        self.assertEqual([entry["id"] for entry in simulation["excluded"]], [report_id])
+        for m in work.reports.measures:
+            view = api.to_measure(m)
+            if m.get("attribution_check") or m.get("quote_status") == "quote required":
+                self.assertFalse(view["includable"], m["id"])
+                self.assertEqual(view["decision"]["status"], "evidence-needed", m["id"])
+            if m["name"] == "Move noncritical workloads to a lower-carbon region":
+                forbidden = {r["ref"] for r in work.reports.by_resource[m["resource"]]
+                             if work.reports.protection_day(m["resource"], r["day"])}
+                self.assertTrue(forbidden)
+                self.assertFalse(forbidden.intersection(m["evidence"]))
         self.assertEqual(len(work.a.sources), 28)
         self.assertTrue(all(r["accepted"] for r in work.a.sources.values()))
         self.assertGreater(len(work.a.lines), 40_000)

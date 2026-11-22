@@ -18,11 +18,12 @@ import { AnalyticalInspector } from "./analytical-inspector";
 import { CheckCircle2 } from "lucide-react";
 import { RiskBadge } from "./ui";
 
-type ReviewFilter = "all" | "blocked" | "review" | "unblocked";
+type ReviewFilter = "all" | "blocked" | "review" | "investigate" | "unblocked";
 const groups = [
   ["all", "All decisions", ""],
   ["blocked", "Blocked", "text-destructive"],
   ["review", "Review required", "text-warning"],
+  ["investigate", "For investigation", ""],
   ["unblocked", "Unblocked", "text-success"],
 ] as const;
 
@@ -42,9 +43,11 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   const items = measures.flatMap((measure) => {
     const original = decisionGroup(measure);
     if (original == null) return [];
-    const decision = decisions[measure.id];
+    const actionable =
+      original !== "investigate" && (api.isDemo || measure.decision?.status !== "protected");
+    const decision = actionable ? decisions[measure.id] : undefined;
     const effective = decision?.approved ? ("unblocked" as const) : original;
-    return [{ measure, original, decision, effective }];
+    return [{ measure, original, decision, effective, actionable }];
   });
   const categories = [...new Set(items.map(({ measure }) => measure.service))].sort();
   const term = search.trim().toLowerCase();
@@ -56,7 +59,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
       (category === "all" || m.service === category) &&
       (membership === "all" || s.measureIds.includes(m.id) === (membership === "included")),
   );
-  const rank = { blocked: 0, review: 1, unblocked: 2 };
+  const rank = { blocked: 0, review: 1, investigate: 2, unblocked: 3 };
   const visible = matching
     .filter(({ effective }) => filter === "all" || effective === filter)
     .sort((a, b) => {
@@ -80,7 +83,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   };
   return (
     <section id="approvals" className="@container space-y-4">
-      <div className="grid grid-cols-2 gap-2 @xl:grid-cols-4 @xl:gap-3">
+      <div className="grid grid-cols-2 gap-2 @xl:grid-cols-5 @xl:gap-3">
         {groups.map(([id, label, color]) => (
           <button
             key={id}
@@ -179,7 +182,9 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
               title={
                 selection.original === "blocked"
                   ? "Original restriction"
-                  : "Why is review required?"
+                  : selection.original === "investigate"
+                    ? "What needs checking?"
+                    : "Why is review required?"
               }
             >
               <p className="text-sm">
@@ -189,18 +194,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
                 <p className="mt-1 text-sm text-muted-foreground">{selected.risk.consequences}</p>
               )}
             </DetailBlock>
-            <DetailBlock title="Potential annual impact">
-              <p className="text-sm">
-                {chf(selected.savingsChf)} · {kg(selected.savingsCo2KgLocation)} location-based CO₂
-                · {kwh(selected.savingsKwh)}
-              </p>
-              {selected.savingsCo2KgMarket != null && (
-                <p className="text-sm">
-                  {carbonMass(selected.savingsCo2KgMarket, "kg CO₂e")} market-based
-                  {selected.marketCoverage?.status === "partial" ? " · covered subtotal" : ""}
-                </p>
-              )}
-            </DetailBlock>
+            <AnnualImpact measure={selected} />
             <p className="text-sm text-muted-foreground">
               {selection.decision?.approved === false && "Previous simulation decision declined. "}
               {api.isDemo
@@ -213,7 +207,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
               <Button size="sm" variant="outline" onClick={() => setEvidenceOpen(true)}>
                 More information
               </Button>
-              {s.role === "ceo" && (
+              {s.role === "ceo" && selection.actionable && (
                 <>
                   {!selection.decision?.approved && (
                     <Button size="sm" onClick={() => setPending(selected)}>
@@ -318,9 +312,11 @@ function DecisionBadge({
   effective,
   original,
 }: {
-  effective: "blocked" | "review" | "unblocked";
-  original: "blocked" | "review";
+  effective: Exclude<ReviewFilter, "all">;
+  original: Exclude<ReviewFilter, "all" | "unblocked">;
 }) {
+  if (effective === "investigate")
+    return <span className="text-xs text-muted-foreground">For investigation</span>;
   if (effective !== "unblocked") return <RiskBadge level={effective} />;
   return (
     <span className="risk-badge inline-flex h-6 shrink-0 items-center gap-1 whitespace-nowrap rounded border border-success/40 bg-success/10 px-1.5 text-[10px] font-semibold text-success">
@@ -330,11 +326,81 @@ function DecisionBadge({
   );
 }
 
+function AnnualImpact({ measure: m }: { measure: Measure }) {
+  const d = m.decision;
+  const pending = d?.status === "evidence-needed";
+  const quote = pending && d.scopedAnnualCostChf != null;
+  const metrics = [
+    [m.savingsChf, chf, "saved", "added cost"],
+    [
+      m.savingsKwh,
+      (v: number) => (v < 1 ? `${v} kWh` : kwh(v)),
+      "energy saved",
+      "additional energy",
+    ],
+    [
+      m.savingsCo2KgLocation,
+      (v: number) => carbonMass(v, "kg CO₂e"),
+      "avoided (location-based)",
+      "added (location-based)",
+    ],
+    [
+      m.savingsCo2KgMarket,
+      (v: number) => carbonMass(v, "kg CO₂e"),
+      "avoided (market-based)",
+      "added (market-based)",
+    ],
+  ] as const;
+  return (
+    <DetailBlock
+      title={
+        d?.status === "protected"
+          ? "Annual impact if protection were lifted"
+          : "Potential annual impact"
+      }
+    >
+      <div className="space-y-1 text-sm">
+        {d && (d.status !== "candidate" || !m.savingsChf || !m.savingsKwh) && <p>{d.reason}</p>}
+        {d?.nextStep && <p>{d.nextStep}</p>}
+        {quote && (
+          <p>
+            Current annual billed cost: {chf(d.scopedAnnualCostChf)}. No energy or emissions change
+            is assumed.
+          </p>
+        )}
+        {pending && metrics.some(([v]) => !!v) && (
+          <p>Illustrative scenario only; excluded from plan totals:</p>
+        )}
+        {metrics.map(
+          ([v, fmt, positive, negative]) =>
+            v != null &&
+            v !== 0 && (
+              <p key={positive}>
+                {fmt(Math.abs(v))} {v > 0 ? positive : negative}
+                {positive.includes("market-based") && m.marketCoverage?.status === "partial"
+                  ? " · covered subtotal"
+                  : ""}
+              </p>
+            ),
+        )}
+        {!quote && m.savingsCo2KgMarket == null && (
+          <p>Market-based emissions impact unavailable.</p>
+        )}
+        {!d && metrics.every(([v]) => !v) && <p>No quantified annual benefit supplied.</p>}
+      </div>
+    </DetailBlock>
+  );
+}
+
 function RecommendationEvidence({ measure }: { measure: Measure }) {
   return (
     <>
       <DetailBlock title="Original restriction">
-        <RiskBadge level={measure.risk.level} />
+        {decisionGroup(measure) === "investigate" ? (
+          <span>For investigation</span>
+        ) : (
+          <RiskBadge level={measure.risk.level} />
+        )}
         <p>{measure.risk.why}</p>
         <p>
           {measure.includable && measure.risk.level !== "blocked"
@@ -368,9 +434,10 @@ function RecommendationEvidence({ measure }: { measure: Measure }) {
           <p>{measure.decision.nextStep && formatEvidenceText(measure.decision.nextStep)}</p>
           {measure.decision.replacement && (
             <p>
-              Linked measures · {measure.decision.replacement.measureIds.join(", ")}. Maximum annual
-              quote {chf(measure.decision.replacement.maxAnnualQuoteChf)} · Remaining CO₂ gap{" "}
-              {kg(measure.decision.replacement.remainingCo2GapKg)}.
+              Linked measures · {measure.decision.replacement.measureIds.join(", ") || "None"}.{" "}
+              {measure.decision.replacement.maxAnnualQuoteChf != null &&
+                `Maximum annual quote ${chf(measure.decision.replacement.maxAnnualQuoteChf)} · `}
+              Remaining CO₂ gap {kg(measure.decision.replacement.remainingCo2GapKg)}.
             </p>
           )}
         </DetailBlock>

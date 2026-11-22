@@ -1,6 +1,9 @@
 import type { Measure } from "@/lib/api/types";
 
-export function decisionGroup(m: Measure): "blocked" | "review" | null {
+export function decisionGroup(m: Measure): "blocked" | "review" | "investigate" | null {
+  if (m.decision?.status === "protected") return "blocked";
+  if (m.decision?.status === "evidence-needed" || m.decision?.status === "no-benefit")
+    return "investigate";
   if (m.risk.level === "blocked") return "blocked";
   if (m.risk.level === "review" || m.risk.approver) return "review";
   return m.includable ? null : "blocked";

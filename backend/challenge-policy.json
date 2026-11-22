@@ -189,6 +189,7 @@
   }
  },
  "case_measures": {
+  "temporary_test_capacity": {"resource": "vm-test", "ticket": "T-1058", "expanded_vcpu": 64},
   "production_autoscale": true,
   "shutdown_groups": {
    "vm-test": {

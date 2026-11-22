@@ -11,7 +11,7 @@ import { categoryShares, gaugeGeometry } from "@/lib/administration";
 import { api, getPlanningApi } from "@/lib/api/client";
 import { approvedDemoIds } from "@/lib/proposals";
 import { demoMeasures, demoOverview, DEMO_BASELINE } from "@/lib/api/demo-data";
-import type { MonthlyObservation } from "@/lib/api/types";
+import type { Measure, MonthlyObservation } from "@/lib/api/types";
 
 const key = "greenops-state-v1";
 const blocked = demoMeasures.find((m) => m.id === "M7")!;
@@ -22,19 +22,45 @@ afterEach(() => {
   localStorage.clear();
 });
 
-function approvals(role: "ceo" | "cfo" | "it" = "ceo") {
+function approvals(role: "ceo" | "cfo" | "it" = "ceo", measures: Measure[] = all) {
   const stored = JSON.parse(localStorage.getItem(key) ?? "{}");
   localStorage.setItem(key, JSON.stringify({ ...stored, role }));
   return render(
     <AppStateProvider>
       <InspectorProvider>
-        <ApprovalWorkspace measures={all} />
+        <ApprovalWorkspace measures={measures} />
       </InspectorProvider>
     </AppStateProvider>,
   );
 }
 
 describe("Administration scorecard, decisions and analysis", () => {
+  it("shows observed spend instead of zero savings and ignores stale approval for a missing quote", () => {
+    const field = api.isDemo ? "demoExceptions" : "simulationDecisions";
+    localStorage.setItem(key, JSON.stringify({ [field]: { [review.id]: { approved: true } } }));
+    approvals("ceo", [
+      {
+        ...review,
+        savingsChf: 0,
+        savingsKwh: 0,
+        savingsCo2KgLocation: 0,
+        savingsCo2KgMarket: 0,
+        decision: {
+          status: "evidence-needed",
+          reason: "Savings await a comparable quote.",
+          nextStep: "Request a quote.",
+          scopedAnnualCostChf: 23225.31,
+          benefits: [],
+          tradeoffs: [],
+        },
+      },
+    ]);
+    expect(screen.getByRole("button", { name: "1 For investigation" })).toBeVisible();
+    expect(screen.getByText(/Current annual billed cost: CHF 23,225.31/)).toBeVisible();
+    expect(screen.getByText("Request a quote.")).toBeVisible();
+    expect(screen.queryByText(/CHF 0/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /for simulation/ })).not.toBeInTheDocument();
+  });
   it("places a target at its exact clockwise angle and scales larger or negative results", () => {
     const gauge = gaugeGeometry(60, 25);
     expect(gauge.arc).toBe(60);
