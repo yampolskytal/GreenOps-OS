@@ -1,6 +1,6 @@
 # GreenOps OS
 
-[![GreenOps checks](https://github.com/yampolskytal/greenops-os-v5/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/yampolskytal/greenops-os-v5/actions/workflows/checks.yml)
+[![GreenOps checks](https://github.com/yampolskytal/GreenOps-OS/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/yampolskytal/GreenOps-OS/actions/workflows/checks.yml)
 
 **A digital cost, electricity and CO₂e decision tool for a Basel SME**
 
@@ -170,7 +170,7 @@ The two required files in `backend/state/jury-review/` are **`template_baseline_
 
 `files_verified: 32` · `live_inputs_verified: true` · `days: 15` · `implementation_chf: 16500` · `savings_chf: 116517.16` · `location_kg_saved: 3426.1265` · `target_met: true`
 
-The validator checks file fingerprints against the receipt, validates official headers and required rows, reconciles the baseline and measures to the run, independently adds the package impacts and effort, and checks both budgets, overlapping scopes and protected selections. The target flag is recomputed from the baseline midpoints. The receipt binds the dataset and factors to the output files. [Validator source](backend/engine/verification.py)
+The validator checks file fingerprints against the receipt, validates official headers and required rows, reconciles the baseline and measures to the run, independently adds the package impacts and effort, and checks both budgets, overlapping scopes and protected selections. The target flag is recomputed from the baseline midpoints. The receipt binds the dataset and factors to the output files. [Validator source](backend/engine/submission.py)
 
 ### Evidence to open
 
