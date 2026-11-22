@@ -15,7 +15,9 @@ import { DetailBlock, DetailDrawer, EvidenceSources } from "./details";
 
 function footprintAmount(value: number, unit: string, format: typeof kg) {
   const magnitude = Math.abs(value);
-  return magnitude >= 1 ? format(magnitude) : `${magnitude < 0.01 ? "<0.01" : magnitude.toFixed(2)} ${unit}`;
+  return magnitude >= 1
+    ? format(magnitude)
+    : `${magnitude < 0.01 ? "<0.01" : magnitude.toFixed(2)} ${unit}`;
 }
 
 export function MeasureCard({
@@ -63,7 +65,8 @@ export function MeasureCard({
       `${footprintAmount(m.savingsCo2KgLocation, "kg", kg)} CO₂e/year ${m.savingsCo2KgLocation > 0 ? "avoided" : "added"}`,
     m.savingsKwh !== 0 &&
       `${footprintAmount(m.savingsKwh, "kWh", kwh)}/year ${m.savingsKwh > 0 ? "saved" : "added"}`,
-    !m.savingsCo2KgLocation && !!m.savingsCo2KgMarket &&
+    !m.savingsCo2KgLocation &&
+      !!m.savingsCo2KgMarket &&
       `${footprintAmount(m.savingsCo2KgMarket, "kg", kg)} market-based CO₂e/year ${m.savingsCo2KgMarket > 0 ? "avoided" : "added"}`,
   ].filter(Boolean);
   const details = (
@@ -76,7 +79,9 @@ export function MeasureCard({
           <p>{decision.reason}</p>
           {decision.nextStep && <p className="mt-2">{decision.nextStep}</p>}
           {decision.scopedAnnualCostChf != null && (
-            <p className="mt-2">Observed annual billed subtotal · {chf(decision.scopedAnnualCostChf)}</p>
+            <p className="mt-2">
+              Observed annual billed subtotal · {chf(decision.scopedAnnualCostChf)}
+            </p>
           )}
           {quote && (
             <p className="mt-2">
@@ -105,10 +110,10 @@ export function MeasureCard({
           {evidenceOnly
             ? "For investigation."
             : blocked
-            ? "Blocked as proposed"
-            : m.risk.level === "review"
-              ? "Pending human review; selection is not approval."
-              : "Planning only; no infrastructure changes have been executed."}
+              ? "Blocked as proposed"
+              : m.risk.level === "review"
+                ? "Pending human review; selection is not approval."
+                : "Planning only; no infrastructure changes have been executed."}
         </p>
       </DetailBlock>
       <DetailBlock title="Assumptions & conflicting evidence">
@@ -148,19 +153,28 @@ export function MeasureCard({
             </span>
             <span className="mt-1 block font-semibold">{m.title}</span>
             <span className="mt-1 block text-xs font-normal text-muted-foreground">
-              {evidenceOnly || decision?.status === "protected" || decision?.status === "prerequisite"
+              {evidenceOnly ||
+              decision?.status === "protected" ||
+              decision?.status === "prerequisite"
                 ? decision?.reason
                 : [...impact, `${m.effortPersonDays} person-days`].join(" · ")}
             </span>
           </span>
-          <ChevronDown className={cn("mr-1 size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+          <ChevronDown
+            className={cn(
+              "mr-1 size-4 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-180",
+            )}
+          />
         </Button>
         <div className={cn("flex flex-wrap items-center gap-2", !compact && "lg:justify-end")}>
           {evidenceOnly ? (
             <span className="text-xs text-muted-foreground">
               {decision?.status === "evidence-needed" ? "Needs evidence" : "No modeled benefit"}
             </span>
-          ) : <RiskBadge level={m.risk.level} />}
+          ) : (
+            <RiskBadge level={m.risk.level} />
+          )}
           {exception && (
             <span className="text-xs text-warning">Demo exception approved · conditional</span>
           )}

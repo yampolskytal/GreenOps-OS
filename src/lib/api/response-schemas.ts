@@ -7,32 +7,56 @@ const range = z
   .refine((r) => r.low <= r.mid && r.mid <= r.high, "Invalid low/mid/high range");
 const riskLevel = z.enum(["low", "review", "blocked"]);
 const impactMetric = z.enum(["cost", "energy", "co2Location", "co2Market"]);
-const measureDecision = z.object({
-  status: z.enum(["candidate", "prerequisite", "protected", "evidence-needed", "no-benefit"]),
-  reason: z.string(),
-  nextStep: z.string().nullable(),
-  scopedAnnualCostChf: number.nullable(),
-  benefits: z.array(impactMetric),
-  tradeoffs: z.array(impactMetric),
-  replacement: z.object({
-    measureIds: list,
-    maxAnnualQuoteChf: number.nullable(),
-    remainingCo2GapKg: number,
-    couldMeetTargets: z.boolean(),
-  }).optional(),
-}).optional();
-const factor = z.object({ label: z.string(), low: z.string(), mid: z.string(), high: z.string(), source: z.string() });
-const marketCoverage = z.object({
-  status: z.enum(["covered", "partial", "unavailable", "no-change"]),
-  modeledKwh: number, coveredKwh: number, uncoveredKwh: number, allocatedCoveredKwh: number,
-  coveragePct: number.min(0).max(100).nullable(),
-  missingEnergyRows: number, missingFactorRows: number,
-  uncoveredRegions: list, sources: list, factors: z.array(factor), assumptions: list, missingInputs: list,
-}).optional();
-const marketSavings = z.object({
-  projectionRange: range.nullable().optional(),
-  partialMeasureIds: list, unavailableMeasureIds: list, forecastLimitedMeasureIds: list,
-}).optional();
+const measureDecision = z
+  .object({
+    status: z.enum(["candidate", "prerequisite", "protected", "evidence-needed", "no-benefit"]),
+    reason: z.string(),
+    nextStep: z.string().nullable(),
+    scopedAnnualCostChf: number.nullable(),
+    benefits: z.array(impactMetric),
+    tradeoffs: z.array(impactMetric),
+    replacement: z
+      .object({
+        measureIds: list,
+        maxAnnualQuoteChf: number.nullable(),
+        remainingCo2GapKg: number,
+        couldMeetTargets: z.boolean(),
+      })
+      .optional(),
+  })
+  .optional();
+const factor = z.object({
+  label: z.string(),
+  low: z.string(),
+  mid: z.string(),
+  high: z.string(),
+  source: z.string(),
+});
+const marketCoverage = z
+  .object({
+    status: z.enum(["covered", "partial", "unavailable", "no-change"]),
+    modeledKwh: number,
+    coveredKwh: number,
+    uncoveredKwh: number,
+    allocatedCoveredKwh: number,
+    coveragePct: number.min(0).max(100).nullable(),
+    missingEnergyRows: number,
+    missingFactorRows: number,
+    uncoveredRegions: list,
+    sources: list,
+    factors: z.array(factor),
+    assumptions: list,
+    missingInputs: list,
+  })
+  .optional();
+const marketSavings = z
+  .object({
+    projectionRange: range.nullable().optional(),
+    partialMeasureIds: list,
+    unavailableMeasureIds: list,
+    forecastLimitedMeasureIds: list,
+  })
+  .optional();
 const marketObservation = {
   co2KgMarket: number.nullable().optional(),
   co2KgMarketRange: range.nullable().optional(),
@@ -61,9 +85,7 @@ const regionalMetrics = {
     )
     .optional(),
 };
-const regionalBreakdowns = z
-  .array(z.object({ label: z.string(), ...regionalMetrics }))
-  .optional();
+const regionalBreakdowns = z.array(z.object({ label: z.string(), ...regionalMetrics })).optional();
 const calculation = z
   .object({
     title: z.string(),
@@ -162,16 +184,18 @@ const exportsSchema = z.object({
   issues: list,
   submittable: z.boolean(),
 });
-const forecastPoint = z.object({
-  year: number,
-  date: z.string().optional(),
-  periodLabel: z.string().optional(),
-  coverage: z.string().optional(),
-  baseline: range,
-  optimized: range.nullable(),
-  observed: number.nullable().optional(),
-  marketCoverage,
-}).passthrough();
+const forecastPoint = z
+  .object({
+    year: number,
+    date: z.string().optional(),
+    periodLabel: z.string().optional(),
+    coverage: z.string().optional(),
+    baseline: range,
+    optimized: range.nullable(),
+    observed: number.nullable().optional(),
+    marketCoverage,
+  })
+  .passthrough();
 
 const responseSchemas: Record<string, z.ZodTypeAny> = {
   "/overview": z
@@ -227,10 +251,7 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
       ...regionalMetrics,
       gridKgPerKwh: range.nullable(),
       carbonIntensityIndex: number.min(0).nullable().optional(),
-      gridFactorEvidence: z
-        .object({ source: z.string(), note: z.string() })
-        .nullable()
-        .optional(),
+      gridFactorEvidence: z.object({ source: z.string(), note: z.string() }).nullable().optional(),
       sources: evidence.optional(),
       period: z.string().optional(),
       providers: list,
@@ -253,10 +274,17 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
         runtimeH30d: number.nullable().default(null),
         activeH30d: number.nullable().optional(),
         unclassifiedRuntimeH30d: number.nullable().optional(),
-        runtimeEvidence: z.object({
-          from: z.string(), through: z.string(), source: z.string().nullable(), method: z.string(),
-          observedDays: number.nullable(), cpuSource: z.string().nullable(), gpuSource: z.string().nullable(),
-        }).optional(),
+        runtimeEvidence: z
+          .object({
+            from: z.string(),
+            through: z.string(),
+            source: z.string().nullable(),
+            method: z.string(),
+            observedDays: number.nullable(),
+            cpuSource: z.string().nullable(),
+            gpuSource: z.string().nullable(),
+          })
+          .optional(),
         idleCostChfYear: number.nullable().default(null),
         provider: z.string().default("Not supplied"),
         location: z.string().default("Not supplied"),
@@ -294,7 +322,11 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
       .passthrough(),
   ),
   "/simulation": simulation,
-  "/optimize": z.object({ measureIds: list, result: simulation, searchComplete: z.boolean().optional() }),
+  "/optimize": z.object({
+    measureIds: list,
+    result: simulation,
+    searchComplete: z.boolean().optional(),
+  }),
   "/forecast": z
     .object({
       metric: z.enum(["cost", "energy", "co2Location", "co2Market"]),
@@ -302,10 +334,17 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
       growthAssumption: z.string().default("Not supplied"),
       points: z.array(forecastPoint),
       annualTotals: z.array(forecastPoint).optional(),
-      drivers: z.array(z.object({
-        date: z.string(), label: z.string(), source: z.string(), amount: number,
-        basis: z.enum(["annual", "one-time"]),
-      })).optional(),
+      drivers: z
+        .array(
+          z.object({
+            date: z.string(),
+            label: z.string(),
+            source: z.string(),
+            amount: number,
+            basis: z.enum(["annual", "one-time"]),
+          }),
+        )
+        .optional(),
       granularity: z.enum(["monthly", "annual"]).optional(),
       methodology: calculation.optional(),
       marketCoverage,
@@ -399,11 +438,16 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
       calculation: z.string().optional(),
       details: z.string().optional(),
       assistant: z.string().optional(),
-      tables: z.array(z.object({
-        title: z.string(),
-        columns: z.array(z.string()).min(1).max(6),
-        rows: z.array(z.array(z.string()).max(6)).max(10),
-      })).max(2).optional(),
+      tables: z
+        .array(
+          z.object({
+            title: z.string(),
+            columns: z.array(z.string()).min(1).max(6),
+            rows: z.array(z.array(z.string()).max(6)).max(10),
+          }),
+        )
+        .max(2)
+        .optional(),
       actions: z
         .array(
           z.discriminatedUnion("type", [

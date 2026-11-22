@@ -11,8 +11,15 @@ export const initialMeasureIds: string[] = [];
 export function runtimeSegments(runtime: number | null, active?: number | null, unclassified = 0) {
   if (runtime == null || !Number.isFinite(runtime) || runtime < 0)
     return { active: null, inactive: null, unknown: null };
-  if (active == null || !Number.isFinite(active) || active < 0 || active > runtime ||
-      !Number.isFinite(unclassified) || unclassified < 0 || active + unclassified > runtime + .01)
+  if (
+    active == null ||
+    !Number.isFinite(active) ||
+    active < 0 ||
+    active > runtime ||
+    !Number.isFinite(unclassified) ||
+    unclassified < 0 ||
+    active + unclassified > runtime + 0.01
+  )
     return { active: null, inactive: null, unknown: runtime };
   const unknown = Math.min(unclassified, runtime - active);
   return { active, inactive: runtime - active - unknown, unknown };

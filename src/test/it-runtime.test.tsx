@@ -6,17 +6,27 @@ import { demoResources } from "@/lib/api/demo-data";
 import type { ResourceSummary } from "@/lib/api/types";
 
 vi.mock("@tanstack/react-router", () => ({ useRouterState: () => "" }));
-vi.mock("@/lib/queries", () => ({ useMeasures: () => ({ data: [], isPending: false, isError: false }) }));
+vi.mock("@/lib/queries", () => ({
+  useMeasures: () => ({ data: [], isPending: false, isError: false }),
+}));
 
 afterEach(cleanup);
 
 describe("IT resource disclosure", () => {
   it("shows a short plain list and reveals usage only in the selected resource", () => {
     const resources: ResourceSummary[] = Array.from({ length: 8 }, (_, i) => ({
-      ...demoResources[0]!, id: `resource-${i}`, name: `Resource ${i}`, runtimeH30d: 720 - i,
-      activeH30d: 48, cpuAvgPct: 15,
+      ...demoResources[0]!,
+      id: `resource-${i}`,
+      name: `Resource ${i}`,
+      runtimeH30d: 720 - i,
+      activeH30d: 48,
+      cpuAvgPct: 15,
     }));
-    render(<InspectorProvider><RuntimePanel resources={resources} /></InspectorProvider>);
+    render(
+      <InspectorProvider>
+        <RuntimePanel resources={resources} />
+      </InspectorProvider>,
+    );
     const list = screen.getByRole("list");
     expect(within(list).getAllByRole("listitem")).toHaveLength(6);
     expect(document.querySelector("[data-runtime-track]")).toBeNull();

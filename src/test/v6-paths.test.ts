@@ -12,7 +12,12 @@ import { buildScenarioChart } from "@/lib/scenario-series";
 import type { Forecast, MonthlyObservation } from "@/lib/api/types";
 
 const d = { budgetChf: 16500, priority: "balanced" as const };
-const p = (id: string, name: string, measureIds: string[] = []): SavedPath => ({ id, name, measureIds, ...d });
+const p = (id: string, name: string, measureIds: string[] = []): SavedPath => ({
+  id,
+  name,
+  measureIds,
+  ...d,
+});
 
 describe("V6 Paths", () => {
   it("typing an existing name selects it instead of duplicating", () => {
@@ -72,7 +77,9 @@ const months = (n: number, missing: string[] = []): MonthlyObservation[] =>
 
 describe("V6 scenario chart data", () => {
   it("draws every genuine monthly observation as history", () => {
-    const c = buildScenarioChart(months(8), "cost", [{ key: "plan", forecast: forecast("annual") }]);
+    const c = buildScenarioChart(months(8), "cost", [
+      { key: "plan", forecast: forecast("annual") },
+    ]);
     expect(c.historyCount).toBe(8);
     expect(c.rows.filter((r) => r["history"] != null)).toHaveLength(8);
   });
@@ -82,7 +89,9 @@ describe("V6 scenario chart data", () => {
     expect(c.historyCount).toBe(3);
   });
   it("shows annual forecasts as one monthly-average point per year, never quarterly", () => {
-    const c = buildScenarioChart(months(6), "cost", [{ key: "plan", forecast: forecast("annual") }]);
+    const c = buildScenarioChart(months(6), "cost", [
+      { key: "plan", forecast: forecast("annual") },
+    ]);
     expect(c.granularity).toBe("annual");
     const projected = c.rows.filter((r) => r["plan"] != null);
     expect(projected).toHaveLength(1);
@@ -94,20 +103,30 @@ describe("V6 scenario chart data", () => {
     expect(c.historyCount).toBe(0);
   });
   it("preserves every supplied month and the changing plan gap across three years", () => {
-    const c = buildScenarioChart([], "cost", [{ key: "plan", forecast: {
-      ...forecast("monthly"),
-      points: Array.from({ length: 36 }, (_, i) => {
-        const d = new Date(Date.UTC(2026, 8 + i, 1));
-        const baseline = 500 + i, plan = baseline - (5 + Math.floor(i / 3) * 2);
-        return { year: d.getUTCFullYear(), date: d.toISOString().slice(0, 10),
-          baseline: { low: baseline, mid: baseline, high: baseline },
-          optimized: { low: plan, mid: plan, high: plan } };
-      }),
-    } }]);
+    const c = buildScenarioChart([], "cost", [
+      {
+        key: "plan",
+        forecast: {
+          ...forecast("monthly"),
+          points: Array.from({ length: 36 }, (_, i) => {
+            const d = new Date(Date.UTC(2026, 8 + i, 1));
+            const baseline = 500 + i,
+              plan = baseline - (5 + Math.floor(i / 3) * 2);
+            return {
+              year: d.getUTCFullYear(),
+              date: d.toISOString().slice(0, 10),
+              baseline: { low: baseline, mid: baseline, high: baseline },
+              optimized: { low: plan, mid: plan, high: plan },
+            };
+          }),
+        },
+      },
+    ]);
     expect(c.granularity).toBe("monthly");
     const projected = c.rows.filter((row) => row.kind === "projected");
     expect(projected).toHaveLength(36);
-    expect(projected.map((r) => Number(r["noChange"]) - Number(r["plan"])))
-      .toEqual(Array.from({ length: 36 }, (_, i) => 5 + Math.floor(i / 3) * 2));
+    expect(projected.map((r) => Number(r["noChange"]) - Number(r["plan"]))).toEqual(
+      Array.from({ length: 36 }, (_, i) => 5 + Math.floor(i / 3) * 2),
+    );
   });
 });

@@ -49,12 +49,37 @@ const POST_SCHEMAS: Record<string, z.ZodType> = {
             .object({
               role: z.enum(["user", "assistant"]),
               content: z.string().min(1).max(4000),
-              context: z.object({
-                metric: z.enum(["chf", "kwh", "kg", "kg_market"]),
-                grouping: z.enum(["department", "tool", "category", "provider", "region", "project", "resource", "month"]).nullable(),
-                filters: z.record(z.enum(["department", "tool", "category", "provider", "region", "project", "resource", "month"]),
-                  z.array(z.string().max(200)).max(30)),
-              }).strict().optional(),
+              context: z
+                .object({
+                  metric: z.enum(["chf", "kwh", "kg", "kg_market"]),
+                  grouping: z
+                    .enum([
+                      "department",
+                      "tool",
+                      "category",
+                      "provider",
+                      "region",
+                      "project",
+                      "resource",
+                      "month",
+                    ])
+                    .nullable(),
+                  filters: z.record(
+                    z.enum([
+                      "department",
+                      "tool",
+                      "category",
+                      "provider",
+                      "region",
+                      "project",
+                      "resource",
+                      "month",
+                    ]),
+                    z.array(z.string().max(200)).max(30),
+                  ),
+                })
+                .strict()
+                .optional(),
             })
             .strict(),
         )
@@ -100,7 +125,8 @@ export function validQuery(params: URLSearchParams, path: string) {
     if (!allowed.has(key) || params.getAll(key).length !== 1) return false;
     if (key === "measureIds") {
       if (!selection.safeParse(value ? value.split(",") : []).success) return false;
-    } else if (value.length > 240 || /[\u0000-\u001f]/.test(value)) return false;
+    } else if (value.length > 240 || Array.from(value).some((c) => c.charCodeAt(0) < 32))
+      return false;
     if (["from", "to"].includes(key) && !/^\d{4}-\d{2}(?:-\d{2})?$/.test(value)) return false;
     if (key === "horizon" && !["1", "2", "3"].includes(value)) return false;
     if (key === "metric" && !["cost", "energy", "co2Location", "co2Market"].includes(value))

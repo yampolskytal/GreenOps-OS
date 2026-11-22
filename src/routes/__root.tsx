@@ -153,7 +153,8 @@ function WorkspaceEntry() {
   const [entered, setEntered] = useState(false);
   useEffect(() => {
     if (entered) return;
-    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    const navigation = performance.getEntriesByType("navigation")[0] as
+      PerformanceNavigationTiming | undefined;
     if (pathname !== "/" && navigation?.type === "reload") {
       void router.navigate({ to: "/", replace: true });
       return;

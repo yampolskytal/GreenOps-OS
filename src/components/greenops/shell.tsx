@@ -54,15 +54,29 @@ export const ROLES: {
   { id: "cfo", to: "/cfo", label: "Finance", Icon: Wallet },
   { id: "it", to: "/it", label: "IT", Icon: Server },
 ];
-export function GreenOpsLogo({ compact = false, hideLabelOnSmall = false, className }: { compact?: boolean; hideLabelOnSmall?: boolean; className?: string }) {
+export function GreenOpsLogo({
+  compact = false,
+  hideLabelOnSmall = false,
+  className,
+}: {
+  compact?: boolean;
+  hideLabelOnSmall?: boolean;
+  className?: string;
+}) {
   return (
-    <Link to="/" aria-label="GreenOps OS home" className={cn("inline-flex items-center gap-2", className)}>
+    <Link
+      to="/"
+      aria-label="GreenOps OS home"
+      className={cn("inline-flex items-center gap-2", className)}
+    >
       <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary">
         <Leaf className="size-4 text-primary-foreground" />
       </span>
-      {!compact && <span className={cn("font-display font-semibold", hideLabelOnSmall && "max-lg:hidden")}>
-        GreenOps <span className="text-primary">OS</span>
-      </span>}
+      {!compact && (
+        <span className={cn("font-display font-semibold", hideLabelOnSmall && "max-lg:hidden")}>
+          GreenOps <span className="text-primary">OS</span>
+        </span>
+      )}
     </Link>
   );
 }
@@ -241,7 +255,9 @@ export function AppShell({
               onClick={() => set({ chatOpen: true })}
             >
               <Sparkles />
-              <span className={cn("ask-greenops-label max-lg:hidden", collapsed && "hidden")}>Ask GreenOps</span>
+              <span className={cn("ask-greenops-label max-lg:hidden", collapsed && "hidden")}>
+                Ask GreenOps
+              </span>
             </Button>
             <Button
               variant="ghost"
@@ -261,14 +277,29 @@ export function AppShell({
             <span className="mr-auto text-xs text-muted-foreground">
               GreenOps OS · {api.isDemo ? "Demo workspace" : "Connected workspace"}
             </span>
-            <Select value={current} onValueChange={(value) => {
-              const role = ROLES.find(r => r.id === value);
-              if (role) { set({ role: role.id }); void navigate({ to: role.to }); }
-            }}>
-              <SelectTrigger aria-label="Presentation role" className="w-auto min-w-28 gap-2 bg-card">
+            <Select
+              value={current}
+              onValueChange={(value) => {
+                const role = ROLES.find((r) => r.id === value);
+                if (role) {
+                  set({ role: role.id });
+                  void navigate({ to: role.to });
+                }
+              }}
+            >
+              <SelectTrigger
+                aria-label="Presentation role"
+                className="w-auto min-w-28 gap-2 bg-card"
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>{ROLES.map(r => <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                {ROLES.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <GlobalSearch />
             <DataHealth />
@@ -286,7 +317,9 @@ export function AppShell({
             <div className="mb-8 grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <div className="min-w-0 flex-1">
                 {kicker && <p className="text-xs font-semibold text-primary">{kicker}</p>}
-                <h1 className={cn("text-3xl font-semibold tracking-tight", kicker && "mt-2")}>{title}</h1>
+                <h1 className={cn("text-3xl font-semibold tracking-tight", kicker && "mt-2")}>
+                  {title}
+                </h1>
                 {subtitle && (
                   <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
                 )}

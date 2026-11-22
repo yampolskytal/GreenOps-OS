@@ -13,7 +13,11 @@ function HookConsumers() {
 
 it("renders motion and query hooks together under the React renderer", async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const view = render(<QueryClientProvider client={client}><HookConsumers /></QueryClientProvider>);
+  const view = render(
+    <QueryClientProvider client={client}>
+      <HookConsumers />
+    </QueryClientProvider>,
+  );
   await waitFor(() => expect(view.getByRole("status")).toHaveTextContent("42"));
   client.clear();
 });

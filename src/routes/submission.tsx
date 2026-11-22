@@ -60,7 +60,9 @@ export function SubmissionContent() {
       key: "measures",
       title: "Package of measures",
       tpl: "template_measures_package.csv",
-      desc: plan.suggested ? `${plan.measureIds.length} measures are suggested. Adopt or customize the recommendation before exporting the package.` : `One row per committed measure (${s.measureIds.length} selected): effort, savings, risks and sources.`,
+      desc: plan.suggested
+        ? `${plan.measureIds.length} measures are suggested. Adopt or customize the recommendation before exporting the package.`
+        : `One row per committed measure (${s.measureIds.length} selected): effort, savings, risks and sources.`,
       run: () => api.exportMeasures(q, s.measureIds),
     },
   ];
@@ -83,7 +85,9 @@ export function SubmissionContent() {
               </div>
               <Button
                 variant="outline"
-                 disabled={busy != null || (it.key === "measures" && (!plan.ready || plan.suggested))}
+                disabled={
+                  busy != null || (it.key === "measures" && (!plan.ready || plan.suggested))
+                }
                 onClick={async () => {
                   setBusy(it.key);
                   setError(null);
@@ -98,9 +102,13 @@ export function SubmissionContent() {
                 }}
                 className="mt-4 rounded-lg border px-3 py-2 text-sm hover:border-primary"
               >
-                 {busy === it.key ? "Checking…" : "Check & prepare"}
-               </Button>
-               {it.key === "measures" && plan.suggested && <Button asChild variant="link"><Link to="/current-plan">Review and adopt plan</Link></Button>}
+                {busy === it.key ? "Checking…" : "Check & prepare"}
+              </Button>
+              {it.key === "measures" && plan.suggested && (
+                <Button asChild variant="link">
+                  <Link to="/current-plan">Review and adopt plan</Link>
+                </Button>
+              )}
               {f && (
                 <div className="rise-in mt-4 space-y-3">
                   <div
