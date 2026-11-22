@@ -1,6 +1,6 @@
 # GreenOps OS backend integration
 
-The Python backend lives in `backend/`. The application uses the same-origin `/api/v2` proxy. See [the production connection report](BACKEND_CONNECTION_REPORT.md) for authentication and proxy configuration.
+The Python backend lives in `backend/`. The application uses the same-origin `/api/v2` proxy. See [the production connection report](production.md) for authentication and proxy configuration.
 
 ## Implemented contract (`/api/v2`, `backend/frontend_api.py`)
 

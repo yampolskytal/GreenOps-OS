@@ -13,7 +13,12 @@ export const useOverview = (official = false) => {
 };
 export const useBreakdowns = (enabled = true, refetchOnMount = true) => {
   const q = useGlobalQuery();
-  return useQuery({ queryKey: k("breakdowns", q), enabled, refetchOnMount, queryFn: () => api.getBreakdowns(q) });
+  return useQuery({
+    queryKey: k("breakdowns", q),
+    enabled,
+    refetchOnMount,
+    queryFn: () => api.getBreakdowns(q),
+  });
 };
 export const useResources = () => {
   const q = useGlobalQuery();
@@ -25,7 +30,11 @@ export const useLocations = () => {
 };
 export const useFindings = (refetchOnMount = true) => {
   const q = useGlobalQuery();
-  return useQuery({ queryKey: k("findings", q), refetchOnMount, queryFn: () => api.getFindings(q) });
+  return useQuery({
+    queryKey: k("findings", q),
+    refetchOnMount,
+    queryFn: () => api.getFindings(q),
+  });
 };
 export const useMeasures = () => {
   const q = officialQuery(useGlobalQuery());
@@ -33,7 +42,11 @@ export const useMeasures = () => {
 };
 export const useDaily = (refetchOnMount = true) => {
   const q = useGlobalQuery();
-  return useQuery({ queryKey: k("daily", q), refetchOnMount, queryFn: () => api.getDailyFootprint(q) });
+  return useQuery({
+    queryKey: k("daily", q),
+    refetchOnMount,
+    queryFn: () => api.getDailyFootprint(q),
+  });
 };
 export const useQuality = () => {
   const q = useGlobalQuery();

@@ -1,12 +1,31 @@
 import type React from "react";
-import { createContext, useContext, useEffect, useMemo, useState, useRef, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+  type ReactNode,
+} from "react";
 import type { GlobalQuery, Priority, Role, OptimizeResult } from "./api/types";
 import { initialMeasureIds } from "./planning";
 import { TARGETS } from "./optimizer";
 import { normalizePaths, type SavedPath } from "./paths";
-import { newInitialization, restoreInitialization, settledInitialization, mayInitialize, displayedPlan, type PlanInitialization } from "./starting-plan";
+import {
+  newInitialization,
+  restoreInitialization,
+  settledInitialization,
+  mayInitialize,
+  displayedPlan,
+  type PlanInitialization,
+} from "./starting-plan";
 
-type LocalDecisions = Record<string, { approved: boolean; reason: string; decidedAt: string; role: "ceo" }>;
+type LocalDecisions = Record<
+  string,
+  { approved: boolean; reason: string; decidedAt: string; role: "ceo" }
+>;
 
 export interface AppState {
   initialization: PlanInitialization;
@@ -52,10 +71,19 @@ type CtxValue = {
   hydrated: boolean;
   s: AppState;
   set: (p: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => void;
-  decideException: (measureId: string, reason: string, approved: boolean | null, connected?: boolean) => void;
+  decideException: (
+    measureId: string,
+    reason: string,
+    approved: boolean | null,
+    connected?: boolean,
+  ) => void;
   commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => void;
   beginInitialization: (requestId: string) => boolean;
-  finishInitialization: (requestId: string, candidate: OptimizeResult | null, error: string | null) => void;
+  finishInitialization: (
+    requestId: string,
+    candidate: OptimizeResult | null,
+    error: string | null,
+  ) => void;
   retryInitialization: () => void;
 };
 // Keep one context instance across hot reloads so the provider and consumers always match.
@@ -116,33 +144,91 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle("dark", s.theme === "dark");
     document.documentElement.classList.toggle("light", s.theme === "light");
   }, [s.theme]);
-  const set = useCallback((p: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => {
-    const x = current.current;
-    const patch = typeof p === "function" ? p(x) : p;
-    const planningChanged = ["measureIds", "paths", "budgetChf", "priority", "demoExceptions", "from", "to", "department", "provider", "datasetVersion"].some((key) => key in patch);
-    const initialization = planningChanged && ("measureIds" in patch || ["new", "loading", "error"].includes(x.initialization.status))
-      ? settledInitialization("measureIds" in patch ? (patch.measureIds?.length ? "committed" : "cleared") : "preserved")
-      : x.initialization;
-    publish({ ...x, ...patch, initialization });
-  }, [publish]);
-  const beginInitialization = useCallback((requestId: string) => {
-    const x = current.current;
-    if (!mayInitialize(x)) return false;
-    try {
-      publish({ ...x, initialization: { ...newInitialization(), status: "loading", requestId } }, true);
-      return true;
-    } catch {
-      publish({ ...x, initialization: { ...newInitialization(), status: "error", error: "Device storage is unavailable. Enable it and retry to preserve your planning decisions." } });
-      return false;
-    }
-  }, [publish]);
-  const finishInitialization = useCallback((requestId: string, candidate: OptimizeResult | null, error: string | null) => {
-    const x = current.current;
-    if (x.initialization.status !== "loading" || x.initialization.requestId !== requestId) return;
-    const next: AppState = { ...x, initialization: { status: candidate ? "suggested" : "error", candidate, requestId: null, error } };
-    try { publish(next, true); }
-    catch { publish({ ...x, initialization: { ...newInitialization(), status: "error", error: "The recommendation could not be saved on this device. Retry when storage is available." } }); }
-  }, [publish]);
+  const set = useCallback(
+    (p: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => {
+      const x = current.current;
+      const patch = typeof p === "function" ? p(x) : p;
+      const planningChanged = [
+        "measureIds",
+        "paths",
+        "budgetChf",
+        "priority",
+        "demoExceptions",
+        "from",
+        "to",
+        "department",
+        "provider",
+        "datasetVersion",
+      ].some((key) => key in patch);
+      const initialization =
+        planningChanged &&
+        ("measureIds" in patch || ["new", "loading", "error"].includes(x.initialization.status))
+          ? settledInitialization(
+              "measureIds" in patch
+                ? patch.measureIds?.length
+                  ? "committed"
+                  : "cleared"
+                : "preserved",
+            )
+          : x.initialization;
+      publish({ ...x, ...patch, initialization });
+    },
+    [publish],
+  );
+  const beginInitialization = useCallback(
+    (requestId: string) => {
+      const x = current.current;
+      if (!mayInitialize(x)) return false;
+      try {
+        publish(
+          { ...x, initialization: { ...newInitialization(), status: "loading", requestId } },
+          true,
+        );
+        return true;
+      } catch {
+        publish({
+          ...x,
+          initialization: {
+            ...newInitialization(),
+            status: "error",
+            error:
+              "Device storage is unavailable. Enable it and retry to preserve your planning decisions.",
+          },
+        });
+        return false;
+      }
+    },
+    [publish],
+  );
+  const finishInitialization = useCallback(
+    (requestId: string, candidate: OptimizeResult | null, error: string | null) => {
+      const x = current.current;
+      if (x.initialization.status !== "loading" || x.initialization.requestId !== requestId) return;
+      const next: AppState = {
+        ...x,
+        initialization: {
+          status: candidate ? "suggested" : "error",
+          candidate,
+          requestId: null,
+          error,
+        },
+      };
+      try {
+        publish(next, true);
+      } catch {
+        publish({
+          ...x,
+          initialization: {
+            ...newInitialization(),
+            status: "error",
+            error:
+              "The recommendation could not be saved on this device. Retry when storage is available.",
+          },
+        });
+      }
+    },
+    [publish],
+  );
   const retryInitialization = useCallback(() => {
     const x = current.current;
     if (x.initialization.status === "error") publish({ ...x, initialization: newInitialization() });
@@ -155,17 +241,32 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       beginInitialization,
       finishInitialization,
       retryInitialization,
-      decideException: (measureId: string, reason: string, approved: boolean | null, connected = false) => {
+      decideException: (
+        measureId: string,
+        reason: string,
+        approved: boolean | null,
+        connected = false,
+      ) => {
         const x = current.current;
         if (x.role !== "ceo") return;
         const field = connected ? "simulationDecisions" : "demoExceptions";
         const decisions = { ...x[field] };
         if (approved === null) delete decisions[measureId];
-        else decisions[measureId] = { approved, reason, role: "ceo", decidedAt: new Date().toISOString() };
+        else
+          decisions[measureId] = {
+            approved,
+            reason,
+            role: "ceo",
+            decidedAt: new Date().toISOString(),
+          };
         publish({ ...x, [field]: decisions }, true);
       },
       commitPlan: (plan: Pick<AppState, "measureIds" | "budgetChf" | "priority">) => {
-        const next = { ...current.current, ...plan, initialization: settledInitialization(plan.measureIds.length ? "committed" : "cleared") };
+        const next = {
+          ...current.current,
+          ...plan,
+          initialization: settledInitialization(plan.measureIds.length ? "committed" : "cleared"),
+        };
         publish(next, true);
       },
     }),

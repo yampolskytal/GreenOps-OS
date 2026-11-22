@@ -222,7 +222,11 @@ export function createHttpApi(baseUrl: string): GreenOpsApi {
     getBonus: (q) => req(`/bonus?${qs(q)}`),
     importFiles: async (files) => {
       if (!import.meta.env.DEV || !["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-        return { accepted: false, message: "Imports are disabled in the public workspace. No files were uploaded.", issues: [] };
+        return {
+          accepted: false,
+          message: "Imports are disabled in the public workspace. No files were uploaded.",
+          issues: [],
+        };
       }
       const body = new FormData();
       for (const file of files) body.append("files", file, file.name);

@@ -1,62 +1,57 @@
-# Basel Green AI
+# GreenOps OS
 
-Project data and requirements
+**[Open the live dashboard →](https://greenops-os.lovable.app/)**
 
-The complete public dataset and hackathon documentation are available here:
+GreenOps OS helps a CEO, CFO and IT manager decide which changes to cloud infrastructure, software subscriptions and AI usage are worth making. Built for the sprintd Basel Green AI challenge, it uses the same case data across all three dashboards so each role can trace a proposed saving back to its evidence.
 
-https://github.com/Fa-Bee/sprintd-basel-green-ai-data
+## Try a planning session
 
-Before building, try to access and review these files directly from the repository:
+1. **Start on the CEO dashboard.** Compare the cost and carbon targets with the recommended starting plan. Switch to CFO or IT Manager to inspect spending or resource usage behind the totals.
+2. **Open Studio.** Change the budget or selection of measures and compare alternatives. Save an alternative as a Path to revisit it later.
+3. **Adopt a Current Plan**, then open **Submission** to check and export the baseline and measures CSVs. Savings are projections for a fictional company; saving a plan on this device does not approve or execute infrastructure changes.
 
-README.md
+## Run locally
 
-data_dictionary.md
+Use Node.js 22.12+ with npm and Python 3.11+ available as `python`. From the repository root, install the JavaScript dependencies once:
 
-example_questions.md
-
-template_baseline_and_assumptions.csv
-
-template_measures_package.csv
-
-Use the README as the authoritative source for the hackathon requirements, the data dictionary for dataset structure, and the two CSV templates for the mandatory exports.
-
-Also inspect the structure of the 13 core datasets and the 15 bonus datasets in the extra/ directory.
-
-If you cannot directly access or read any of these files, explicitly tell me which ones you need. Do not pretend to have read inaccessible files.
-
-The frontend connects to the GreenOps Python backend in `backend/` (merged from the team's `sprintd` project) through the `GreenOpsApi` HTTP adapter.
-
-Start with the design system, role selection, CEO dashboard, CFO dashboard, IT Manager dashboard and shared navigation.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/c6246f98-cd16-4e36-8da3-be9cc48e4088).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Use Node.js 22.12+ and Python 3.11+. In PowerShell, open two terminals in the project folder.
-
-In the first terminal, start the Python backend with the official dataset:
-
-```powershell
-npm.cmd run backend
+```sh
+npm ci
 ```
 
-Wait for `http://127.0.0.1:8765` to appear. The backend also serves the classic dashboard at that address. Use `npm.cmd run backend:demo` to try the representative dataset instead.
+**Terminal 1 — start the Python backend with the bundled challenge dataset:**
 
-In the second terminal, install the frontend dependencies the first time and start the current dashboard:
-
-```powershell
-npm.cmd install
-npm.cmd run dev:local
+```sh
+npm run backend
 ```
 
-Open [the local dashboard](http://127.0.0.1:8080). Both `npm.cmd run dev:local` and `npm.cmd run dev` connect to the local Python backend. Keep both terminals open, and press Ctrl+C in each to stop. If Python cannot find Europe/Zurich, install its time-zone data with `python -m pip install tzdata`.
+Wait for the backend at `http://127.0.0.1:8765`. If Python reports that `Europe/Zurich` is missing, run `python -m pip install tzdata` and restart it.
 
-`backend/frontend_api.py` maps the backend's workspace (ledger, measure catalog, optimizer, forecast, diagnostics, assistant) to the frontend contract in `src/lib/api/types.ts`. The backend's own CLI (export, validate, assistant-check) and its legacy dashboard keep working — see `backend/README.md`. Backend tests: `npm run test:backend`.
+**Terminal 2 — start the web dashboard from the same repository root:**
+
+```sh
+npm run dev
+```
+
+Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)**, or the local URL printed by Vite. Keep both terminals open: the dashboard forwards `/api/v2` requests to the Python process on port 8765. Press `Ctrl+C` in each terminal to stop. To explore the smaller demo dataset instead, use `npm run backend:demo` in terminal 1.
+
+## Repository guide
+
+| Location | What lives here |
+| --- | --- |
+| [`src/routes/`](src/routes/) and [`src/components/`](src/components/) | React and TanStack Start dashboards, planning tools and reports |
+| [`src/lib/api/`](src/lib/api/) | Typed interface between dashboard views and the GreenOps API |
+| [`backend/`](backend/README.md) | Python accounting, optimization, forecasts, CLI and classic dashboard |
+| [`backend/inputs/`](backend/inputs/) and [`backend/templates/`](backend/templates/) | Case datasets and official export formats |
+| [`docs/`](docs/README.md) | API contract, deployment notes, audits and project history |
+
+## Development checks
+
+| Command | Checks |
+| --- | --- |
+| `npm run typecheck` | TypeScript types |
+| `npm run lint` | Lint and code style |
+| `npm test` | Frontend unit and component tests |
+| `npm run test:backend` | Python backend tests |
+| `npm run build` | Production dashboard build |
+
+**Dataset credit:** Sample data ALTYCA, sprintd Basel 2026. See the [organizer’s dataset and challenge brief](https://github.com/Fa-Bee/sprintd-basel-green-ai-data) for the data dictionary, example questions and submission requirements.

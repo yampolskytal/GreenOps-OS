@@ -3,9 +3,9 @@
  * Proposed shapes — align with the backend endpoint spec when it arrives.
  */
 export type Role = "ceo" | "cfo" | "it";
-export type LocationId =
-  "zurich" | "frankfurt" | "dublin" | "eu-mixed" | "unknown";
-export type ServiceType = "Cloud" | "Servers" | "AI" | "SaaS" | "SaaS & AI" | "Data platform" | "Unclassified";
+export type LocationId = "zurich" | "frankfurt" | "dublin" | "eu-mixed" | "unknown";
+export type ServiceType =
+  "Cloud" | "Servers" | "AI" | "SaaS" | "SaaS & AI" | "Data platform" | "Unclassified";
 export type Provider =
   "Azure" | "AWS" | "Swiss hoster" | "Anthropic" | "OpenAI" | "Microsoft" | "Other SaaS";
 export type RiskLevel = "low" | "review" | "blocked";
@@ -153,8 +153,7 @@ export interface ResourceSummary {
   co2Market?: Kpi | null;
 }
 
-export type GeographicMetric =
-  "costChf" | "energyKwh" | "co2KgLocation" | "co2KgMarket";
+export type GeographicMetric = "costChf" | "energyKwh" | "co2KgLocation" | "co2KgMarket";
 
 export interface RegionalMetrics {
   costChf: number | null;
@@ -173,8 +172,7 @@ export interface RegionalMetrics {
   };
 }
 
-export type RegionalGroup =
-  "byDepartment" | "byProvider" | "byTool" | "byService";
+export type RegionalGroup = "byDepartment" | "byProvider" | "byTool" | "byService";
 export type RegionalBreakdown = RegionalMetrics & { label: string };
 
 export interface LocationSummary extends RegionalMetrics {
@@ -336,7 +334,13 @@ export interface Forecast {
   growthAssumption: string;
   points: ForecastPoint[];
   annualTotals?: ForecastPoint[];
-  drivers?: { date: string; label: string; source: string; amount: number; basis: "annual" | "one-time" }[];
+  drivers?: {
+    date: string;
+    label: string;
+    source: string;
+    amount: number;
+    basis: "annual" | "one-time";
+  }[];
   granularity?: "monthly" | "annual";
   methodology?: Calculation;
   implementationTiming?: string;

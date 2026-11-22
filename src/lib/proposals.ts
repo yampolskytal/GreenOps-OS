@@ -28,9 +28,7 @@ export function numericalWarnings(r: SimulationResult) {
   if (r.effortDays > 15)
     warnings.push(`effort exceeds the limit by ${(r.effortDays - 15).toFixed(1)} person-days`);
   if (r.effortChf > 16500)
-    warnings.push(
-      `implementation cost exceeds the limit by ${chf(r.effortChf - 16500)}`,
-    );
+    warnings.push(`implementation cost exceeds the limit by ${chf(r.effortChf - 16500)}`);
   return warnings;
 }
 export const isImplementableProposal = (m: Measure, approved: string[]) =>

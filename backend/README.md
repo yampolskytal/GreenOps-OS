@@ -4,7 +4,7 @@ GreenOps evaluates the cost, energy and carbon footprint of the sprintd Basel ca
 
 ## Start the product
 
-Download [GreenOps-Basel.zip](./GreenOps-Basel.zip) for the one-click launcher, organizer data, and generated case reports. The source checkout also runs the representative demo with `python app.py serve`.
+For the current web dashboard, follow the [two-terminal setup](../README.md#run-locally). The commands below run the standalone Python dashboard from the `backend/` directory (or an extracted portable release).
 
 On Windows, extract the release and run launch-challenge.cmd. From a terminal in the extracted folder:
 

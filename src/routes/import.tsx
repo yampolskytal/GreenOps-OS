@@ -49,8 +49,10 @@ async function check(file: File): Promise<Checked> {
       const sample = await file.slice(0, 65536).text();
       const row = JSON.parse(sample.trimStart().split(/\r?\n/, 1)[0] ?? "");
       if (!row || Array.isArray(row) || typeof row !== "object") throw new Error();
-      return { ...result, missing: fields.filter(k => !(k in row)), preview: [Object.keys(row)] };
-    } catch { return { ...result, error: "Cannot preview the first JSON record" }; }
+      return { ...result, missing: fields.filter((k) => !(k in row)), preview: [Object.keys(row)] };
+    } catch {
+      return { ...result, error: "Cannot preview the first JSON record" };
+    }
   }
   if (!file.name.toLowerCase().endsWith(".csv"))
     return { file, source: null, missing: [], preview: [], error: "Choose a CSV or JSONL source" };

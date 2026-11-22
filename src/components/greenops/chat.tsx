@@ -55,7 +55,8 @@ export function ChatPanel() {
   };
   const run = (a: ChatAction) => {
     if (a.type !== "setFilters") set({ chatOpen: false });
-    if (a.type === "navigate") navigate(a.hash ? { to: a.to, hash: a.hash } : { to: a.to, hash: "" });
+    if (a.type === "navigate")
+      navigate(a.hash ? { to: a.to, hash: a.hash } : { to: a.to, hash: "" });
     else if (a.type === "openSimulation") navigate({ to: "/studio" });
     else if (a.type === "openMeasure") navigate({ to: "/studio", hash: `measure-${a.measureId}` });
     else if (a.type === "setFilters") {
@@ -118,20 +119,30 @@ export function ChatPanel() {
                 : "mr-4 space-y-2 rounded-xl border bg-card p-3 text-sm"
             }
           >
-            <p className="whitespace-pre-line leading-relaxed">{m.role === "assistant" ? formatEvidenceText(m.content) : m.content}</p>
+            <p className="whitespace-pre-line leading-relaxed">
+              {m.role === "assistant" ? formatEvidenceText(m.content) : m.content}
+            </p>
             {m.tables?.map((table) => (
               <div key={table.title} className="overflow-x-auto rounded-md border">
                 <table className="w-full border-collapse text-left text-sm">
                   <caption className="sr-only">{table.title}</caption>
                   <thead className="bg-muted">
                     <tr>
-                      {table.columns.map((column, j) => <th key={j} scope="col" className="px-3 py-2 font-medium">{column}</th>)}
+                      {table.columns.map((column, j) => (
+                        <th key={j} scope="col" className="px-3 py-2 font-medium">
+                          {column}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {table.rows.map((row, j) => (
                       <tr key={j} className="border-t">
-                        {row.map((cell, k) => <td key={k} className="px-3 py-2 align-top">{cell}</td>)}
+                        {row.map((cell, k) => (
+                          <td key={k} className="px-3 py-2 align-top">
+                            {cell}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
@@ -159,18 +170,31 @@ export function ChatPanel() {
                 <summary className="cursor-pointer">Sources and details</summary>
                 <div className="mt-2 space-y-2">
                   {m.details && <p>{m.details}</p>}
-                  {m.calculation && <p>{m.assistant && `${m.assistant} · `}{m.calculation}</p>}
-                  {!!m.evidence?.length && <EvidencePopover evidence={m.evidence} label="View source records" />}
+                  {m.calculation && (
+                    <p>
+                      {m.assistant && `${m.assistant} · `}
+                      {m.calculation}
+                    </p>
+                  )}
+                  {!!m.evidence?.length && (
+                    <EvidencePopover evidence={m.evidence} label="View source records" />
+                  )}
                 </div>
               </details>
             )}
           </div>
         ))}
-        {busy && <p className="text-sm text-muted-foreground" role="status">Checking your data…</p>}
+        {busy && (
+          <p className="text-sm text-muted-foreground" role="status">
+            Checking your data…
+          </p>
+        )}
         {error && (
           <div className="flex items-center gap-2 text-sm" role="status">
             <p>The assistant couldn’t finish this request.</p>
-            <Button size="sm" variant="outline" onClick={() => void ask(error, true)}>Retry</Button>
+            <Button size="sm" variant="outline" onClick={() => void ask(error, true)}>
+              Retry
+            </Button>
           </div>
         )}
         <div ref={end} />
@@ -194,8 +218,19 @@ export function ChatPanel() {
           <Send className="h-4 w-4" />
         </Button>
         {msgs.length > 0 && (
-          <Button type="button" variant="ghost" size="icon" aria-label="New conversation" title="New conversation"
-            disabled={busy} onClick={() => { setMsgs([]); setError(null); setInput(""); }}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="New conversation"
+            title="New conversation"
+            disabled={busy}
+            onClick={() => {
+              setMsgs([]);
+              setError(null);
+              setInput("");
+            }}
+          >
             <RotateCcw className="size-4" />
           </Button>
         )}

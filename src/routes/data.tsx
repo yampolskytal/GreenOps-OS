@@ -35,7 +35,9 @@ function DataReports() {
               <div className="mb-6 flex flex-wrap gap-x-10 gap-y-4 border-b pb-6 text-sm">
                 <div>
                   <p className="text-muted-foreground">Current dataset</p>
-                  <p className="mt-1">{d.datasetName ?? "Active dataset"} · {d.version}</p>
+                  <p className="mt-1">
+                    {d.datasetName ?? "Active dataset"} · {d.version}
+                  </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Data as of</p>
@@ -61,7 +63,8 @@ function DataReports() {
             assumptions. Monthly/daily values and scenario effects must be supplied separately.
           </p>
           <p className="mt-6 text-xs text-muted-foreground">
-            Files are previewed locally. Once the backend confirms an import, dashboards use the new dataset.
+            Files are previewed locally. Once the backend confirms an import, dashboards use the new
+            dataset.
           </p>
         </TabsContent>
         <TabsContent value="submission">
