@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { scenarioDomain, type ScenarioRow } from "@/lib/scenario-series";
+import { scenarioAxis, scenarioDateTicks, type ScenarioRow } from "@/lib/scenario-series";
 import { isAvailable, percentDifference } from "@/lib/analytics";
 import { formatNumber, pct } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -140,13 +140,15 @@ export function ScenarioChart({
     rows.filter((row) => row.kind === "actual" && isAvailable(row["history"])).at(-1) ??
     rows.filter((row) => row.kind === "actual").at(-1) ??
     rows[0];
-  const showBaselineBand =
+  const [includeRange, setIncludeRange] = useState(false);
+  const bandAvailable =
     showBand &&
     visible.some(({ key }) => key === "noChange") &&
     rows.some((row) => {
       const range = row.ranges?.["noChange"];
       return range && range.low !== range.high;
     });
+  const showBaselineBand = bandAvailable && includeRange;
   const values = rows.flatMap((row) => {
     const values = visible.map(({ key }) => row[key]).filter(isAvailable);
     const range = showBaselineBand ? row.ranges?.["noChange"] : null;
@@ -155,12 +157,9 @@ export function ScenarioChart({
   });
   const start = rows[0]?.time ?? boundary;
   const end = Math.max(boundary, rows.at(-1)?.time ?? boundary);
-  const ticks = rows
-    .map((row) => row.time)
-    .filter(
-      (_time, index) =>
-        index % Math.max(1, Math.ceil(rows.length / 7)) === 0 || index === rows.length - 1,
-    );
+  const [width, setWidth] = useState(720);
+  const { ticks, yearsOnly } = scenarioDateTicks(start, end, width);
+  const yAxis = scenarioAxis(values);
   return (
     <div className="min-w-0">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -191,8 +190,13 @@ export function ScenarioChart({
             )}
           </li>
         ))}
-        {showBaselineBand && (
-          <li className="py-1 text-muted-foreground">Shading · supplied baseline low–high range</li>
+        {bandAvailable && (
+          <li className="py-1">
+            <label className="inline-flex cursor-pointer items-center gap-2">
+              <input type="checkbox" checked={includeRange} onChange={(e) => setIncludeRange(e.target.checked)} />
+              Show baseline low–high range
+            </label>
+          </li>
         )}
       </ul>
       {values.length > 0 && (
@@ -203,7 +207,7 @@ export function ScenarioChart({
           role="img"
           aria-label={`Forecast timeline · ${unit}`}
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" onResize={setWidth}>
             <ComposedChart
               data={rows}
               margin={{ top: 20, right: 16, bottom: 6, left: 0 }}
@@ -222,8 +226,8 @@ export function ScenarioChart({
                 minTickGap={28}
                 tickFormatter={(time: number) =>
                   new Date(time).toLocaleDateString("en-US", {
-                    month: "short",
-                    year: "2-digit",
+                    ...(yearsOnly ? {} : { month: "short" }),
+                    year: yearsOnly ? "numeric" : "2-digit",
                     timeZone: "UTC",
                   })
                 }
@@ -232,14 +236,17 @@ export function ScenarioChart({
               />
               <YAxis
                 type="number"
-                domain={scenarioDomain(values)}
-                tickCount={5}
+                domain={yAxis.domain}
+                ticks={yAxis.ticks}
                 tickFormatter={(value: number) =>
-                  formatNumber(value, { maximumFractionDigits: Math.abs(value) < 1 ? 3 : 0 })
+                  formatNumber(value, { maximumSignificantDigits: 6 })
                 }
                 tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                 stroke="var(--border)"
-                width={75}
+                width={Math.max(...yAxis.ticks.map((v) => formatNumber(v, { maximumSignificantDigits: 6 }).length)) * 7 + 14}
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
               />
               {end > boundary && (
                 <ReferenceArea

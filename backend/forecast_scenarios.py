@@ -173,7 +173,7 @@ def dashboard_forecast(a, baseline_model, key, years, measures):
                 target[i] += value
         points.append({"year": month.year, "date": month.isoformat(),
                        "baseline": baseline, "optimized": optimized,
-                       **({} if row["observed_base"] else {"coverage": "Baseline month unavailable · annual average used"})})
+                       **({} if row["observed_base"] else {"coverage": "Corresponding historical month unavailable · modeled from annual trend"})})
     annual = [{"year": y, "date": f"{y}-08-01", "periodLabel": f"Sep {y - 1}–Aug {y}",
                "baseline": b, "optimized": o} for y, (b, o) in sums.items()]
     return points, annual, sorted(drivers, key=lambda d: (d["date"], d["label"])), assumptions

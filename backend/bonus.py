@@ -47,33 +47,27 @@ def forecast(a, years=3, *, damp_growth=False):
                      {"method": "assumption", "values": assumed, "r2": None,
                       "months": sum(m in monthly for m in months)})
     multipliers = {k: [1.0] * 3 for k in growth}
-    factors = []
+    projected = {k: [] for k in growth}
     results = []
     for t in range(1, years + 1):
         weight = min((t - 1) / 2, 1) if damp_growth else 0
         multipliers = {k: [previous * (1 + rate * (1 - weight) + default * weight)
                            for previous, rate, default in zip(multipliers[k], g["values"], assumed)]
                        for k, g in growth.items()}
-        factors.append(multipliers)
         factor = multipliers
         results.append({"period": f"Sep {2025+t}–Aug {2026+t}", "chf": [round(baseline["chf"] * v, 2) for v in factor["chf"]],
-                        **{k: [round(v * x, 2) for v, x in zip(factor[k], baseline[k])] for k in ("kwh", "kg")},
-                        "monthly_chf_mid": [round(monthly[m]["chf"] * factor["chf"][1], 2) if m in monthly else None for m in months]})
-    # Monthly path: each future month is the same calendar month of the baseline year grown by the per-metric
-    # rate, so observed seasonality and the fitted trend both carry forward. A month without observations uses
-    # the baseline-year monthly average instead.
-    projected = {k: [] for k in growth}
-    for t, factor in enumerate(factors, 1):
-        for m in months:
-            year, month = int(m[:4]) + t, m[5:]
-            for k in growth:
-                observed = monthly[m][k] if m in monthly else None
-                if observed is None:
-                    observed = [v / 12 for v in baseline[k]] if isinstance(baseline[k], list) else baseline[k] / 12
-                level = observed if isinstance(observed, list) else [observed] * 3
-                projected[k].append({"month": f"{year}-{month}", "values": [
-                    round(x * multiplier, 4) for x, multiplier in zip(level, factor[k])],
-                    "observed_base": m in monthly})
+                        **{k: [round(v * x, 2) for v, x in zip(factor[k], baseline[k])] for k in ("kwh", "kg")}})
+        # Allocate each annual scenario on a monthly trend. A single observed year
+        # cannot distinguish recurring seasonal effects from one-off events.
+        for k, g in growth.items():
+            rate = g["values"][1] * (1 - weight) + assumed[1] * weight
+            weights = [(1 + rate) ** (i / 12) for i in range(12)]
+            norm = sum(weights)
+            for m, w in zip(months, weights):
+                projected[k].append({"month": f"{int(m[:4]) + t}-{m[5:]}",
+                                     "values": [annual * w / norm for annual in results[-1][k]],
+                                     "observed_base": m in monthly})
+        results[-1]["monthly_chf_mid"] = [round(row["values"][1], 2) for row in projected["chf"][-12:]]
     def describe(k):
         g = growth[k]
         low, rate, high = (f"{v * 100:+.1f}%" for v in g["values"])
@@ -87,7 +81,7 @@ def forecast(a, years=3, *, damp_growth=False):
             "method": "No-action compound growth scenario, fixed CHF unit rates and grid factors. Growth is fitted per "
                       "metric from the observed baseline-year monthly totals when at least nine months are complete, "
                       "otherwise the configured planning assumption is used. One year cannot separate seasonality from "
-                      "trend. Monthly projections repeat the observed seasonal pattern on the fitted trend. Ranges combine growth and factor scenarios "
+                       "trend. Monthly projections distribute each annual scenario along its growth trend. Ranges combine growth and factor scenarios "
                       "and carry forward baseline coverage gaps."}
 
 

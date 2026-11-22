@@ -148,3 +148,29 @@ export function scenarioDomain(values: number[]): [number, number] {
   const padding = (span - (maximum - minimum)) / 2 + span * 0.08;
   return [minimum >= 0 ? Math.max(0, minimum - padding) : minimum - padding, maximum + padding];
 }
+
+export function scenarioAxis(values: number[]) {
+  const [low, high] = scenarioDomain(values);
+  const roughStep = (high - low) / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const step = ([1, 2, 2.5, 5, 10].find((n) => n * magnitude >= roughStep) ?? 10) * magnitude;
+  const first = Math.floor(low / step);
+  const last = Math.ceil(high / step);
+  const ticks = Array.from({ length: last - first + 1 }, (_, i) => (first + i) * step);
+  return { domain: [first * step, last * step] as [number, number], ticks };
+}
+
+export function scenarioDateTicks(start: number, end: number, width: number) {
+  const d = new Date(start);
+  const e = new Date(end);
+  const months = (e.getUTCFullYear() - d.getUTCFullYear()) * 12 + e.getUTCMonth() - d.getUTCMonth();
+  const capacity = Math.max(2, Math.floor((width - 72) / 80));
+  const stride = [1, 3, 6, 12, 24].find((n) => months / n <= capacity) ?? 24;
+  const ticks: number[] = [];
+  for (let i = 0; i <= months; i++) {
+    const month = d.getUTCMonth() + i;
+    if ((d.getUTCFullYear() * 12 + month) % stride === 0)
+      ticks.push(Date.UTC(d.getUTCFullYear(), month, 1));
+  }
+  return { ticks, yearsOnly: stride >= 12 };
+}

@@ -540,9 +540,9 @@ class FrontendApi:
         limitations.extend(row["reason"] for row in excluded)
         methodology = {
             "title": "Timed forecast scenario", "kind": "forecast", "period": PERIOD, "units": units,
-            "formula": "Seasonal baseline × compound growth + documented changes − dated recurring effects × affected workload growth + one-time CHF implementation",
+            "formula": "Annual baseline projected along a monthly growth trend + documented changes − dated recurring effects × affected workload growth + one-time CHF implementation",
             "sources": sorted({"Normalized baseline ledger", self.a.factors["growth"]["source"], *(d["source"] for d in drivers)}),
-            "assumptions": ["Baseline growth converges to the configured long-run rate by year three. Recorded capacity changes use observed unit rates.",
+            "assumptions": ["One observed year cannot establish seasonality. Monthly estimates follow the growth trend; dated changes can create steps. Baseline growth converges to the configured long-run rate by year three. Recorded capacity changes use observed unit rates.",
                             "Continuing operational effects scale with their affected workload after year one. Contract and other cost-only savings stay at their modeled run-rate.",
                             "Unit prices and grid factors stay fixed unless the scenario records a change.", *scope_assumptions],
             "inputs": [], "limitations": limitations,
