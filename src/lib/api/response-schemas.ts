@@ -38,6 +38,32 @@ const marketObservation = {
   co2KgMarketRange: range.nullable().optional(),
   marketCoverage,
 };
+const count = z.number().int().nonnegative();
+const regionalMetrics = {
+  costChf: number.nullable(),
+  energyKwh: number.nullable(),
+  co2KgLocation: number.nullable(),
+  energyKwhRange: range.nullable().optional(),
+  co2KgLocationRange: range.nullable().optional(),
+  ...marketObservation,
+  co2KgMarket: number.nullable().default(null),
+  ledgerCoverage: z
+    .object({
+      totalRows: count,
+      costRows: count,
+      energyRows: count,
+      locationRows: count,
+    })
+    .refine(
+      ({ totalRows, costRows, energyRows, locationRows }) =>
+        Math.max(costRows, energyRows, locationRows) <= totalRows,
+      "Invalid ledger coverage",
+    )
+    .optional(),
+};
+const regionalBreakdowns = z
+  .array(z.object({ label: z.string(), ...regionalMetrics }))
+  .optional();
 const calculation = z
   .object({
     title: z.string(),
@@ -190,6 +216,35 @@ const responseSchemas: Record<string, z.ZodTypeAny> = {
     byService: arrayOfBreakdowns,
     allocationRule: z.string().default("Allocation rule not supplied"),
   }),
+  "/locations": z.array(
+    z.object({
+      id: z.enum(["zurich", "frankfurt", "dublin", "eu-mixed", "unknown"]),
+      label: z.string(),
+      country: z.string(),
+      lat: number.min(-90).max(90).nullable(),
+      lng: number.min(-180).max(180).nullable(),
+      resourceCount: count,
+      ...regionalMetrics,
+      gridKgPerKwh: range.nullable(),
+      carbonIntensityIndex: number.min(0).nullable().optional(),
+      gridFactorEvidence: z
+        .object({ source: z.string(), note: z.string() })
+        .nullable()
+        .optional(),
+      sources: evidence.optional(),
+      period: z.string().optional(),
+      providers: list,
+      risks: list,
+      breakdowns: z
+        .object({
+          byDepartment: regionalBreakdowns,
+          byProvider: regionalBreakdowns,
+          byTool: regionalBreakdowns,
+          byService: regionalBreakdowns,
+        })
+        .optional(),
+    }),
+  ),
   "/resources": z.array(
     z
       .object({

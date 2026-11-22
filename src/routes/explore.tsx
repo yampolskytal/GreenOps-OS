@@ -1,4 +1,5 @@
 import { chf, carbonMass } from "@/lib/format";
+import type { GeographicMetric } from "@/lib/api/types";
 import { useEffect, useState } from "react";
 import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
@@ -47,7 +48,7 @@ function Explore() {
     date: null,
     view: "2d",
   });
-  const [geoMetric, setGeoMetric] = useState<"costChf" | "co2KgLocation" | "energyKwh">("costChf");
+  const [geoMetric, setGeoMetric] = useState<GeographicMetric>("costChf");
   const [metric, setMetric] = useState<CalMetric>("co2Kg");
   const [compareFootprint, setCompareFootprint] = useState(true);
   const linkedComparison = comparisonFromHash(hash);

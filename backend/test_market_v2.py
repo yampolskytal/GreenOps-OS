@@ -77,6 +77,57 @@ class MarketV2Test(unittest.TestCase):
         self.assertEqual(api.forecast(self.q, "co2Market", 1, [])["points"], [])
         self.assertNotIn("co2Market", [x["metric"] for x in total_market["forecastSupport"]])
 
+    def test_regional_metrics_separate_unknown_geography_and_preserve_missing_and_zero(self):
+        euros = line("2026-01-12", "eu", 0, provider="", department="")
+        euros.update(chf=0, tool="", category="")
+        unknown = line("2026-01-12", "unknown", None)
+        unknown.update(chf=None)
+        missing = line("2026-01-13", "de", None, department="")
+        missing.update(chf=None)
+        api = workspace(self.rows + [euros, unknown, missing])
+        api.a.factors["grid"] = {"de": {"values": [.24, .374, .48], "source": "Grid disclosure", "note": "Grid proxy"}}
+        regions = {region["id"]: region for region in api.locations(self.q)}
+        self.assertEqual(regions["eu-mixed"]["costChf"], 0)
+        self.assertEqual(regions["eu-mixed"]["energyKwh"], 0)
+        self.assertIsNone(regions["eu-mixed"]["lat"])
+        self.assertIsNone(regions["unknown"]["lng"])
+        self.assertIsNone(regions["unknown"]["costChf"])
+        self.assertIsNone(regions["unknown"]["energyKwhRange"])
+        self.assertIsNone(regions["unknown"]["co2KgLocation"])
+        self.assertIsNone(regions["zurich"]["co2KgMarket"])
+        frankfurt = regions["frankfurt"]
+        self.assertEqual(frankfurt["co2KgMarket"], 16.8)
+        self.assertEqual(frankfurt["co2KgMarketRange"], {"low": 12, "mid": 16.8, "high": 21.6})
+        self.assertEqual(frankfurt["gridFactorEvidence"]["source"], "Grid disclosure")
+        self.assertEqual(frankfurt["ledgerCoverage"], {"totalRows": 3, "costRows": 2, "energyRows": 2, "locationRows": 2})
+        self.assertEqual(frankfurt["marketCoverage"]["status"], "partial")
+        self.assertEqual(frankfurt["marketCoverage"]["coveragePct"], 100)
+        for groups in frankfurt["breakdowns"].values():
+            self.assertEqual(sum(row["co2KgMarket"] or 0 for row in groups), 16.8)
+            self.assertEqual(sum(row["costChf"] or 0 for row in groups), frankfurt["costChf"])
+        unassigned = next(row for row in frankfurt["breakdowns"]["byDepartment"] if row["label"] == "Unassigned")
+        self.assertIsNone(unassigned["energyKwh"])
+        filtered = api.locations(query({"provider": "Swiss Hoster", "from": "2026-01", "to": "2026-01"}))
+        self.assertEqual([region["id"] for region in filtered], ["zurich"])
+        self.assertEqual(filtered[0]["period"], "2026-01–2026-01")
+
+    def test_carbon_intensity_index_uses_paired_ledgers_and_all_three_regions(self):
+        ch, de, ie = [line("2026-01-12", region, energy)
+                      for region, energy in (("ch", 100), ("de", 200), ("ie", 100))]
+        for row, emissions in ((ch, 10), (de, 40), (ie, 30)):
+            row["kg"] = [emissions] * 3
+        unknown = line("2026-01-12", "unknown", 1000000)
+        unpaired = line("2026-01-13", "ch", 1000000)
+        unpaired["kg"] = None
+        api = workspace([ch, de, ie, unknown, unpaired])
+        indices = {row["id"]: row["carbonIntensityIndex"] for row in api.locations(self.q)}
+        self.assertEqual(set(indices), {"zurich", "frankfurt", "dublin", "unknown"})
+        self.assertIsNone(indices["unknown"])
+        for region, expected in (("zurich", .5), ("frankfurt", 1), ("dublin", 1.5)):
+            self.assertAlmostEqual(indices[region], expected)
+        api = workspace([ch, de, unknown, unpaired])
+        self.assertTrue(all(row["carbonIntensityIndex"] is None for row in api.locations(self.q)))
+
     def test_partial_and_unsupported_savings_and_forecasts(self):
         shutdown = market_reduction([self.rows[0]], .5)
         move = market_relocation(self.api.a, [self.rows[0]], "ch", .5)

@@ -1,19 +1,12 @@
 import { useState } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
-import {
-  GeographicView,
-  geographicRows,
-  carbonIntensityIndices,
-} from "@/components/greenops/geographic-footprint";
-import {
-  GeographicBreakdowns,
-  RegionalBars,
-  regionalBreakdownRows,
-} from "@/components/greenops/geographic-breakdowns";
+import { GeographicView, geographicRows } from "@/components/greenops/geographic-footprint";
+import { GeographicBreakdowns, RegionalBars } from "@/components/greenops/geographic-breakdowns";
 import { InspectorProvider } from "@/components/greenops/analytical-inspector";
 import { geographicDots } from "@/lib/geographic-dots";
 import type { LocationSummary } from "@/lib/api/types";
+import { validateApiResponse } from "@/lib/api/response-schemas";
 
 vi.mock("@/lib/queries", () => ({
   useLocations: () => ({ isPending: true }),
@@ -51,7 +44,9 @@ it("maps only city-associated region rows and preserves supplied zero and missin
     expect.objectContaining({ city: undefined, value: 900 }),
   ]);
   expect(geographicRows([mixed], "energyKwh")[0]?.value).toBe(0);
-  expect(geographicRows([mixed], "co2KgLocation")[0]).toMatchObject({ value: null });
+  expect(geographicRows([mixed], "co2KgLocation")[0]).toMatchObject({
+    value: null,
+  });
 });
 
 it("switches metric units and updates the existing location evidence dock", () => {
@@ -64,7 +59,9 @@ it("switches metric units and updates the existing location evidence dock", () =
     );
   }
   render(<Harness />);
-  const cityComparison = screen.getByRole("region", { name: "City-area comparison" });
+  const cityComparison = screen.getByRole("region", {
+    name: "City-area comparison",
+  });
   const scroll = vi.fn();
   Object.defineProperty(cityComparison, "scrollIntoView", { value: scroll });
   const europe = screen.getByLabelText("Dotted map of European reporting regions");
@@ -80,7 +77,7 @@ it("switches metric units and updates the existing location evidence dock", () =
   fireEvent.click(screen.getByRole("button", { name: "View location evidence for Zurich" }));
   const dock = screen.getByRole("complementary", { name: "Analysis details" });
   expect(within(dock).getByText("Providers · Provider A")).toBeVisible();
-  fireEvent.click(screen.getByRole("button", { name: "Emissions" }));
+  fireEvent.click(screen.getByRole("button", { name: "Location-based CO₂e" }));
   expect(screen.getByRole("button", { name: "Zurich area · 8.5 kg CO₂e" })).toBeVisible();
   expect(screen.getByRole("button", { name: "EU (AI & SaaS, mixed) Unavailable" })).toBeVisible();
   expect(screen.getByRole("complementary", { name: "Analysis details" })).toBe(dock);
@@ -88,6 +85,7 @@ it("switches metric units and updates the existing location evidence dock", () =
   expect(screen.getByRole("button", { name: "Zurich area · 75.25 kWh" })).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "EU (AI & SaaS, mixed) 0 kWh" }));
   expect(within(dock).getByRole("heading", { name: "EU (AI & SaaS, mixed)" })).toBeVisible();
+  expect(screen.getByLabelText("Region")).toHaveValue("eu-mixed");
   expect(scroll).toHaveBeenCalledTimes(2);
 });
 
@@ -128,7 +126,7 @@ it("keeps every city marker white and ranks each metric on a common city-only sc
   const list = screen.getByRole("list", { name: "Ranked mapped cities" });
   for (const [metric, order, widths] of [
     ["Cost", ["Zurich", "Frankfurt", "Dublin"], [100, 50, 25]],
-    ["Emissions", ["Dublin", "Frankfurt", "Zurich"], [100, 50, (8.5 / 84) * 100]],
+    ["Location-based CO₂e", ["Dublin", "Frankfurt", "Zurich"], [100, 50, (8.5 / 84) * 100]],
     ["Energy consumption", ["Frankfurt", "Dublin", "Zurich"], [100, 50, (75.25 / 300) * 100]],
   ] as const) {
     fireEvent.click(screen.getByRole("button", { name: metric }));
@@ -152,24 +150,12 @@ it("keeps every city marker white and ranks each metric on a common city-only sc
   expect(within(list).queryByText(/Mixed/)).not.toBeInTheDocument();
 });
 
-it("calculates dimensionless indices across all three mapped regions and handles missing or zero denominators", () => {
+it("displays supplied intensity indices across mapped regions", () => {
   const regions = [
-    { ...zurich, energyKwh: 100, co2KgLocation: 10 },
-    { ...frankfurt, energyKwh: 200, co2KgLocation: 40 },
-    { ...dublin, energyKwh: 100, co2KgLocation: 30 },
+    { ...zurich, carbonIntensityIndex: 0.5 },
+    { ...frankfurt, carbonIntensityIndex: 1 },
+    { ...dublin, carbonIntensityIndex: 1.5 },
   ];
-  expect([...carbonIntensityIndices([...regions, mixed]).values()]).toEqual([0.5, 1, 1.5]);
-  expect(carbonIntensityIndices(regions.slice(1)).size).toBe(0);
-  expect(
-    carbonIntensityIndices(regions.map((region) => ({ ...region, co2KgLocation: 0 }))).size,
-  ).toBe(0);
-  expect(carbonIntensityIndices([{ ...regions[0]!, energyKwh: 0 }, ...regions.slice(1)]).size).toBe(
-    0,
-  );
-  expect(
-    carbonIntensityIndices([{ ...regions[0]!, co2KgLocation: Number.NaN }, ...regions.slice(1)])
-      .size,
-  ).toBe(0);
 
   render(
     <InspectorProvider>
@@ -180,29 +166,82 @@ it("calculates dimensionless indices across all three mapped regions and handles
   for (const value of ["0.50×", "1.00×", "1.50×"])
     expect(within(section).getByText(value)).toBeVisible();
   fireEvent.click(
-    within(section).getAllByRole("button", { name: "Explain carbon intensity index" })[0]!,
+    within(section).getAllByRole("button", {
+      name: "Explain carbon intensity index",
+    })[0]!,
   );
   expect(
     within(screen.getByRole("complementary", { name: "Carbon intensity index" })).getByText(
-      /Mixed EU is excluded/,
+      /energy-weighted average/,
     ),
   ).toBeVisible();
 });
 
-it("keeps region slices separate and leaves failed or missing metric values unavailable", () => {
+it("validates the location contract while distinguishing missing and zero values", () => {
+  const unresolved = {
+    ...zurich,
+    id: "unknown",
+    lat: null,
+    lng: null,
+    energyKwh: null,
+    co2KgMarket: 0,
+  };
+  expect(validateApiResponse("/locations?provider=all", [unresolved])).toEqual([unresolved]);
+  expect(() => validateApiResponse("/locations", [{ ...unresolved, energyKwh: "0" }])).toThrow();
+  expect(geographicRows([unresolved as LocationSummary], "co2KgMarket")[0]).toMatchObject({
+    point: null,
+    value: 0,
+  });
+});
+
+it("shows a dashed pin for missing market emissions and preserves a supported zero", () => {
+  const market: LocationSummary = {
+    ...frankfurt,
+    co2KgMarket: 0,
+    marketCoverage: {
+      status: "partial",
+      modeledKwh: 300,
+      coveredKwh: 90,
+      uncoveredKwh: 210,
+      allocatedCoveredKwh: 0,
+      coveragePct: 30,
+      missingEnergyRows: 0,
+      missingFactorRows: 2,
+      uncoveredRegions: ["de"],
+      sources: ["Supplier attestation"],
+      factors: [],
+      assumptions: [],
+      missingInputs: ["Some regional energy lacks a market factor."],
+    },
+  };
+  const unknown: LocationSummary = {
+    ...mixed,
+    id: "unknown",
+    label: "Unresolved geography",
+    lat: null,
+    lng: null,
+  };
+  render(
+    <GeographicView
+      locations={[zurich, market, unknown]}
+      metric="co2KgMarket"
+      onMetricChange={() => {}}
+    />,
+  );
+  const map = within(screen.getByLabelText("Dotted map of European reporting regions"));
+  expect(map.getAllByRole("button")).toHaveLength(2);
   expect(
-    regionalBreakdownRows("zurich", [
-      { label: "Provider A", locations: [zurich, mixed] },
-      { label: "Provider B", locations: [mixed] },
-      { label: "Provider C", locations: undefined },
-    ]),
-  ).toEqual([
-    { label: "Provider A", costChf: 3200, energyKwh: 75.25, co2Kg: 8.5 },
-    { label: "Provider C", costChf: null, energyKwh: null, co2Kg: null },
-  ]);
+    map.getByRole("button", { name: "Zurich area · Unavailable" }).querySelector("circle"),
+  ).toHaveAttribute("stroke-dasharray");
   expect(
-    regionalBreakdownRows("eu-mixed", [{ label: "Department A", locations: [zurich, mixed] }]),
-  ).toEqual([{ label: "Department A", costChf: 900, energyKwh: 0, co2Kg: null }]);
+    map.getByRole("button", { name: "Frankfurt area · 0 kg CO₂e" }).querySelector("circle"),
+  ).not.toHaveAttribute("stroke-dasharray");
+  expect(
+    within(screen.getByRole("list", { name: "Ranked mapped cities" })).getByText(
+      /30.0% of modeled energy covered/,
+    ),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Unresolved geography Unavailable" })).toBeVisible();
 });
 
 it("compares three city areas with all metrics and never gives Mixed EU a marker", () => {
@@ -221,7 +260,7 @@ it("compares three city areas with all metrics and never gives Mixed EU a marker
   }
   expect(comparison.getByText("75.25 kWh")).toBeVisible();
   expect(comparison.getByText("8.5 kg CO₂e")).toBeVisible();
-  expect(comparison.getAllByText("Unavailable")).toHaveLength(9);
+  expect(comparison.getAllByText("Unavailable")).toHaveLength(12);
   expect(
     within(screen.getByLabelText("Dotted map of European reporting regions")).getAllByRole(
       "button",
@@ -229,18 +268,30 @@ it("compares three city areas with all metrics and never gives Mixed EU a marker
   ).toHaveLength(1);
 });
 
-it("offers only departments and providers and falls back for a stale selection", () => {
-  render(<GeographicBreakdowns locations={[zurich, mixed]} metric="costChf" />);
+it("uses regional breakdowns for all four dimensions and falls back for a stale region", () => {
+  const tool = { ...zurich, label: "Unassigned", costChf: 41, co2KgMarket: 0 };
+  render(
+    <InspectorProvider>
+      <GeographicBreakdowns
+        locations={[{ ...zurich, breakdowns: { byTool: [tool] } }, mixed]}
+        metric="co2KgMarket"
+        region="dublin"
+        onRegionChange={() => {}}
+      />
+    </InspectorProvider>,
+  );
+  expect(screen.getByLabelText("Region")).toHaveValue("zurich");
   const select = screen.getByLabelText("Group by");
   expect(
     within(select)
       .getAllByRole("option")
       .map((option) => option.textContent),
-  ).toEqual(["Departments", "Providers"]);
+  ).toEqual(["Departments", "Providers", "Tools", "Service categories"]);
   fireEvent.change(select, { target: { value: "byDepartment" } });
   expect(select).toHaveValue("byDepartment");
   fireEvent.change(select, { target: { value: "byTool" } });
-  expect(select).toHaveValue("byProvider");
+  expect(select).toHaveValue("byTool");
+  expect(screen.getByRole("button", { name: /Unassigned.*0 kg CO₂e/ })).toBeVisible();
 });
 
 it("includes Iberia, keeps non-focus countries gray and leaves a dark border gutter", () => {
@@ -271,10 +322,21 @@ it("ranks group values with a shared full-width track, common zero and subtotal 
     <InspectorProvider>
       <RegionalBars
         metric="costChf"
-        rule="Regional attribution"
         rows={[
-          { label: "Provider B", costChf: 10, energyKwh: 70, co2Kg: null },
-          { label: "Provider A", costChf: 30, energyKwh: 40, co2Kg: 7 },
+          {
+            label: "Provider B",
+            costChf: 10,
+            energyKwh: 70,
+            co2KgLocation: null,
+            co2KgMarket: null,
+          },
+          {
+            label: "Provider A",
+            costChf: 30,
+            energyKwh: 40,
+            co2KgLocation: 7,
+            co2KgMarket: null,
+          },
         ]}
       />
     </InspectorProvider>,
@@ -293,7 +355,7 @@ it("ranks group values with a shared full-width track, common zero and subtotal 
   fireEvent.click(screen.getByRole("button", { name: /evidence for regional attribution/i }));
   expect(
     within(screen.getByRole("complementary", { name: "Attribution methodology" })).getByText(
-      "Regional attribution",
+      /same scoped ledger/,
     ),
   ).toBeVisible();
 });

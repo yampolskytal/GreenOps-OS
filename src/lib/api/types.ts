@@ -3,7 +3,8 @@
  * Proposed shapes — align with the backend endpoint spec when it arrives.
  */
 export type Role = "ceo" | "cfo" | "it";
-export type LocationId = "zurich" | "frankfurt" | "dublin" | "eu-mixed";
+export type LocationId =
+  "zurich" | "frankfurt" | "dublin" | "eu-mixed" | "unknown";
 export type ServiceType = "Cloud" | "Servers" | "AI" | "SaaS" | "SaaS & AI" | "Data platform" | "Unclassified";
 export type Provider =
   "Azure" | "AWS" | "Swiss hoster" | "Anthropic" | "OpenAI" | "Microsoft" | "Other SaaS";
@@ -152,19 +153,43 @@ export interface ResourceSummary {
   co2Market?: Kpi | null;
 }
 
-export interface LocationSummary {
+export type GeographicMetric =
+  "costChf" | "energyKwh" | "co2KgLocation" | "co2KgMarket";
+
+export interface RegionalMetrics {
+  costChf: number | null;
+  energyKwh: number | null;
+  co2KgLocation: number | null;
+  co2KgMarket: number | null;
+  energyKwhRange?: Range | null;
+  co2KgLocationRange?: Range | null;
+  co2KgMarketRange?: Range | null;
+  marketCoverage?: MarketCoverage;
+  ledgerCoverage?: {
+    totalRows: number;
+    costRows: number;
+    energyRows: number;
+    locationRows: number;
+  };
+}
+
+export type RegionalGroup =
+  "byDepartment" | "byProvider" | "byTool" | "byService";
+export type RegionalBreakdown = RegionalMetrics & { label: string };
+
+export interface LocationSummary extends RegionalMetrics {
   id: LocationId;
   label: string;
   country: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   resourceCount: number;
-  costChf: number;
-  energyKwh: number;
-  co2KgLocation: number;
-  co2KgMarket: number | null;
-  marketCoverage?: MarketCoverage;
-  gridKgPerKwh: Range;
+  gridKgPerKwh: Range | null;
+  carbonIntensityIndex?: number | null;
+  gridFactorEvidence?: { source: string; note: string } | null;
+  period?: string;
+  sources?: Evidence[];
+  breakdowns?: Partial<Record<RegionalGroup, RegionalBreakdown[]>>;
   providers: string[];
   risks: string[];
 }

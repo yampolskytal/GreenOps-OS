@@ -29,9 +29,11 @@ LOCATIONS = {
     "ch": ("zurich", "Zurich area", "Switzerland", 47.37, 8.54),
     "de": ("frankfurt", "Frankfurt area", "Germany", 50.11, 8.68),
     "ie": ("dublin", "Dublin area", "Ireland", 53.35, -6.26),
-    "eu": ("eu-mixed", "EU (AI & SaaS, mixed)", "EU", 50.5, 4.5),
-    "unknown": ("eu-mixed", "EU (AI & SaaS, mixed)", "EU", 50.5, 4.5),
+    "eu": ("eu-mixed", "Mixed Europe", "Europe", None, None),
+    "unknown": ("unknown", "Unresolved geography", "Unknown", None, None),
 }
+REGIONAL_DIMENSIONS = {"byDepartment": "department", "byProvider": "provider",
+                       "byTool": "tool", "byService": "category"}
 SERVICE = {"Cloud": "Cloud", "Servers": "Servers", "SaaS": "SaaS", "AI gateway": "AI", "AI subscriptions": "AI"}
 MONTHLY_FILES = {"ai_subscriptions.csv", "saas_contracts.csv"}
 DAILY_SERVER_FALLBACK = "server_metrics_weekly.csv"
@@ -95,6 +97,36 @@ def market_observation(summary):
     return {"co2KgMarket": round(result[1], 3) if result is not None else None,
             "co2KgMarketRange": rng(result) if result is not None else None,
             "marketCoverage": summary.coverage()}
+
+
+def regional_metrics(rows):
+    known = {key: [row[key] for row in rows if row[key] is not None] for key in ("chf", "kwh", "kg")}
+    totals = {
+        key: rng([round(sum(value[i] for value in known[key]), 3) for i in range(3)]) if known[key] else None
+        for key in ("kwh", "kg")
+    }
+    return {"costChf": round(sum(known["chf"]), 2) if known["chf"] else None,
+            "energyKwh": totals["kwh"]["mid"] if totals["kwh"] else None,
+            "energyKwhRange": totals["kwh"],
+            "co2KgLocation": totals["kg"]["mid"] if totals["kg"] else None,
+            "co2KgLocationRange": totals["kg"],
+            "ledgerCoverage": {"totalRows": len(rows), "costRows": len(known["chf"]),
+                               "energyRows": len(known["kwh"]), "locationRows": len(known["kg"])},
+            **market_observation(MarketSummary(rows))}
+
+
+def regional_intensity_indices(groups):
+    paired = {}
+    for region in ("ch", "de", "ie"):
+        observed = [(mid(row["kg"]), mid(row["kwh"])) for row in groups.get(region, ())
+                    if row["kg"] is not None and row["kwh"] is not None]
+        emissions = sum(kg for kg, _ in observed)
+        energy = sum(kwh for _, kwh in observed)
+        if emissions < 0 or energy <= 0:
+            return {}
+        paired[region] = emissions, energy
+    mean = sum(kg for kg, _ in paired.values()) / sum(kwh for _, kwh in paired.values())
+    return {region: emissions / energy / mean for region, (emissions, energy) in paired.items()} if mean > 0 else {}
 
 
 def market_kpi(summary, period, units):
@@ -349,22 +381,38 @@ class FrontendApi:
 
     def locations(self, q):
         groups = defaultdict(list)
-        for l in self.lines(q):
-            groups[LOCATIONS.get(l["region"], LOCATIONS["unknown"])].append(l)
+        for row in self.lines(q):
+            region = row["region"] if row["region"] in LOCATIONS else "unknown"
+            groups[region].append(row)
+        intensity = regional_intensity_indices(groups)
         out = []
-        grid = self.a.factors["grid"]
-        for (lid, label, country, lat, lng), rows in groups.items():
-            region = next(k for k, v in LOCATIONS.items() if v[0] == lid)
-            market = market_observation(MarketSummary(rows))
+        for region, (lid, label, country, lat, lng) in LOCATIONS.items():
+            rows = groups.get(region)
+            if not rows:
+                continue
+            grid_factor = self.a.factors.get("grid", {}).get(region)
+            metrics = regional_metrics(rows)
+            breakdowns = {}
+            for dimension, key in REGIONAL_DIMENSIONS.items():
+                entities = defaultdict(list)
+                for row in rows:
+                    entities[row[key] or "Unassigned"].append(row)
+                breakdowns[dimension] = [
+                    {"label": name, **regional_metrics(entities[name])}
+                    for name in sorted(entities, key=str.casefold)
+                ]
             out.append({"id": lid, "label": label, "country": country, "lat": lat, "lng": lng,
                         "resourceCount": len({r["resource"] for r in rows}),
-                        "costChf": round(sum(r["chf"] or 0 for r in rows), 2),
-                        "energyKwh": round(sum(mid(r["kwh"]) or 0 for r in rows), 3),
-                        "co2KgLocation": round(sum(mid(r["kg"]) or 0 for r in rows), 3),
-                        **market,
-                        "gridKgPerKwh": rng(grid[region]["values"]),
-                        "providers": [p for p, _ in Counter(r["provider"] for r in rows if r["provider"]).most_common(6)],
-                        "risks": [market_coverage_text(market["marketCoverage"])]})
+                        **metrics,
+                        "gridKgPerKwh": rng(grid_factor["values"]) if grid_factor else None,
+                        "carbonIntensityIndex": intensity.get(region),
+                        "gridFactorEvidence": {key: grid_factor.get(key, "") for key in ("source", "note")}
+                        if grid_factor else None,
+                        "providers": sorted({row["provider"] for row in rows if row["provider"]}),
+                        "sources": files_of(sorted({row["ref"] for row in rows})),
+                        "period": f"{q['from']}–{q['to']}",
+                        "breakdowns": breakdowns,
+                        "risks": [market_coverage_text(metrics["marketCoverage"])]})
         return out
 
     def findings(self, q):

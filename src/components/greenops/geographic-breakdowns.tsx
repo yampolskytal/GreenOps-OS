@@ -1,223 +1,135 @@
 import { useState } from "react";
-import { useQueries } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
-import type { Breakdown, LocationSummary } from "@/lib/api/types";
-import { useBreakdowns } from "@/lib/queries";
-import { useGlobalQuery } from "@/lib/store";
-import { spendingCategories } from "./spending-donut";
-import { Q } from "./ui";
-import { LeaderboardBars } from "./leaderboard-bars";
+import type {
+  GeographicMetric,
+  LocationSummary,
+  RegionalBreakdown,
+  RegionalGroup,
+} from "@/lib/api/types";
+import { GEOGRAPHIC_METRICS, regionalCoverage, regionalValue } from "@/lib/geographic";
 import { categoryShares } from "@/lib/administration";
-import { carbonMass, chf, formatNumber, pct } from "@/lib/format";
+import { pct } from "@/lib/format";
+import { LeaderboardBars } from "./leaderboard-bars";
+import { CoverageEvidence } from "./emissions-evidence";
 
-const groups = spendingCategories.filter(([id]) => id === "byDepartment" || id === "byProvider");
-type Group = (typeof groups)[number][0];
-type Metric = "costChf" | "co2KgLocation" | "energyKwh";
-
-export function regionalBreakdownRows(
-  region: LocationSummary["id"],
-  slices: { label: string; locations: LocationSummary[] | undefined }[],
-): Breakdown[] {
-  return slices.flatMap(({ label, locations }) => {
-    const location = locations?.find(({ id }) => id === region);
-    if (locations && !location) return [];
-    const value = (value: number | undefined) =>
-      typeof value === "number" && Number.isFinite(value) ? value : null;
-    return [
-      {
-        label,
-        costChf: value(location?.costChf),
-        energyKwh: value(location?.energyKwh),
-        co2Kg: value(location?.co2KgLocation),
-      },
-    ];
-  });
-}
+const GROUPS = {
+  byDepartment: "Departments",
+  byProvider: "Providers",
+  byTool: "Tools",
+  byService: "Service categories",
+} as const;
 
 export function GeographicBreakdowns({
   locations,
+  region,
+  onRegionChange,
   metric,
 }: {
   locations: LocationSummary[];
-  metric: Metric;
+  region: LocationSummary["id"] | undefined;
+  onRegionChange: (id: LocationSummary["id"]) => void;
+  metric: GeographicMetric;
 }) {
-  const [region, setRegion] = useState<LocationSummary["id"]>();
-  const [category, setCategory] = useState<Group>("byProvider");
+  const [category, setCategory] = useState<RegionalGroup>("byProvider");
   const selected = locations.find(({ id }) => id === region) ?? locations[0];
   if (!selected) return null;
+  const rows = selected.breakdowns?.[category];
 
   return (
-    <section aria-labelledby="geographic-breakdown" className="border-t pt-4">
-      <h3 id="geographic-breakdown" className="text-sm font-semibold">
+    <section
+      id="geographic-breakdown"
+      aria-labelledby="geographic-breakdown-heading"
+      className="space-y-3 border-t pt-4"
+    >
+      <h3 id="geographic-breakdown-heading" className="font-semibold">
         Geographic breakdown
       </h3>
-      <div className="space-y-4 pt-3">
-        <div className="flex flex-wrap gap-3">
-          <label className="grid gap-1 text-xs font-medium">
-            Region
-            <select
-              className="h-9 rounded-md border bg-card px-2 text-sm"
-              value={selected.id}
-              onChange={(event) =>
-                setRegion(locations.find(({ id }) => id === event.target.value)?.id)
-              }
-            >
-              {locations.map(({ id, label }) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-xs font-medium">
-            Group by
-            <select
-              className="h-9 rounded-md border bg-card px-2 text-sm"
-              value={category}
-              onChange={(event) => {
-                const group = groups.find(([id]) => id === event.target.value);
-                setCategory(group?.[0] ?? "byProvider");
-              }}
-            >
-              {groups.map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <ScopedBreakdown
-          region={selected}
-          category={category === "byDepartment" ? "department" : "provider"}
-          metric={metric}
-        />
+      <div className="flex flex-wrap gap-3">
+        <label className="grid gap-1 text-xs font-medium">
+          Region
+          <select
+            className="h-9 max-w-[75vw] rounded-md border bg-card px-2 text-sm"
+            value={selected.id}
+            onChange={(event) => {
+              const next = locations.find(({ id }) => id === event.target.value);
+              if (next) onRegionChange(next.id);
+            }}
+          >
+            {locations.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-medium">
+          Group by
+          <select
+            className="h-9 rounded-md border bg-card px-2 text-sm"
+            value={category}
+            onChange={(event) => setCategory(event.target.value as RegionalGroup)}
+          >
+            {Object.entries(GROUPS).map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-    </section>
-  );
-}
-
-function ScopedBreakdown({
-  region,
-  category,
-  metric,
-}: {
-  region: LocationSummary;
-  category: "provider" | "department";
-  metric: Metric;
-}) {
-  const breakdowns = useBreakdowns(!api.isDemo, false);
-  if (api.isDemo) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        The demo provider supplies regional totals only.
-      </p>
-    );
-  }
-  return (
-    <Q q={breakdowns}>
-      {(data) => (
-        <RegionalCompare
-          region={region}
-          category={category}
-          metric={metric}
-          labels={(category === "provider" ? data.byProvider : data.byDepartment).map(
-            ({ label }) => label,
-          )}
-          rule={data.allocationRule}
-        />
-      )}
-    </Q>
-  );
-}
-
-function RegionalCompare({
-  region,
-  category,
-  metric,
-  labels,
-  rule,
-}: {
-  region: LocationSummary;
-  category: "provider" | "department";
-  metric: Metric;
-  labels: string[];
-  rule: string;
-}) {
-  const scope = useGlobalQuery();
-  const options = [
-    ...new Set(
-      labels.filter((label) => label && label.toLowerCase() !== "all" && label !== "Unassigned"),
-    ),
-  ];
-  const filters = options.map((label) => ({ ...scope, [category]: label }));
-  const results = useQueries({
-    queries: filters.map((filter) => ({
-      queryKey: ["locations", filter],
-      queryFn: () => api.getLocations(filter),
-      refetchOnMount: false,
-    })),
-  });
-  if (results.some((result) => result.isPending)) {
-    return (
-      <p role="status" className="text-sm text-muted-foreground">
-        Loading regional subtotals…
-      </p>
-    );
-  }
-  const rows = regionalBreakdownRows(
-    region.id,
-    options.map((label, index) => ({
-      label,
-      locations: results[index]?.data,
-    })),
-  );
-  return (
-    <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Shares use the available regional subtotals. Unassigned records without a filterable
-        provider or department are omitted, so the breakdown can differ from the regional total.
-      </p>
-      {results.some((result) => result.isError) && (
-        <p role="status" className="text-sm text-warning">
-          Some regional subtotals could not be loaded.
+      {rows ? (
+        <RegionalBars rows={rows} metric={metric} />
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {GROUPS[category]} are unavailable for this region from the current backend.
         </p>
       )}
-      <RegionalBars rows={rows} metric={metric} rule={rule} />
-    </div>
+    </section>
   );
 }
 
 export function RegionalBars({
   rows,
   metric,
-  rule,
 }: {
-  rows: Breakdown[];
-  metric: Metric;
-  rule: string;
+  rows: RegionalBreakdown[];
+  metric: GeographicMetric;
 }) {
-  const key = metric === "co2KgLocation" ? "co2Kg" : metric;
-  const { shares } = categoryShares(rows.map((row) => row[key]));
-  const format =
-    metric === "costChf"
-      ? chf
-      : metric === "co2KgLocation"
-        ? (n: number) => carbonMass(n, "kg CO₂e")
-        : (n: number) => `${formatNumber(n, { maximumFractionDigits: 3 })} kWh`;
+  const values = rows.map((row) => regionalValue(row, metric));
+  const { shares } = categoryShares(values);
+  const { format } = GEOGRAPHIC_METRICS.find(({ key }) => key === metric)!;
+  const market = metric === "co2KgMarket";
   if (!rows.length)
     return <p className="text-sm text-muted-foreground">No regional entries for this scope.</p>;
   return (
-    <LeaderboardBars
-      items={rows.map((row, index) => ({
-        id: row.label,
-        label: row.label,
-        value: row[key],
-        ...(shares[index] == null ? {} : { shareLabel: `${pct(shares[index])} of subtotal` }),
-      }))}
-      format={format}
-      label={rule}
-      methodologyIcon
-    />
+    <>
+      {market && (
+        <p className="text-xs text-muted-foreground">
+          Shares use covered emissions. Select a group to see its coverage and factor evidence.
+        </p>
+      )}
+      <LeaderboardBars
+        items={rows.map((row, index) => ({
+          id: row.label,
+          label: row.label,
+          value: values[index] ?? null,
+          ...(shares[index] == null ? {} : { shareLabel: `${pct(shares[index])} of subtotal` }),
+          content:
+            market && row.marketCoverage ? (
+              <CoverageEvidence
+                title="Market-based emissions coverage"
+                coverage={row.marketCoverage}
+              />
+            ) : (
+              <p>
+                {regionalCoverage(row, metric) ??
+                  "Subtotal of available ledger values in this region."}
+              </p>
+            ),
+        }))}
+        format={format}
+        label="Subtotals use the same scoped ledger as the regional figures. The comparison includes an Unassigned group where the ledger has no group label."
+        methodologyIcon
+      />
+    </>
   );
 }
