@@ -62,7 +62,9 @@ Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)**, or the local URL printe
 | --- | --- |
 | [`src/routes/`](src/routes/) and [`src/components/`](src/components/) | React and TanStack Start dashboards, planning tools and reports |
 | [`src/lib/api/`](src/lib/api/) | Typed interface between dashboard views and the GreenOps API |
-| [`backend/`](backend/README.md) | Python accounting, optimization, forecasts, CLI and classic dashboard |
+| [`backend/`](backend/README.md) | Python calculation engine, API, tests, CLI and classic dashboard |
+| [`backend/engine/`](backend/engine/) | Ingestion, accounting, planning, forecasts, assistant and `/api/v2` mapping |
+| [`backend/tests/`](backend/tests/) | Python regression and integration tests |
 | [`backend/inputs/`](backend/inputs/) and [`backend/templates/`](backend/templates/) | Case datasets and official export formats |
 | [`docs/`](docs/README.md) | API contract, deployment notes, audits and project history |
 

@@ -249,19 +249,6 @@ html.light {
   }
 }
 
-.leaflet-container {
-  background: var(--surface);
-  font-family: var(--font-sans);
-}
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip {
-  background: var(--popover);
-  color: var(--popover-foreground);
-}
-.map-tiles-dark {
-  filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.4);
-}
-
 @utility bg-overlay {
   background: var(--overlay);
 }

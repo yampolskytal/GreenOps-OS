@@ -8,7 +8,7 @@ Start with the [two-terminal setup](README.md#run-locally). Use the bundled chal
 | --- | --- |
 | A dashboard, chart or interaction | [`src/routes/`](src/routes/) and [`src/components/greenops/`](src/components/greenops/). Read values through `GreenOpsApi`; leave missing observations visibly unavailable. |
 | A calculation or estimate | [`backend/`](backend/README.md). Add a Python regression test near the existing `test_*.py` files. |
-| A field returned by the API | Update [`backend/frontend_api.py`](backend/frontend_api.py), then the [TypeScript contract and runtime schemas](src/lib/api/). See the [endpoint guide](docs/integration/api.md). |
+| A field returned by the API | Update [`backend/engine/frontend_api.py`](backend/engine/frontend_api.py), then the [TypeScript contract and runtime schemas](src/lib/api/). See the [endpoint guide](docs/integration/api.md). |
 | A saved setting or plan | [`src/lib/store.tsx`](src/lib/store.tsx). Check that switching roles and reloading preserve the selection. |
 
 ## Before opening a pull request

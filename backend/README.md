@@ -1,12 +1,12 @@
 # GreenOps Basel
 
-GreenOps evaluates the cost, energy and carbon footprint of the sprintd Basel case across 13 core and 15 bonus exports. The release includes the organizer's case inputs, both official CSV templates, generated case reports, a separate representative demo, tests and a local dashboard. The case company and its usage patterns are fictional. Source data attribution is “Sample data ALTYCA, sprintd Basel 2026”.
+GreenOps evaluates the cost, energy and carbon footprint of the sprintd Basel case across 13 core and 15 bonus exports. The project includes the organizer's case inputs, both official CSV templates, generated case reports, a separate representative demo, tests and a local dashboard. The case company and its usage patterns are fictional. Source data attribution is “Sample data ALTYCA, sprintd Basel 2026”.
 
 ## Start the product
 
-For the current web dashboard, follow the [two-terminal setup](../README.md#run-locally). The commands below run the standalone Python dashboard from the `backend/` directory (or an extracted portable release).
+For the current web dashboard, follow the [two-terminal setup](../README.md#run-locally). The commands below run the standalone Python dashboard from the `backend/` directory.
 
-On Windows, extract the release and run launch-challenge.cmd. From a terminal in the extracted folder:
+On Windows, from the `backend/` folder, run `scripts\launch-challenge.cmd`. From a terminal in the `backend/` folder:
 
     python app.py serve --data inputs/sprintd-basel-green-ai-data-main --policy challenge-policy.json
 
@@ -68,7 +68,7 @@ For live scheduling, place timestamped grid data in `hourly_grid.csv`. In `job_d
 
 ### Apertus
 
-For local development, copy `apertus.env.example` to `apertus.env`, enter your Public AI key, and restart the Python backend. The example uses `swiss-ai/apertus-70b-instruct` at `https://api.publicai.co/v1`. The loader accepts this file on Windows and the file is ignored by Git and Docker.
+For local development, copy `apertus.env.example` to `apertus.env`, enter your Public AI key, and restart the Python backend. The example uses `swiss-ai/apertus-70b-instruct` at `https://api.publicai.co/v1`. The loader accepts this file on Windows and the file is ignored by Git.
 
 On the deployed Python service, configure `GREENOPS_LLM_BASE_URL`, `GREENOPS_LLM_MODEL`, `GREENOPS_LLM_TOOLS=0`, and `GREENOPS_LLM_API_KEY` as service environment variables. The Python backend talks to Public AI. The frontend only calls `/api/v2/chat`. For a self-hosted model, set `GREENOPS_APERTUS_MODEL` and serve the endpoint on `127.0.0.1:8000`.
 
@@ -104,12 +104,25 @@ Local access is single-operator by default. To provision separate viewer, planne
     python app.py account --accounts state/accounts.json --username operator --role admin
     python app.py serve --accounts state/accounts.json
 
-For a shared deployment use an HTTPS reverse proxy and restrict backend access to the proxy. Use separate writable volumes for SQLite and read-only mounts for data and credentials. The Dockerfile supports this layout. Set --host 0.0.0.0 only for an authenticated, network-restricted deployment. Credentials should never travel in cleartext between machines. The service has no public hosting configured. Run behind an organizational identity proxy, add monitoring, and validate concurrency and load before opening it to a wider audience. API read endpoints support optional paging on ledger and audit. An administrator can reload configured datasets and edit factors without restarting the process. Use --catalog for an additional allowlist of names mapped to data, factors, and policy paths.
+For a shared deployment, run the Python service behind an HTTPS reverse proxy and restrict backend access to that proxy. Give the service write access to its SQLite state directory and read-only access to input data and credentials. Set `--host 0.0.0.0` only for an authenticated, network-restricted deployment. API read endpoints support optional paging on ledger and audit. An administrator can reload configured datasets and edit factors without restarting the process. Use `--catalog` for an additional allowlist of names mapped to data, factors, and policy paths.
 
 ## Verify
 
     python app.py build
-    python -m unittest -v
+    python -m unittest discover -s tests
     node --check dist/app.js
 
-The case integration test runs when the organizer's dataset is in the bundled input location. Tests cover both template schemas, rules and resource protection, dated schedule behavior, persisted review and scenario operations, assistant queries, driver attribution, and HTTP and export routes. PITCH.md is a five-minute walkthrough. A Git bundle can be cloned locally with git clone GreenOps-Basel.bundle.
+The case integration test runs when the organizer's dataset is in the bundled input location. Tests cover both template schemas, rules and resource protection, dated schedule behavior, persisted review and scenario operations, assistant queries, driver attribution, and HTTP and export routes. [PITCH.md](../docs/pitch.md) is a five-minute walkthrough.
+
+## Layout
+
+| Path | What lives here |
+| --- | --- |
+| `app.py` | Command line, export builder, workspace loader and loopback server |
+| `engine/` | Ingestion, accounting, planning, forecasts, assistant and the `/api/v2` contract |
+| `tests/` | Python regression and integration tests |
+| `scripts/` | Helper scripts and the one-off hourly grid replay used for bonus evidence |
+| `inputs/` | Official case data, the example upload package and runtime uploads |
+| `templates/` | Official submission CSV templates |
+| `frontend/` | Classic standalone dashboard served by `app.py serve` (built into `dist/`) |
+| `demo-data/`, `factors.json`, `challenge-policy.json`, `schema-v13.json` | Representative demo, emission factors, case policy and source schema |

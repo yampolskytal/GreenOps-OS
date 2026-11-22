@@ -26,3 +26,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm run test:backend
+      - run: python backend/app.py build
+      - run: node --check backend/dist/app.js

@@ -28,22 +28,22 @@ def _load_env_file(path=Path(__file__).with_name("apertus.env")):
             os.environ.setdefault(key.strip(), value)
 
 
-from accounting import ai_price_reconciliation, allocate, coverage, embodied_inventory, market_breakdown
-from analytics import Reports
-from evidence import contradictions, figure, question_figures, totals_explained
-from verification import energy_coverage, review_queue
-from decision import attribution_checks, combine_production, gap_priorities, investment_options, readiness, savings_timing, swiss_sensitivity
-from submission import validate, write_receipt
-from insights import forecast_changes, projections
-from service import accounts_from, serve
-from records import Records, fingerprint
-from templates import BASE_NAME, MEASURE_NAME, tables
-from bonus import diagnostics, forecast
-from bonus_evidence import considered_joins
-from scheduler import schedule
-from assistant_check import check_assistant
-from demo import generate
-from greenops import END, ROOT, START, Analysis, day, number
+from engine.accounting import ai_price_reconciliation, allocate, coverage, embodied_inventory, market_breakdown
+from engine.analytics import Reports
+from engine.evidence import contradictions, figure, question_figures, totals_explained
+from engine.verification import energy_coverage, review_queue
+from engine.decision import attribution_checks, combine_production, gap_priorities, investment_options, readiness, savings_timing, swiss_sensitivity
+from engine.submission import validate, write_receipt
+from engine.insights import forecast_changes, projections
+from engine.service import accounts_from, serve
+from engine.records import Records, fingerprint
+from engine.templates import BASE_NAME, MEASURE_NAME, tables
+from engine.bonus import diagnostics, forecast
+from engine.bonus_evidence import considered_joins
+from engine.scheduler import schedule
+from engine.assistant_check import check_assistant
+from engine.demo import generate
+from engine.greenops import END, ROOT, START, Analysis, day, number
 
 STATIC = {"": "index.html", "index.html": "index.html", "app.js": "app.js", "style.css": "style.css"}
 
@@ -84,7 +84,12 @@ class Workspace:
         self.answers = question_figures(self.reports.answers())
         self.directory = directory
         self.store, self.template_root = store, template_root
-        signature_files = ("app.py", "greenops.py", "analytics.py", "accounting.py", "planning.py", "case_measures.py", "evidence.py", "assistant_router.py", "assistant_check.py", "bonus.py", "bonus_evidence.py", "scheduler.py", "grid_replay.py", "insights.py", "templates.py", "schema-v13.json", "verification.py", "decision.py", "submission.py", "forecast_scenarios.py", "runtime.py")
+        signature_files = ("app.py", "schema-v13.json") + tuple(
+            f"engine/{name}.py" for name in (
+                "greenops", "analytics", "accounting", "planning", "case_measures", "evidence",
+                "assistant_router", "assistant_check", "bonus", "bonus_evidence", "scheduler",
+                "insights", "templates", "verification", "decision", "submission",
+                "forecast_scenarios", "runtime"))
         self.manifest = {"engine": fingerprint([(n, (ROOT / n).read_text(encoding="utf-8")) for n in signature_files]),
                          "mode": self.a.mode, "as_of": str(as_of), "factors": self.a.factors, "policy": self.a.policy,
                          "sources": {k: v.get("sha256") for k, v in self.a.sources.items()}}
@@ -190,7 +195,7 @@ class Workspace:
             autoscale = available.get("Autoscale surplus production workers:dp-prod")
             if not (rate and autoscale):
                 raise ValueError("This dataset has no comparable production compute and autoscaling scopes.")
-            from planning import apply_policy
+            from engine.planning import apply_policy
             item = apply_policy(self.reports, combine_production(autoscale, rate, quote, hypothetical=True))
             item["review_fingerprint"] = fingerprint(item)
             catalog = copy(self.reports)

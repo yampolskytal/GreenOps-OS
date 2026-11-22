@@ -4,6 +4,6 @@ The raw public German generation series is from [Fraunhofer ISE Energy-Charts](h
 
 The proxy uses the IPCC direct coal and combined-cycle gas medians of 0.76 and 0.37 kg CO₂e/kWh. It applies the coal median to lignite, coal-derived gas, and oil as a coarse proxy. Other generation contributes zero to the modeled numerator. Imports, storage consumption and trading are excluded. The result is suitable for a historical scenario comparison and does not establish German consumption intensity or marginal grid emissions.
 
-Regenerate the CSV from the archived source with:
+From `backend/`, regenerate the CSV from the archived source with:
 
-    python grid_replay.py bonus-evidence/de-generation.json bonus-evidence/de-hourly-replay.csv
+    python scripts/grid_replay.py bonus-evidence/de-generation.json bonus-evidence/de-hourly-replay.csv
