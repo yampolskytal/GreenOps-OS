@@ -170,46 +170,50 @@ function Studio() {
             id: "recommended",
             label: "Recommendations",
             content: (
-              <div className="@container space-y-4">
+              <div className="@container space-y-8 pb-8">
                 <StartingPlanNotice compact />
-                <div className="grid items-start gap-6 @4xl:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
-                  <section className="min-w-0 space-y-4">
-                    <h2 className="font-semibold">Recommendation settings</h2>
+                <div className="grid items-start gap-10 @4xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+                  <section className="min-w-0 space-y-6">
+                    <header className="border-b pb-3">
+                      <h2 className="text-lg font-semibold">Recommendation settings</h2>
+                    </header>
                     <BudgetSlider
                       value={budget}
                       onChange={(value) =>
                         set({ studioSettings: { budgetChf: value, priority: prio } })
                       }
                     />
-                    <p className="mb-2 mt-6 text-sm font-medium">Optimization priority</p>
-                    <div className="flex flex-wrap gap-1">
-                      {PRIOS.map((p) => (
-                        <Button
-                          key={p.id}
-                          size="sm"
-                          aria-pressed={prio === p.id}
-                          title={p.description}
-                          variant={prio === p.id ? "default" : "ghost"}
-                          onClick={() =>
-                            set({ studioSettings: { budgetChf: budget, priority: p.id } })
-                          }
-                        >
-                          {p.label}
-                        </Button>
-                      ))}
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Optimization priority</p>
+                      <div className="flex flex-wrap gap-2">
+                        {PRIOS.map((p) => (
+                          <Button
+                            key={p.id}
+                            size="sm"
+                            aria-pressed={prio === p.id}
+                            title={p.description}
+                            variant={prio === p.id ? "default" : "ghost"}
+                            onClick={() =>
+                              set({ studioSettings: { budgetChf: budget, priority: p.id } })
+                            }
+                          >
+                            {p.label}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                    <p className="mt-5 text-xs text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       Official limits: CHF 16,500 · 15 person-days.{" "}
                       {api.isDemo
                         ? "DEMO optimizer — illustrative only."
                         : "Calculated by the team backend."}
                     </p>
                     <div
-                      className="grid justify-items-center gap-2 border-t pt-3"
+                      className="grid justify-items-start gap-3 border-t pt-6"
                       role="group"
                       aria-label="Recommendation actions"
                     >
-                      <div className="flex flex-wrap justify-center gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           size="sm"
                           variant="outline"
@@ -244,8 +248,8 @@ function Studio() {
                     </div>
                   </section>
                   <section id="recommended" className="min-w-0">
-                    <header className="grid grid-cols-[minmax(0,1fr)_auto] gap-3">
-                      <h2 className="font-semibold">Recommended package</h2>
+                    <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-3">
+                      <h2 className="text-lg font-semibold">Recommended package</h2>
                       <span role="status" className="text-xs text-muted-foreground">
                         {recalculating ? "Recalculating…" : currentPackage ? "Updated" : ""}
                       </span>
@@ -291,21 +295,13 @@ function Studio() {
                               ` · Conservative carbon reduction ${pct(pkg.result.conservativeCo2Pct)}`}
                           </p>
                         )}
-                        <div className="mt-5">
-                          <Q q={overview}>
-                            {(o) => (
-                              <PlanOutcomes
-                                overview={o}
-                                result={pkg.result}
-                                afterLabel="After recommendation"
-                                projectionFirst
-                              />
-                            )}
-                          </Q>
-                        </div>
-                        <div className="mt-6">
-                          <TargetPanel r={pkg.result} compact indicatorsOnly />
-                        </div>
+                        <section
+                          aria-label="Implementation feasibility"
+                          className="mt-6 border-t pt-5"
+                        >
+                          <h3 className="mb-5 font-semibold">Implementation feasibility</h3>
+                          <TargetPanel r={pkg.result} indicatorsOnly />
+                        </section>
                         {hasOperationalBlock && (
                           <p className="mt-3 text-sm text-warning">
                             This recommendation contains blocked or excluded measures. Review the
@@ -334,6 +330,23 @@ function Studio() {
                     )}
                   </section>
                 </div>
+                {pkg && !recalculating && (
+                  <section aria-labelledby="studio-annual-outcomes" className="border-t pt-6">
+                    <h2 id="studio-annual-outcomes" className="mb-5 text-lg font-semibold">
+                      Annual outcomes
+                    </h2>
+                    <Q q={overview}>
+                      {(o) => (
+                        <PlanOutcomes
+                          overview={o}
+                          result={pkg.result}
+                          afterLabel="After recommendation"
+                          projectionFirst
+                        />
+                      )}
+                    </Q>
+                  </section>
+                )}
               </div>
             ),
           },

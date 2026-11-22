@@ -10,7 +10,12 @@ function TargetStatus({ label, met }: { label: string; met: boolean | null }) {
   const Icon = met == null ? MinusCircle : met ? CheckCircle2 : XCircle;
   const status = met == null ? "unavailable" : met ? "target met" : "target missed";
   return (
-    <span role="img" aria-label={`${label} · ${status}`} title={status}>
+    <span
+      role="img"
+      aria-label={`${label} · ${status}`}
+      title={status}
+      className="inline-flex shrink-0 items-center"
+    >
       <Icon
         aria-hidden
         className={`size-4 ${met == null ? "text-muted-foreground" : met ? "text-success" : "text-destructive"}`}
@@ -113,6 +118,7 @@ export function AdministrationScorecard({
           overview={overview}
           result={result}
           afterLabel={suggested ? "After suggested strategy" : "After Current Plan"}
+          carbonFirst
           projectionFirst
         />
       </section>
@@ -137,11 +143,11 @@ function ReductionGauge({
   const [x1, y1] = marker(70);
   const [x2, y2] = marker(96);
   return (
-    <section className="relative flex min-w-0 flex-col items-center border-b px-6 pb-2 text-center">
-      <div className="absolute left-1 top-1">
+    <section className="card-elevated flex min-w-0 flex-col items-center px-3 py-3 text-center">
+      <div className="grid w-full grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-2">
         <TargetStatus label={label} met={met} />
+        <h2 className="text-base font-semibold">{label}</h2>
       </div>
-      <h2 className="text-base font-semibold">{label}</h2>
       <div className="relative my-1 aspect-square w-full max-w-40">
         <svg aria-hidden="true" viewBox="0 0 200 200" className="size-full">
           <circle
@@ -224,7 +230,7 @@ function Limit({
           statusIcon={icon}
         />
       ) : (
-        <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
           <span className="flex items-center gap-1.5">
             {icon}
             {label}

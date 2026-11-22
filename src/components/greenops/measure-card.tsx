@@ -125,14 +125,14 @@ export function MeasureCard({
     <article
       id={`measure-${m.id}`}
       className={cn(
-        "recommendation relative rounded-lg border bg-card",
+        "recommendation card-elevated relative",
         inPlan && "border-primary",
         blocked && "border-destructive/40",
       )}
     >
       <div
         className={cn(
-          "relative grid min-w-0 gap-3 p-4",
+          "relative grid min-w-0 items-center gap-x-4 gap-y-2 px-4 py-3",
           !compact && "lg:grid-cols-[minmax(0,1fr)_auto]",
         )}
       >
@@ -153,7 +153,7 @@ export function MeasureCard({
                 : [...impact, `${m.effortPersonDays} person-days`].join(" · ")}
             </span>
           </span>
-          <ChevronDown className={cn("shrink-0 transition-transform", open && "rotate-180")} />
+          <ChevronDown className={cn("mr-1 size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
         </Button>
         <div className={cn("flex flex-wrap items-center gap-2", !compact && "lg:justify-end")}>
           {evidenceOnly ? (

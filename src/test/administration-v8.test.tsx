@@ -171,6 +171,56 @@ describe("Administration scorecard, decisions and analysis", () => {
     expect(screen.getAllByText("Review confirmed · simulation only")).toHaveLength(2);
   });
 
+  it("records and reverses a local block on an eligible measure without changing the plan", () => {
+    const candidate: Measure = {
+      ...review,
+      includable: true,
+      risk: {
+        level: "low",
+        why: "Candidate",
+        consequences: "",
+        protectionWindows: [],
+        conflicts: [],
+      },
+    };
+    approvals("ceo", [candidate]);
+    fireEvent.click(screen.getByRole("button", { name: "Block" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm simulation decision" }));
+    expect(screen.getByRole("button", { name: "1 Blocked" })).toBeVisible();
+    expect(screen.getAllByText("Blocked · local decision")).toHaveLength(2);
+    expect(candidate.includable).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Unblock" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm simulation decision" }));
+    expect(screen.getByRole("button", { name: "0 Blocked" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "0 Unblocked" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Block" })).toBeVisible();
+  });
+
+  it("leaves backend-protected measures blocked despite a previously stored simulation decision", () => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({ simulationDecisions: { [blocked.id]: { approved: true } } }),
+    );
+    approvals("ceo", [
+      {
+        ...blocked,
+        decision: {
+          status: "protected",
+          reason: "Hard operational restriction",
+          nextStep: null,
+          scopedAnnualCostChf: null,
+          benefits: [],
+          tradeoffs: [],
+        },
+      },
+    ]);
+    expect(screen.getByRole("button", { name: "1 Blocked" })).toBeVisible();
+    expect(screen.getByText(/Unblock is unavailable because/)).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /Unblock for simulation/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("uses unrounded values for four target indicators and renders the projection before baseline", () => {
     const result = evaluatePackage(demoMeasures, [], DEMO_BASELINE, 16500, 1100);
     result.co2ReductionPct = 39.999;
@@ -190,6 +240,9 @@ describe("Administration scorecard, decisions and analysis", () => {
     ]) {
       expect(screen.getByRole("img", { name })).toBeInTheDocument();
     }
+    expect(
+      screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent),
+    ).toEqual(["Location-based CO₂", "Annual spending"]);
     expect(screen.queryByText(/numerical targets achieved/)).not.toBeInTheDocument();
     expect(screen.getAllByText("After suggested strategy")).toHaveLength(2);
     const tracks = Array.from(container.querySelectorAll("[data-outcome-track]"));

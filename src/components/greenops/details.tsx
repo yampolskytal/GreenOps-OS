@@ -31,7 +31,7 @@ export function DetailDrawer({
 export function DetailBlock({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h4 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">{title}</h4>
+      <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h4>
       {children}
     </section>
   );

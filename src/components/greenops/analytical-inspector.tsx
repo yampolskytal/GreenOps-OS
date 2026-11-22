@@ -176,7 +176,7 @@ export function AnalyticalInspector({
             role="complementary"
             aria-labelledby={`${id}-title`}
           >
-            <header className="flex items-start gap-3 border-b bg-background p-5">
+            <header className="flex items-start gap-3 border-b bg-card px-4 py-3">
               <div className="min-w-0 flex-1">
                 {currentDetails && (
                   <Button
@@ -218,7 +218,7 @@ export function AnalyticalInspector({
             <NestedInspectorContext.Provider
               value={(details) => setDetailStack((stack) => [...stack, details])}
             >
-              <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5 text-sm">
+              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 text-sm">
                 <div hidden={currentDetails != null} className="space-y-5">
                   {children}
                 </div>

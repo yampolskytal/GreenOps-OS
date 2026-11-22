@@ -9,7 +9,7 @@ import { AnalyticalInspector } from "./analytical-inspector";
 import { Input } from "@/components/ui/input";
 import { ChartCard, Q } from "./ui";
 
-const categories = [
+export const spendingCategories = [
   ["byDepartment", "Departments"],
   ["byProvider", "Providers"],
   ["byTool", "Tools"],
@@ -23,7 +23,7 @@ const metrics = [
 ] as const;
 
 export type SpendingSelection = {
-  category: (typeof categories)[number][0];
+  category: (typeof spendingCategories)[number][0];
   metric: HistoricalMetric;
 };
 
@@ -46,12 +46,12 @@ export function SpendingDonut({
   };
 } = {}) {
   const breakdowns = useBreakdowns(!servers?.active, !servers);
-  const [localCategory, setCategory] = useState<(typeof categories)[number][0]>(
+  const [localCategory, setCategory] = useState<(typeof spendingCategories)[number][0]>(
     initial?.category ?? "byDepartment",
   );
   const [localMetric, setMetric] = useState<HistoricalMetric>(initial?.metric ?? "costChf");
-  const category = onSelectionChange ? initial?.category ?? localCategory : localCategory;
-  const metric = onSelectionChange ? initial?.metric ?? localMetric : localMetric;
+  const category = onSelectionChange ? (initial?.category ?? localCategory) : localCategory;
+  const metric = onSelectionChange ? (initial?.metric ?? localMetric) : localMetric;
   const unit = metrics.find(([id]) => id === metric)?.[2] ?? "";
   const [selection, setSelection] = useState<{ label: string } | "methodology" | null>(null);
   return (
@@ -74,7 +74,7 @@ export function SpendingDonut({
             setSelection((current) => (current ? "methodology" : null));
           }}
         >
-          {categories.map(([id, label]) => (
+          {spendingCategories.map(([id, label]) => (
             <option key={id} value={id}>
               {label}
             </option>
@@ -142,8 +142,8 @@ type Selection = { label: string } | "methodology" | null;
 
 export function donutColor(rank: number, count: number) {
   const position = rank / Math.max(1, count - 1);
-  const hue = 151 - 42 * position + (rank % 2 ? -7 : 5);
-  return `hsl(${Math.round(hue)} 59% ${(31 + 46 * position).toFixed(1)}%)`;
+  const hue = 153 - 97 * position;
+  return `hsl(${Math.round(hue)} ${Math.round(52 + 20 * position)}% ${(27 + 53 * position).toFixed(1)}%)`;
 }
 
 function amount(value: number | null | undefined, unit: string) {
@@ -243,7 +243,10 @@ export function DonutBreakdown({
             : "No matching entities."}
         </p>
       )}
-      <div className="flex min-w-0 flex-wrap items-start justify-center gap-5">
+      <div
+        className="spending-composition flex min-w-0 flex-wrap items-center justify-center gap-5"
+        data-single-legend={columns.length === 1 || undefined}
+      >
         {drawable && (
           <div className="relative aspect-square w-full min-w-0 max-w-[26rem] grow basis-[22rem]">
             <svg viewBox="0 0 200 200" aria-label="Category share donut" className="size-full">
@@ -299,6 +302,26 @@ export function DonutBreakdown({
                     </circle>
                   ),
               )}
+              {positive > 1 &&
+                segments.map(({ row, offset, share }, index) => {
+                  if (share == null || share <= 0) return null;
+                  const before =
+                    index === 0 ? segments[positive - 1]?.share : segments[index - 1]?.share;
+                  const angle = (offset * Math.PI) / 50 - Math.PI / 2;
+                  return (
+                    <line
+                      key={row.label}
+                      aria-hidden
+                      pointerEvents="none"
+                      className="stroke-background"
+                      strokeWidth={Math.min(0.85, Math.min(share, before ?? share) * 0.7)}
+                      x1={100 + 66 * Math.cos(angle)}
+                      y1={100 + 66 * Math.sin(angle)}
+                      x2={100 + 98 * Math.cos(angle)}
+                      y2={100 + 98 * Math.sin(angle)}
+                    />
+                  );
+                })}
             </svg>
             <div className="pointer-events-none absolute inset-[22%] grid content-center text-center">
               <p className="line-clamp-2 break-words text-xs text-muted-foreground">
@@ -321,6 +344,7 @@ export function DonutBreakdown({
           <div
             role="group"
             aria-label="Categories and shares"
+            data-donut-legend
             className="grid min-w-0 grow grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-x-3 gap-y-2"
             style={{ flexBasis: `${columns.length * 9 + (columns.length - 1) * 0.75}rem` }}
           >

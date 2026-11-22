@@ -9,6 +9,7 @@ export interface ComparisonItem {
   label: string;
   value: number | null;
   detail?: string;
+  shareLabel?: string;
   content?: React.ReactNode;
 }
 export function LeaderboardBars({
@@ -29,7 +30,12 @@ export function LeaderboardBars({
     [items, search],
   );
   const rows = sorted;
-  const max = Math.max(1, ...items.map((i) => (Number.isFinite(i.value) ? (i.value ?? 0) : 0)));
+  const values = items.flatMap(({ value }) =>
+    value != null && Number.isFinite(value) ? [value] : [],
+  );
+  const min = Math.min(0, ...values);
+  const max = Math.max(0, ...values);
+  const span = max - min || 1;
   return (
     <div>
       <div className="mb-5 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
@@ -56,7 +62,8 @@ export function LeaderboardBars({
       </div>
       <p className="mb-4 text-xs text-muted-foreground">
         <span className="mr-2 inline-block h-2 w-5 rounded bg-primary" />
-        Shared zero-based scale: {format(0)}–{format(max)} · Unavailable values have no fill
+        Shared scale with a common zero: {format(min)}–{format(max)} · Unavailable values have no
+        fill
       </p>
       <div className="space-y-4">
         {rows.map((i, rank) => (
@@ -72,18 +79,24 @@ export function LeaderboardBars({
                   <Boxes className="size-5 text-muted-foreground" />
                   <span className="min-w-0 break-words font-medium">{i.label}</span>
                   <span className="num shrink-0 text-right text-xs">
-                    {i.value == null ? "—" : format(i.value)}
+                    <span className="block">
+                      {i.value == null ? "Unavailable" : format(i.value)}
+                    </span>
+                    {i.shareLabel && (
+                      <span className="block text-muted-foreground">{i.shareLabel}</span>
+                    )}
                   </span>
                   <span
                     data-comparison-track
                     data-value={i.value ?? "unavailable"}
                     data-maximum={max}
-                    className="col-span-3 block h-2.5 w-full overflow-hidden rounded bg-muted"
+                    className="relative col-span-3 block h-2.5 w-full overflow-hidden rounded bg-muted"
                   >
                     <span
-                      className="vlb-bar block h-full rounded bg-primary"
+                      className="vlb-bar absolute inset-y-0 rounded bg-primary"
                       style={{
-                        width: i.value == null ? "0%" : `${(Math.max(0, i.value) / max) * 100}%`,
+                        left: `${((Math.min(0, i.value ?? 0) - min) / span) * 100}%`,
+                        width: `${(Math.abs(i.value ?? 0) / span) * 100}%`,
                         animationDelay: `${rank * 55}ms`,
                       }}
                     />

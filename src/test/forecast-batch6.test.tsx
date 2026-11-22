@@ -200,12 +200,15 @@ it("keeps horizon and metric controls separate and synchronizes one selected dat
   expect(screen.getByRole("region", { name: "Projected impact" })).toHaveTextContent(
     "Annual projection",
   );
-  fireEvent.keyDown(screen.getByRole("tab", { name: "Annual Outlook" }), { key: "Enter" });
-  expect(screen.getByText("Annual total · Sep–Aug 2027")).toBeVisible();
-  expect(screen.queryByLabelText("Inspect a date")).not.toBeInTheDocument();
-  fireEvent.keyDown(screen.getByRole("tab", { name: "Assumptions & Evidence" }), { key: "Enter" });
-  expect(screen.getByText("Source-backed growth assumption")).toBeVisible();
-  fireEvent.keyDown(screen.getByRole("tab", { name: "Forecast" }), { key: "Enter" });
+  expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+  fireEvent.click(
+    screen.getByRole("button", { name: /view calculation and evidence for forecast/i }),
+  );
+  const evidence = screen.getByRole("complementary", { name: "Analysis details" });
+  expect(within(evidence).getByText("Annual total · Sep–Aug 2027")).toBeVisible();
+  expect(within(evidence).getByText("Source-backed growth assumption")).toBeVisible();
+  expect(screen.getByLabelText("Inspect a date")).toBeVisible();
+  fireEvent.click(within(evidence).getByRole("button", { name: "Close evidence" }));
   expect(screen.getByText("January 2027 — Projected outcomes")).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "Market-based CO₂" }));
   expect(selectForecasts).toHaveBeenLastCalledWith("co2Market", 1, expect.any(Array), true);

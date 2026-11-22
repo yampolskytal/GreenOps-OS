@@ -8,42 +8,61 @@ export const Route = createFileRoute("/")({
   component: Welcome,
 });
 
-const descriptions = {
-  ceo: "Strategy, sustainability targets and management decisions.",
-  cfo: "Digital spending, cost savings and financial planning.",
-  it: "Resource efficiency, infrastructure and operational risks.",
+const roleCards = {
+  ceo: {
+    label: "CEO",
+    title: "Executive Overview",
+    text: "Are we on track for −40% CO₂ and −25% cost? The three biggest opportunities and risks at a glance.",
+  },
+  cfo: {
+    label: "CFO",
+    title: "Financial Intelligence",
+    text: "Costs by department, provider and service. Build a savings portfolio within the CHF 16,500 budget.",
+  },
+  it: {
+    label: "IT Manager",
+    title: "Technical Operations",
+    text: "Servers, GPU, data platform and AI usage. What idles, what is protected, what to change safely.",
+  },
 };
 
 function Welcome() {
   return (
-    <main className="relative isolate mx-auto flex min-h-dvh max-w-6xl flex-col px-6 py-8 sm:px-10">
+    <main className="relative isolate mx-auto min-h-dvh max-w-6xl px-6 py-16 md:py-24">
       <WelcomeMap />
       <header>
         <GreenOpsLogo />
       </header>
-      <section className="my-auto py-12">
-        <h1 className="text-center text-4xl font-semibold tracking-tight sm:text-5xl">
-          What's your role?
+      <section className="mt-10">
+        <h1 className="max-w-3xl text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
+          How would you like to explore <span className="welcome-accent">GreenOps</span>?
         </h1>
-        <p className="mt-4 text-center text-muted-foreground">
-          Choose your role to explore your company's digital operations.
+        <p className="mt-5 max-w-2xl text-muted-foreground">
+          See where cloud, servers, AI and SaaS create costs, energy use and CO₂ — and pick safe
+          measures to cut them. You can switch roles at any time; your selections stay.
         </p>
-        <div className="mt-10 grid auto-rows-fr gap-4 md:grid-cols-3">
-          {ROLES.map(({ id, to, label, Icon }) => (
+        <div className="mt-12 grid auto-rows-fr gap-5 md:grid-cols-3">
+          {ROLES.map(({ id, to, Icon }) => (
             <Link
               key={id}
               to={to}
-              className="group flex min-w-0 flex-col rounded-xl border border-[#C8FA50]/40 bg-card p-6 transition-colors hover:border-[#C8FA50] hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C8FA50]"
+              className="card-elevated group flex min-w-0 flex-col items-start p-7 transition-colors hover:border-accent-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
-              <span className="mb-6 grid size-11 place-items-center rounded-lg bg-[#C8FA50] text-[#1a2410]">
+              <span className="grid size-12 place-items-center rounded-lg bg-accent text-accent-ink">
                 <Icon className="size-5" />
               </span>
-              <h2 className="text-xl font-semibold">{label}</h2>
-              <p className="mb-6 mt-2 text-sm text-muted-foreground">{descriptions[id]}</p>
-              <ArrowRight
-                aria-hidden
-                className="mt-auto size-5 self-end transition-transform group-hover:translate-x-1"
-              />
+              <span className="mt-6 text-xs font-semibold uppercase tracking-wide text-accent-ink">
+                {roleCards[id].label}
+              </span>
+              <h2 className="mt-1 text-2xl font-semibold">{roleCards[id].title}</h2>
+              <p className="mt-3 flex-1 text-sm text-muted-foreground">{roleCards[id].text}</p>
+              <span className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink">
+                Open{" "}
+                <ArrowRight
+                  aria-hidden
+                  className="size-4 transition-transform group-hover:translate-x-1"
+                />
+              </span>
             </Link>
           ))}
         </div>

@@ -90,8 +90,8 @@ function GlobalSearch() {
     ...(fs.data ?? []).map((f) => ({
       label: f.title,
       type: "Finding",
-      to: "/explore" as const,
-      hash: `finding-${f.id}`,
+      to: f.measureId ? ("/studio" as const) : ("/findings" as const),
+      hash: f.measureId ? `measure-${f.measureId}` : `finding-${f.id}`,
     })),
     ...(br.data ? [...br.data.byDepartment, ...br.data.byProvider, ...br.data.byTool] : []).map(
       (b) => ({ label: b.label, type: "Comparison", to: "/explore" as const, hash: "compare" }),
@@ -286,7 +286,7 @@ export function AppShell({
             <div className="mb-8 grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
               <div className="min-w-0 flex-1">
                 {kicker && <p className="text-xs font-semibold text-primary">{kicker}</p>}
-                <h1 className={cn("text-3xl font-semibold", kicker && "mt-2")}>{title}</h1>
+                <h1 className={cn("text-3xl font-semibold tracking-tight", kicker && "mt-2")}>{title}</h1>
                 {subtitle && (
                   <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{subtitle}</p>
                 )}

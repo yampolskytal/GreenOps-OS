@@ -155,6 +155,13 @@ it("keeps recommendation actions with the settings, debounces changes, and saves
   const actions = within(screen.getByLabelText("Recommendation actions"));
   const save = actions.getByRole("button", { name: "Save as Path" });
   await waitFor(() => expect(save).toBeEnabled());
+  const feasibility = screen.getByRole("region", { name: "Implementation feasibility" });
+  expect(within(feasibility).getAllByTitle("Target")).toHaveLength(4);
+  expect(within(feasibility).getByText("Location-based CO₂ reduction")).toBeVisible();
+  expect(within(feasibility).getByText("Annual cost reduction")).toBeVisible();
+  const outcomes = screen.getByRole("region", { name: "Annual outcomes" });
+  expect(feasibility.closest(".grid")?.contains(outcomes)).toBe(false);
+  expect(outcomes.querySelectorAll("[data-outcome-track]")).toHaveLength(4);
   const comparisons = screen.getAllByText("After recommendation");
   for (const row of comparisons)
     expect(row.parentElement?.parentElement?.nextElementSibling).toHaveTextContent("Baseline");

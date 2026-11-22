@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { buildCalendarScale, buildFootprintGrid } from "@/lib/calendar-model";
+import { monthLabels } from "@/components/greenops/contribution-skyline";
 describe("footprint periods and integrity", () => {
+  it("anchors headings to the week containing the first visible date of each month", () => {
+    const grid = buildFootprintGrid(
+      [],
+      Date.parse("2026-08-31"),
+      1,
+      undefined,
+      Date.parse("2025-09-01"),
+    );
+    const headings = monthLabels(grid.cells);
+    expect(headings).toHaveLength(12);
+    expect(headings[0]).toEqual({ label: "Sep", week: 0 });
+    expect(headings[1]).toEqual({ label: "Oct", week: 4 });
+    expect(headings.at(-1)?.label).toBe("Aug");
+  });
   it("keeps August 2026 in Monday-to-Sunday rows without extra dates", () => {
     const grid = buildFootprintGrid(
       [{ date: "2026-08-01", count: 12, colorCount: 100 }],

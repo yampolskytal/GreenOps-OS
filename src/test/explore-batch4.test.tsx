@@ -106,8 +106,8 @@ it("keeps a compact cross-month range, updates the dock in place, and clears out
   render(<Page />);
   expect(screen.getAllByRole("tab").map((item) => item.textContent)).toEqual([
     "Digital Footprint",
+    "Geographic Footprint",
     "Compare",
-    "Waste Findings",
   ]);
   expect(screen.getByRole("button", { name: "Official baseline year" })).toHaveAttribute(
     "aria-pressed",
@@ -188,32 +188,14 @@ it("uses linked comparison settings and retains full-denominator shares while se
   expect(screen.queryByLabelText("Category share donut")).not.toBeInTheDocument();
 });
 
-it("discloses three ranked findings, preserves filters and actions, and keeps blocked measures out of Path actions", () => {
+it("routes old finding links to the matching Studio measure without loading findings", () => {
+  router.hash = "#finding-F-measure-id";
   render(<Page />);
-  tab("Waste Findings");
-  const items = () => document.querySelectorAll("[id^='finding-']");
-  expect(items()).toHaveLength(3);
-  expect(screen.getAllByRole("button", { name: "Add to Paths" }).length).toBeGreaterThan(0);
-  expect(screen.getAllByRole("link", { name: "Review optimization" })[0]).toHaveAttribute(
-    "href",
-    expect.stringMatching(/^\/studio#measure-/),
-  );
-  fireEvent.click(
-    screen.getByRole("button", { name: `Show ${demoFindings.length - 3} more findings` }),
-  );
-  expect(items()).toHaveLength(demoFindings.length);
-  fireEvent.click(screen.getByRole("button", { name: "Show less" }));
-  expect(items()).toHaveLength(3);
-  fireEvent.change(screen.getByLabelText("Show findings"), { target: { value: "blocked" } });
-  expect(items().length).toBeGreaterThan(0);
-  expect(screen.queryByRole("button", { name: "Add to Paths" })).not.toBeInTheDocument();
-  tab("Compare");
-  tab("Waste Findings");
-  expect(screen.getByLabelText("Show findings")).toHaveValue("blocked");
-  fireEvent.change(screen.getByLabelText("Search findings"), {
-    target: { value: "no matching source" },
+  expect(screen.queryByRole("tab", { name: "Waste Findings" })).not.toBeInTheDocument();
+  expect(findings).not.toHaveBeenCalled();
+  expect(router.navigate).toHaveBeenCalledWith({
+    to: "/studio",
+    hash: "measure-measure-id",
+    replace: true,
   });
-  expect(items()).toHaveLength(0);
-  expect(screen.getByRole("status")).toHaveTextContent("No findings match");
-  expect(screen.queryByRole("button", { name: /more findings/ })).not.toBeInTheDocument();
 });

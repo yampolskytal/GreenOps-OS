@@ -19,6 +19,7 @@ import { CheckCircle2 } from "lucide-react";
 import { RiskBadge } from "./ui";
 
 type ReviewFilter = "all" | "blocked" | "review" | "investigate" | "unblocked";
+type DecisionStatus = Exclude<ReviewFilter, "all"> | "eligible";
 const groups = [
   ["all", "All decisions", ""],
   ["blocked", "Blocked", "text-destructive"],
@@ -38,16 +39,22 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   const [membership, setMembership] = useState("all");
   const [sort, setSort] = useState("risk");
   const [selectedId, setSelectedId] = useState<string>();
-  const [pending, setPending] = useState<Measure | null>(null);
+  const [pending, setPending] = useState<{ measure: Measure; approved: boolean | null } | null>(
+    null,
+  );
   const [error, setError] = useState("");
-  const items = measures.flatMap((measure) => {
-    const original = decisionGroup(measure);
-    if (original == null) return [];
+  const items = measures.map((measure) => {
+    const original = decisionGroup(measure) ?? ("eligible" as const);
     const actionable =
       original !== "investigate" && (api.isDemo || measure.decision?.status !== "protected");
     const decision = actionable ? decisions[measure.id] : undefined;
-    const effective = decision?.approved ? ("unblocked" as const) : original;
-    return [{ measure, original, decision, effective, actionable }];
+    const effective: DecisionStatus =
+      decision?.approved === true
+        ? "unblocked"
+        : decision?.approved === false
+          ? "blocked"
+          : original;
+    return { measure, original, decision, effective, actionable };
   });
   const categories = [...new Set(items.map(({ measure }) => measure.service))].sort();
   const term = search.trim().toLowerCase();
@@ -59,7 +66,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
       (category === "all" || m.service === category) &&
       (membership === "all" || s.measureIds.includes(m.id) === (membership === "included")),
   );
-  const rank = { blocked: 0, review: 1, investigate: 2, unblocked: 3 };
+  const rank = { blocked: 0, review: 1, investigate: 2, unblocked: 3, eligible: 4 };
   const visible = matching
     .filter(({ effective }) => filter === "all" || effective === filter)
     .sort((a, b) => {
@@ -116,7 +123,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
             ["all", "Any decision"],
             ["pending", "Undecided"],
             ["approved", "Approved locally"],
-            ["rejected", "Rejected"],
+            ["rejected", "Blocked locally"],
           ]}
         />
         <ApprovalSelect
@@ -152,7 +159,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
             aria-label="Recommendations"
             className="max-h-80 space-y-1 overflow-y-auto rounded-lg border bg-card p-2 @2xl:max-h-[32rem]"
           >
-            {visible.map(({ measure: m, effective, original }) => (
+            {visible.map(({ measure: m, effective, original, decision }) => (
               <li key={m.id}>
                 <button
                   type="button"
@@ -164,7 +171,11 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
                   <span className="my-1 block break-words text-xs text-muted-foreground">
                     {m.resource}
                   </span>
-                  <DecisionBadge effective={effective} original={original} />
+                  <DecisionBadge
+                    effective={effective}
+                    original={original}
+                    locallyBlocked={decision?.approved === false}
+                  />
                 </button>
               </li>
             ))}
@@ -175,7 +186,11 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
                 <h2 className="font-semibold">{selected.title}</h2>
                 <p className="text-sm text-muted-foreground">{selected.resource}</p>
               </div>
-              <DecisionBadge effective={selection.effective} original={selection.original} />
+              <DecisionBadge
+                effective={selection.effective}
+                original={selection.original}
+                locallyBlocked={selection.decision?.approved === false}
+              />
             </header>
             <p className="text-sm">{selected.description || selected.change}</p>
             <DetailBlock
@@ -184,7 +199,9 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
                   ? "Original restriction"
                   : selection.original === "investigate"
                     ? "What needs checking?"
-                    : "Why is review required?"
+                    : selection.original === "eligible"
+                      ? "Operational considerations"
+                      : "Why is review required?"
               }
             >
               <p className="text-sm">
@@ -196,7 +213,8 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
             </DetailBlock>
             <AnnualImpact measure={selected} />
             <p className="text-sm text-muted-foreground">
-              {selection.decision?.approved === false && "Previous simulation decision declined. "}
+              {selection.decision?.approved === false &&
+                "Management block recorded in this review workspace. "}
               {api.isDemo
                 ? "Original restrictions still apply. Demo projections are illustrative."
                 : !selected.includable || selected.risk.level === "blocked"
@@ -209,11 +227,38 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
               </Button>
               {s.role === "ceo" && selection.actionable && (
                 <>
-                  {!selection.decision?.approved && (
-                    <Button size="sm" onClick={() => setPending(selected)}>
-                      {selection.original === "blocked"
-                        ? "Unblock for simulation"
-                        : "Confirm review for simulation"}
+                  {selection.effective !== "blocked" &&
+                    (selected.includable || selection.decision?.approved) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive"
+                        onClick={() => setPending({ measure: selected, approved: false })}
+                      >
+                        Block
+                      </Button>
+                    )}
+                  {selection.effective === "blocked" && (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        setPending({
+                          measure: selected,
+                          approved: selection.decision?.approved === false ? null : true,
+                        })
+                      }
+                    >
+                      {selection.decision?.approved === false
+                        ? "Unblock"
+                        : "Unblock for simulation"}
+                    </Button>
+                  )}
+                  {selection.effective === "review" && (
+                    <Button
+                      size="sm"
+                      onClick={() => setPending({ measure: selected, approved: true })}
+                    >
+                      Confirm review for simulation
                     </Button>
                   )}
                   {selection.decision && (
@@ -224,6 +269,13 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
                 </>
               )}
             </div>
+            {s.role === "ceo" &&
+              !selection.actionable &&
+              selected.decision?.status === "protected" && (
+                <p className="text-sm text-muted-foreground">
+                  Unblock is unavailable because this measure has a backend safety restriction.
+                </p>
+              )}
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}
@@ -259,8 +311,13 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
           <DialogHeader>
             <DialogTitle>Confirm simulation decision?</DialogTitle>
             <DialogDescription>
-              {pending?.title}. This saves a local planning decision. Original restrictions and
-              submission eligibility still apply.
+              {pending?.measure.title}.{" "}
+              {pending?.approved === false
+                ? "Record a local management block."
+                : pending?.approved === null
+                  ? "Remove the local management block."
+                  : "Save a local simulation decision."}{" "}
+              Original restrictions and submission eligibility still apply.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-wrap justify-end gap-2">
@@ -269,7 +326,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
             </Button>
             <Button
               onClick={() => {
-                if (pending && s.role === "ceo") record(pending, true);
+                if (pending && s.role === "ceo") record(pending.measure, pending.approved);
               }}
             >
               Confirm simulation decision
@@ -311,10 +368,20 @@ function ApprovalSelect({
 function DecisionBadge({
   effective,
   original,
+  locallyBlocked,
 }: {
-  effective: Exclude<ReviewFilter, "all">;
-  original: Exclude<ReviewFilter, "all" | "unblocked">;
+  effective: DecisionStatus;
+  original: Exclude<DecisionStatus, "unblocked">;
+  locallyBlocked: boolean;
 }) {
+  if (effective === "eligible")
+    return <span className="text-xs text-muted-foreground">Eligible for planning</span>;
+  if (locallyBlocked)
+    return (
+      <span className="risk-badge whitespace-nowrap text-xs font-semibold text-destructive">
+        Blocked · local decision
+      </span>
+    );
   if (effective === "investigate")
     return <span className="text-xs text-muted-foreground">For investigation</span>;
   if (effective !== "unblocked") return <RiskBadge level={effective} />;

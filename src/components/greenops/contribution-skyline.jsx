@@ -80,20 +80,16 @@ export const computeStats = (cells) => {
     current,
   };
 };
-/** A label on each week whose first day starts a new month; a cramped first label is dropped. */
+/** Position each month at the first column containing one of its days. */
 export const monthLabels = (cells, locale = "en-US") => {
   const fmt = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" });
   const out = [];
   let prev = -1;
-  let previousWeek = -1;
   for (const c of cells) {
-    if (c.week === previousWeek) continue;
-    previousWeek = c.week;
     const m = +c.date.slice(5, 7);
     if (m !== prev) out.push({ week: c.week, label: fmt.format(dayMs(c.date)) });
     prev = m;
   }
-  if (out.length > 1 && out[1].week - out[0].week < 3) out.shift();
   return out;
 };
 /** Convert the normalized height to grid units. */
@@ -605,6 +601,10 @@ export default function ContributionSkyline({
       // room for the month labels that run along the front edge in 3D
       add(0, rows + 1.5 * e, 0);
       add(weeks, rows + 1.5 * e, 0);
+      if (!cfg.current.model.monthly && e > 0) {
+        add(0, -1.4 * e, 0);
+        add(weeks, -1.4 * e, 0);
+      }
       return { minx, maxx, miny, maxy };
     };
     const relayout = () => {
@@ -810,10 +810,11 @@ export default function ContributionSkyline({
             continue;
           }
           const x = px(m.week + off, -0.3);
-          const tw = ctx.measureText(m.label).width;
+          const label = s < 9 ? m.label[0] : m.label;
+          const tw = ctx.measureText(label).width;
           if (x < edge || x + tw > W) continue;
-          ctx.fillText(m.label, x, py(m.week + off, -0.3, 0) - 3);
-          edge = x + tw + 6;
+          ctx.fillText(label, x, py(m.week + off, -0.3, 0) - 3);
+          edge = x + tw + 3;
         }
         ctx.textAlign = "right";
         ctx.textBaseline = "middle";
@@ -836,9 +837,10 @@ export default function ContributionSkyline({
         ctx.textBaseline = "top";
         let edge = -Infinity;
         for (const m of months) {
-          const x = px(m.week + 0.5, rows + 0.3);
+          const labelRow = cfg.current.model.monthly ? rows + 0.3 : -0.45;
+          const x = px(m.week + 0.5, labelRow);
           if (x < edge || x + ctx.measureText(m.label).width > W) continue;
-          ctx.fillText(m.label, x, py(m.week + 0.5, rows + 0.3, 0) + 2);
+          ctx.fillText(m.label, x, py(m.week + 0.5, labelRow, 0) + 2);
           edge = x + ctx.measureText(m.label).width + 10;
         }
       }

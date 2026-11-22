@@ -2,6 +2,7 @@ import { chf, carbonMass } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { createFileRoute, useRouterState, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/greenops/shell";
+import { GeographicFootprint } from "@/components/greenops/geographic-footprint";
 import { DashboardSections } from "@/components/greenops/dashboard-sections";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,6 @@ import {
   type ComparisonSelection,
 } from "@/components/greenops/compare";
 import { Q } from "@/components/greenops/ui";
-import { WasteFindings, type FindingsSelection } from "./findings";
 import { useDaily, useBonus } from "@/lib/queries";
 import { DetailDrawer, DetailBlock, EvidenceInfoButton } from "@/components/greenops/details";
 import { seo } from "@/lib/seo";
@@ -24,12 +24,12 @@ export const Route = createFileRoute("/explore")({
   head: () =>
     seo(
       "Explore & Findings — GreenOps OS",
-      "Explore the daily digital footprint, compare cost drivers and review waste with evidence.",
+      "Explore the daily and geographic digital footprint and compare cost drivers.",
     ),
   component: Explore,
 });
 function sectionForHash(hash: string) {
-  if (hash.startsWith("finding-")) return "findings";
+  if (hash === "geographic-footprint") return "geographic";
   if (hash === "compare" || comparisonFromHash(hash)) return "compare";
   return "footprint";
 }
@@ -42,17 +42,12 @@ function Explore() {
     serverMetric: "runtimeH30d",
     search: "",
   });
-  const [findings, setFindings] = useState<FindingsSelection>({
-    risk: "all",
-    sort: "risk",
-    search: "",
-    expanded: false,
-  });
   const [footprint, setFootprint] = useState<FootprintSelection>({
     range: null,
     date: null,
     view: "2d",
   });
+  const [geoMetric, setGeoMetric] = useState<"costChf" | "co2KgLocation" | "energyKwh">("costChf");
   const [metric, setMetric] = useState<CalMetric>("co2Kg");
   const [compareFootprint, setCompareFootprint] = useState(true);
   const linkedComparison = comparisonFromHash(hash);
@@ -60,14 +55,18 @@ function Explore() {
     const linked = comparisonFromHash(hash);
     if (linked)
       setComparison((current) => ({ ...current, spending: linked, servers: false, search: "" }));
-    if (hash.startsWith("finding-"))
-      setFindings((current) => ({ ...current, risk: "all", search: "", expanded: true }));
-  }, [hash]);
+    if (hash.startsWith("finding-")) {
+      const id = hash.slice("finding-".length);
+      if (id.startsWith("F-") && !/^F-C(?:-|\d+$)/.test(id))
+        void navigate({ to: "/studio", hash: `measure-${id.slice(2)}`, replace: true });
+      else void navigate({ to: "/findings", hash, replace: true });
+    }
+  }, [hash, navigate]);
   return (
     <AppShell
       kicker="Connect · Find"
       title="Explore & Findings"
-      subtitle="Investigate drivers, compare entities and review potential improvements."
+      subtitle="Investigate the digital footprint and compare operational drivers."
     >
       <ExplorationScope />
       <DashboardSections
@@ -93,6 +92,11 @@ function Explore() {
             ),
           },
           {
+            id: "geographic",
+            label: "Geographic Footprint",
+            content: <GeographicFootprint metric={geoMetric} onMetricChange={setGeoMetric} />,
+          },
+          {
             id: "compare",
             label: "Compare",
             content: (
@@ -102,15 +106,6 @@ function Explore() {
                   selection={comparison}
                   onChange={setComparison}
                 />
-              </div>
-            ),
-          },
-          {
-            id: "findings",
-            label: "Waste Findings",
-            content: (
-              <>
-                <WasteFindings selection={findings} onSelectionChange={setFindings} />
                 <div className="mt-3 flex items-center gap-1 text-sm">
                   <span>Operational source evidence</span>
                   <DetailDrawer
@@ -120,7 +115,7 @@ function Explore() {
                     <OperationalEvidence />
                   </DetailDrawer>
                 </div>
-              </>
+              </div>
             ),
           },
         ]}
@@ -166,7 +161,8 @@ function FootprintSection({
             <Button
               key={v}
               size="sm"
-              variant={footprintMetric === v ? "default" : "ghost"}
+              variant="ghost"
+              className="secondary-selection"
               aria-pressed={footprintMetric === v}
               disabled={v === "co2KgMarket" && !market}
               onClick={() => {

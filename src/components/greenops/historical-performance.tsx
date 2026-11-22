@@ -52,7 +52,7 @@ const METRICS = [
     label: "Location-based CO₂",
     unit: "kg CO₂",
     Icon: Cloud,
-    color: "var(--chart-2)",
+    color: "var(--historical-line)",
   },
   {
     key: "co2KgMarket",
@@ -281,20 +281,20 @@ export function HistoricalPerformance({
                     x={selected.month}
                     y={selected[metric]}
                     r={6}
-                    fill="var(--chart-2)"
+                    fill="var(--historical-line)"
                     stroke="var(--foreground)"
                   />
                 )}
                 <Line
                   type="linear"
                   dataKey={metric}
-                  stroke="var(--chart-2)"
+                  stroke="var(--historical-line)"
                   strokeWidth={2.5}
                   connectNulls={false}
-                  dot={{ r: 3, fill: "var(--chart-2)", stroke: "var(--background)" }}
+                  dot={{ r: 3, fill: "var(--historical-line)", stroke: "var(--background)" }}
                   activeDot={{
                     r: 6,
-                    fill: "var(--chart-2)",
+                    fill: "var(--historical-line)",
                     stroke: "var(--background)",
                     strokeWidth: 2,
                   }}

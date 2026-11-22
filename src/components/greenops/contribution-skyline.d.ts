@@ -7,6 +7,10 @@ export interface ContributionDay {
   detail?: string;
   partial?: boolean;
 }
+export function monthLabels(
+  cells: { date: string; week: number }[],
+  locale?: string,
+): { label: string; week: number }[];
 export default function ContributionSkyline(props: {
   data: ContributionDay[];
   footprintGrid?: ReturnType<typeof buildFootprintGrid>;

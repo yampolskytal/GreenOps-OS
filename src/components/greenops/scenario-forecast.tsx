@@ -10,10 +10,17 @@ import {
   forecastLabel,
   SUPPORTED_FORECAST_HORIZONS,
 } from "@/lib/analytics";
-import { carbonMass, carbonUnit, chf, formatEvidenceText, formatNumber } from "@/lib/format";
+import {
+  carbonMass,
+  carbonUnit,
+  chf,
+  formatEvidenceText,
+  formatNumber,
+  group,
+  pct,
+} from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { ScenarioChart, type ScenarioSeries } from "./scenario-chart";
-import { DashboardSections } from "./dashboard-sections";
 import { DetailBlock, DetailDrawer, EvidenceInfoButton } from "./details";
 import { CalculationDetails } from "./ui";
 import { CoverageEvidence } from "./emissions-evidence";
@@ -38,12 +45,6 @@ export type ScenarioSettings = {
   hidden: Record<string, boolean>;
   selectedDate?: number;
 };
-function sectionForHash(hash: string) {
-  if (hash === "annual-outlook") return "annual";
-  if (hash === "forecast-evidence") return "evidence";
-  return "forecast";
-}
-
 function forecastUnit(metric: Forecast["metric"], sourceUnit?: string) {
   const standard = FORECAST_METRICS.find((entry) => entry.id === metric)?.unit ?? "";
   return metric === "co2Location" || metric === "co2Market"
@@ -56,6 +57,13 @@ function formatValue(value: number | null | undefined, unit: string) {
   if (unit === "CHF") return chf(value);
   if (unit === "kWh") return `${formatNumber(value, { maximumFractionDigits: 3 })} kWh`;
   return carbonMass(value, unit);
+}
+
+function formatSummary(value: number | null | undefined, unit: string) {
+  if (!isAvailable(value)) return "Unavailable";
+  if (unit === "CHF") return `CHF ${group(value)}`;
+  if (unit.startsWith("kg")) return `${group(value)} ${unit}`;
+  return formatValue(value, unit);
 }
 
 function annualOutlook(forecast: Forecast | undefined) {
@@ -173,8 +181,40 @@ export function ScenarioForecastPanel({
   const evidence = primary ? <ForecastEvidence forecasts={forecasts} /> : null;
   const lastAnnual = annual.at(-1);
   const lastProjected = projected.filter((row) => isAvailable(row["noChange"])).at(-1);
-  const forecastContent = (
-    <>
+  return (
+    <section className="min-w-0" aria-label={title}>
+      <div className="mb-3 flex items-center gap-1">
+        <h2 className="text-base font-semibold">{title}</h2>
+        {evidence && (
+          <DetailDrawer
+            title="Forecast assumptions & calculation"
+            trigger={<EvidenceInfoButton description="forecast methodology and annual outlook" />}
+          >
+            <div className="space-y-4">
+              {showDetails && annual.length > 0 && (
+                <DetailBlock title="Annual outlook">
+                  {[...new Set(annual.flatMap(({ coverage }) => (coverage ? [coverage] : [])))].map(
+                    (coverage) => (
+                      <p key={coverage} className="text-xs text-muted-foreground">
+                        {coverage}
+                      </p>
+                    ),
+                  )}
+                  {annual.map((point) => (
+                    <AnnualProjection
+                      key={point.year}
+                      point={point}
+                      unit={unit}
+                      planLabel={selections[0]?.label}
+                    />
+                  ))}
+                </DetailBlock>
+              )}
+              {evidence}
+            </div>
+          </DetailDrawer>
+        )}
+      </div>
       <div className="@container">
         <div className="grid gap-3 border-b pb-3 @3xl:grid-cols-[minmax(0,1fr)_auto] @3xl:gap-6">
           <div role="group" aria-label="Metric" className="min-w-0">
@@ -184,7 +224,8 @@ export function ScenarioForecastPanel({
                 <Button
                   key={id}
                   size="sm"
-                  variant={metric === id ? "default" : "ghost"}
+                  variant="ghost"
+                  className="secondary-selection"
                   aria-pressed={metric === id}
                   disabled={!support.some((entry) => entry.metric === id && entry.horizons.length)}
                   title={
@@ -215,7 +256,8 @@ export function ScenarioForecastPanel({
                 <Button
                   key={year}
                   size="sm"
-                  variant={horizon === year ? "default" : "ghost"}
+                  variant="ghost"
+                  className="secondary-selection"
                   aria-pressed={horizon === year}
                   disabled={!horizons.includes(year)}
                   onClick={() => update({ horizon: year })}
@@ -240,18 +282,7 @@ export function ScenarioForecastPanel({
           unit={unit}
         />
       )}
-      <div className="mb-1 mt-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {evidence && (
-          <DetailDrawer
-            title="Forecast assumptions & calculation"
-            trigger={<EvidenceInfoButton description="forecast methodology" />}
-          >
-            {evidence}
-          </DetailDrawer>
-        )}
-      </div>
-      <div className="mb-3 space-y-1 text-xs text-muted-foreground" role="status">
+      <div className="my-3 space-y-1 text-xs text-muted-foreground" role="status">
         {pending && <p>Updating projections…</p>}
         {!ov.isPending && support.length > 0 && unavailableMetrics.length > 0 && (
           <p>Provider forecast unavailable for {unavailableMetrics.join(", ")}.</p>
@@ -319,65 +350,6 @@ export function ScenarioForecastPanel({
           })
         }
       />
-    </>
-  );
-
-  return (
-    <section className="min-w-0" aria-label={title}>
-      {showDetails ? (
-        <DashboardSections
-          label="Forecast sections"
-          sectionForHash={sectionForHash}
-          sections={[
-            { id: "forecast", label: "Forecast", content: forecastContent },
-            ...(annual.length
-              ? [
-                  {
-                    id: "annual",
-                    label: "Annual Outlook",
-                    content: (
-                      <div id="annual-outlook" className="space-y-3">
-                        <h2 className="font-semibold">
-                          Annual outlook · {FORECAST_METRICS.find(({ id }) => id === metric)?.label}
-                        </h2>
-                        {primary?.marketScopeLabel && (
-                          <p className="text-sm text-muted-foreground">
-                            {primary.marketScopeLabel}
-                          </p>
-                        )}
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                          {annual.map((point) => (
-                            <AnnualProjection
-                              key={point.year}
-                              point={point}
-                              unit={unit}
-                              planLabel={selections[0]?.label}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ),
-                  },
-                ]
-              : []),
-            ...(evidence
-              ? [
-                  {
-                    id: "evidence",
-                    label: "Assumptions & Evidence",
-                    content: (
-                      <div id="forecast-evidence" className="max-w-4xl space-y-4">
-                        {evidence}
-                      </div>
-                    ),
-                  },
-                ]
-              : []),
-          ]}
-        />
-      ) : (
-        forecastContent
-      )}
     </section>
   );
 }
@@ -396,30 +368,34 @@ function ImpactSummary({
   unit: string;
 }) {
   const difference = isAvailable(planValue) ? planValue - baseline : null;
+  const change =
+    difference != null && baseline !== 0 ? Math.abs(difference / baseline) * 100 : null;
   return (
     <section aria-label="Projected impact" className="@container border-b py-3">
       <h3 className="mb-2 text-xs font-medium text-muted-foreground">{label}</h3>
       <dl className="grid gap-2 @lg:grid-cols-3">
         <div>
           <dt className="text-xs text-muted-foreground">Without changes</dt>
-          <dd className="num font-semibold">{formatValue(baseline, unit)}</dd>
+          <dd className="num font-semibold">{formatSummary(baseline, unit)}</dd>
         </div>
         {planLabel && (
           <>
             <div>
               <dt className="text-xs text-muted-foreground">{planLabel}</dt>
               <dd className="num font-semibold">
-                {formatValue(isAvailable(planValue) ? planValue : null, unit)}
+                {formatSummary(isAvailable(planValue) ? planValue : null, unit)}
               </dd>
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">Projected difference</dt>
-              <dd className="num font-semibold">
+              <dd
+                className={`num font-semibold ${difference == null || difference === 0 ? "" : difference < 0 ? "text-success" : "text-warning"}`}
+              >
                 {difference == null
                   ? "Unavailable"
                   : difference === 0
                     ? "No modeled difference"
-                    : `${formatValue(Math.abs(difference), unit)} ${difference > 0 ? "higher" : "lower"}`}
+                    : `${formatSummary(Math.abs(difference), unit)} ${difference > 0 ? "higher" : "lower"}${change == null ? "" : ` · ${pct(change)}`}`}
               </dd>
             </div>
           </>
@@ -447,7 +423,6 @@ function AnnualProjection({
         planLabel={planLabel}
         unit={unit}
       />
-      {point.coverage && <p className="mt-1 text-xs text-muted-foreground">{point.coverage}</p>}
       <details className="mt-2 text-xs">
         <summary className="cursor-pointer">Supplied annual low–high ranges</summary>
         <p className="mt-1">
@@ -491,7 +466,9 @@ function ForecastEvidence({
                       : "Annual totals are shown as one monthly-average point per supplied year. No intermediate values are inferred."}
                   </p>
                 </DetailBlock>
-                {forecast.marketScopeLabel && <p>{forecast.marketScopeLabel}</p>}
+                {forecast.marketScopeLabel && !forecast.marketCoverage && (
+                  <p>{forecast.marketScopeLabel}</p>
+                )}
                 {forecast.marketCoverage && (
                   <CoverageEvidence
                     title="Market-based scope and coverage"

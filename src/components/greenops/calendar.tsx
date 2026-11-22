@@ -212,7 +212,8 @@ export function FootprintCalendar({
             <Button
               key={label}
               size="sm"
-              variant={matchesPreset?.[1] === label ? "default" : "outline"}
+              variant="outline"
+              className="secondary-selection"
               aria-pressed={matchesPreset?.[1] === label}
               onClick={() => setRange(presetRange(months, availableFrom, availableTo))}
             >
@@ -226,7 +227,8 @@ export function FootprintCalendar({
                 size="sm"
                 aria-label={v === "2d" ? "Flat heat map" : "3D skyline"}
                 aria-pressed={view === v}
-                variant={view === v ? "default" : "ghost"}
+                variant="ghost"
+                className="secondary-selection"
                 onClick={() => setView(v)}
               >
                 {v.toUpperCase()}

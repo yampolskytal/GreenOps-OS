@@ -6,11 +6,13 @@ export function PlanOutcomes({
   result,
   afterLabel = "After Current Plan",
   projectionFirst = false,
+  carbonFirst = false,
 }: {
   overview: Overview;
   result: SimulationResult;
   afterLabel?: string;
   projectionFirst?: boolean;
+  carbonFirst?: boolean;
 }) {
   const metrics = [
     {
@@ -31,7 +33,7 @@ export function PlanOutcomes({
   return (
     <div className="@container">
       <div className="grid gap-4 @xl:grid-cols-2">
-        {metrics.map((m) => {
+        {(carbonFirst ? [...metrics].reverse() : metrics).map((m) => {
           const after = m.baseline - m.savings;
           const max = Math.max(m.baseline, after, 1);
           if (
