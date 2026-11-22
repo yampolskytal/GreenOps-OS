@@ -241,6 +241,10 @@ The reviewed revision passed **59 backend tests**, **174 frontend tests**, TypeS
 - **Energy and market coverage.** Prioritize electricity gaps on material spend, calibrate the broad compute and PUE ranges using measured activity, and add applicable dated Swiss supplier evidence. The location-based target remains the main assessment.
 - **Operational use.** Live job shifts and CI changes require clearance and attributable evidence. The reviewed package is designed for controlled pilots and documented sign-off. The reference-baseline sensitivity explains how to rerun the assessment when the jury denominator is available.
 
+## AI use during development
+
+We used Perplexity, OpenAI, Claude and DeepSeek while building GreenOps OS. We do not have complete usage logs across the four services, so our total electricity use is unknown. For scale, our [energy assumptions](backend/factors.json) estimate **0.8 kWh per million weighted tokens** (range: **0.3–4 kWh**). This is an illustrative inference estimate, separate from the fictional SME’s footprint.
+
 ## Credits
 
 Case attribution: **Sample data ALTYCA, sprintd Basel 2026**. The organizer’s repository records the public inputs and their sources. The project uses Lovable for the frontend workflow, Python for the analysis and optional Apertus routing for the assistant. [Organizer dataset and documentation](https://github.com/Fa-Bee/sprintd-basel-green-ai-data) · [Historical grid replay provenance](backend/bonus-evidence/README.md)
