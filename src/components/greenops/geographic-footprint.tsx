@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { Cloud, Wallet, Zap } from "lucide-react";
+import { Cloud, Info, Wallet, Zap } from "lucide-react";
 import { geographicDots } from "@/lib/geographic-dots";
 import { COUNTRY_VIEWS, EUROPE_BOUNDARIES, europePoint } from "@/lib/europe-boundaries";
 import { GeographicBreakdowns } from "./geographic-breakdowns";
@@ -8,7 +8,7 @@ import { carbonMass, chf, formatNumber } from "@/lib/format";
 import { useLocations } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { AnalyticalInspector } from "./analytical-inspector";
-import { DetailBlock, EvidenceInfoButton } from "./details";
+import { DetailBlock, DetailDrawer, EvidenceInfoButton } from "./details";
 import { Q } from "./ui";
 
 const METRICS = [
@@ -28,7 +28,6 @@ const METRICS = [
   },
 ] as const;
 type GeoMetric = (typeof METRICS)[number]["key"];
-const COLORS = ["#e0e8ac", "#afd17d", "#77a866", "#49794f", "#286044"];
 
 const REGIONS = [
   {
@@ -125,26 +124,36 @@ function suppliedValue(location: LocationSummary, metric: GeoMetric) {
 }
 
 export function geographicRows(locations: LocationSummary[], metric: GeoMetric) {
-  const values = locations.flatMap((location) => {
-    if (!REGIONS.some(({ id }) => id === location.id)) return [];
-    const value = suppliedValue(location, metric);
-    return value == null ? [] : [value];
-  });
-  const low = Math.min(...values);
-  const high = Math.max(...values);
-  return locations.map((location) => {
-    const value = suppliedValue(location, metric);
-    const index =
-      value == null || low === high || !Number.isFinite(low)
-        ? 2
-        : Math.max(0, Math.min(4, Math.floor(((value - low) / (high - low)) * 5)));
-    return {
-      location,
-      city: REGIONS.find(({ id }) => id === location.id)?.city,
-      value,
-      color: value == null ? null : COLORS[index],
-    };
-  });
+  return locations.map((location) => ({
+    location,
+    city: REGIONS.find(({ id }) => id === location.id)?.city,
+    value: suppliedValue(location, metric),
+  }));
+}
+
+export function carbonIntensityIndices(locations: LocationSummary[]) {
+  // /locations returns both modeled metrics for the same filtered period and ledger rows.
+  const regions: { id: LocationSummary["id"]; emissions: number; energy: number }[] = [];
+  const indices = new Map<LocationSummary["id"], number>();
+  for (const { id } of REGIONS) {
+    const location = locations.find((entry) => entry.id === id);
+    if (!location) return indices;
+    const emissions = suppliedValue(location, "co2KgLocation");
+    const energy = suppliedValue(location, "energyKwh");
+    // Zero energy cannot be distinguished from missing modeled coverage in the subtotal.
+    if (emissions == null || emissions < 0 || energy == null || energy <= 0) return indices;
+    regions.push({ id, emissions, energy });
+  }
+
+  const emissionsTotal = regions.reduce((sum, { emissions }) => sum + emissions, 0);
+  const energyTotal = regions.reduce((sum, { energy }) => sum + energy, 0);
+  if (!Number.isFinite(emissionsTotal) || !Number.isFinite(energyTotal) || emissionsTotal <= 0)
+    return indices;
+  for (const { id, emissions, energy } of regions) {
+    const index = emissions / emissionsTotal / (energy / energyTotal);
+    if (Number.isFinite(index)) indices.set(id, index);
+  }
+  return indices;
 }
 
 export function GeographicFootprint({
@@ -192,9 +201,12 @@ export function GeographicView({
   const format = selectedMetric.format;
   const rows = geographicRows(locations, metric);
   const selected = rows.find(({ location }) => location.id === active);
-  const values = rows.flatMap(({ value, city }) => (value == null || !city ? [] : [value]));
-  const low = Math.min(...values);
-  const high = Math.max(...values);
+  const ranked = rows
+    .filter(({ city }) => city)
+    .sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity));
+  const unallocated = rows.filter(({ city }) => !city);
+  const maximum = Math.max(0, ...ranked.map(({ value }) => value ?? 0));
+  const intensity = carbonIntensityIndices(locations);
 
   return (
     <section className="@container space-y-4">
@@ -228,7 +240,7 @@ export function GeographicView({
             aria-label="Dotted map of European reporting regions"
           >
             <EuropeanOutline />
-            {rows.map(({ city, location, value, color }) => {
+            {rows.map(({ city, location, value }) => {
               if (!city || !Number.isFinite(location.lat) || !Number.isFinite(location.lng))
                 return null;
               const [x, y] = europePoint(location.lng, location.lat);
@@ -252,13 +264,7 @@ export function GeographicView({
                   <title>
                     {location.label} · {format(value)}
                   </title>
-                  <circle
-                    r="3.5"
-                    fill={color ?? "var(--geo-background)"}
-                    stroke={highlightedCity === location.id ? "#f9da7d" : "currentColor"}
-                    strokeWidth={highlightedCity === location.id ? 1.6 : 1}
-                    strokeDasharray={color == null ? "2 2" : undefined}
-                  />
+                  <circle r="3.5" fill="#fff" />
                   <text
                     x="6"
                     y="2.5"
@@ -275,66 +281,61 @@ export function GeographicView({
               );
             })}
           </svg>
-          <div className="mx-auto max-w-xs text-xs">
-            <p className="mb-1">
-              City markers ·{" "}
-              {metric === "co2KgLocation" ? "Location-based emissions" : selectedMetric.label}
-            </p>
-            {values.length > 0 ? (
-              <>
-                <div className="flex h-2 overflow-hidden rounded-sm" aria-hidden="true">
-                  {(low === high ? [COLORS[2]] : COLORS).map((color) => (
-                    <span key={color} className="flex-1" style={{ backgroundColor: color }} />
-                  ))}
-                </div>
-                <div className="num mt-1 flex flex-wrap justify-between gap-2 text-muted-foreground">
-                  <span>{format(low)}</span>
-                  {low !== high && <span>{format(high)}</span>}
-                </div>
-              </>
-            ) : (
-              <p className="text-muted-foreground">No values supplied.</p>
-            )}
-          </div>
         </div>
         <div className="card-elevated min-w-0 px-3 py-2">
-          <h3 className="border-b px-1 pb-2 text-sm font-semibold">Location breakdown</h3>
-          {rows.length ? (
-            <ul className="divide-y">
-              {rows.map(({ location, value, color, city }) => (
-                <li key={location.id}>
+          <h3 className="border-b px-1 pb-2 text-sm font-semibold">Location leaderboard</h3>
+          {ranked.length > 0 && (
+            <ol aria-label="Ranked mapped cities" className="divide-y">
+              {ranked.map(({ location, value, city }, index) => (
+                <li key={location.id} className="py-1">
                   <div className="flex min-w-0 items-center gap-1">
                     <button
                       type="button"
-                      aria-pressed={(city ? highlightedCity : active) === location.id}
+                      aria-pressed={highlightedCity === location.id}
                       data-inspector-interactive
-                      className="secondary-selection grid min-w-0 flex-1 grid-cols-[0.625rem_minmax(0,1fr)_auto] items-center gap-2 rounded-sm px-1 py-2 text-left text-xs hover:bg-accent"
-                      onClick={() => (city ? goToCity(location.id) : setActive(location.id))}
+                      className="secondary-selection grid min-w-0 flex-1 grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 rounded-sm px-1 py-2 text-left text-xs hover:bg-accent"
+                      onClick={() => goToCity(location.id)}
                     >
-                      <span
-                        aria-hidden
-                        className="size-2.5 rounded-full border border-muted-foreground/50"
-                        style={{ backgroundColor: color ?? "transparent" }}
-                      />
-                      <span className="min-w-0 break-words font-medium">{location.label}</span>
+                      <span className="num text-muted-foreground">{index + 1}</span>
+                      <span className="min-w-0 break-words font-medium">{city}</span>
                       <span className="num text-right">{format(value)}</span>
+                      <span
+                        data-location-track
+                        className="col-span-3 h-1.5 w-full rounded-full bg-muted"
+                      >
+                        {value != null && maximum > 0 && (
+                          <span
+                            className="block h-full rounded-full bg-success"
+                            style={{ width: `${(Math.max(0, value) / maximum) * 100}%` }}
+                          />
+                        )}
+                      </span>
                     </button>
-                    {city && (
-                      <EvidenceInfoButton
-                        label={`View location evidence for ${city}`}
-                        onClick={() => setActive(location.id)}
-                      />
-                    )}
+                    <EvidenceInfoButton
+                      label={`View location evidence for ${city}`}
+                      onClick={() => setActive(location.id)}
+                    />
                   </div>
-                  {!city && (
-                    <p className="pb-2 pl-5 text-xs text-muted-foreground">
-                      No city allocation supplied.
-                    </p>
-                  )}
                 </li>
               ))}
-            </ul>
-          ) : (
+            </ol>
+          )}
+          {unallocated.map(({ location, value }) => (
+            <div key={location.id} className="border-t px-1 py-2">
+              <button
+                type="button"
+                aria-pressed={active === location.id}
+                data-inspector-interactive
+                className="secondary-selection grid w-full grid-cols-[minmax(0,1fr)_auto] gap-2 rounded-sm py-1 text-left text-xs hover:bg-accent"
+                onClick={() => setActive(location.id)}
+              >
+                <span className="font-medium">{location.label}</span>
+                <span className="num text-right">{format(value)}</span>
+              </button>
+              <p className="text-xs text-muted-foreground">No city allocation supplied.</p>
+            </div>
+          ))}
+          {rows.length === 0 && (
             <p className="p-2 text-sm text-muted-foreground">
               No locations were supplied for this scope.
             </p>
@@ -357,11 +358,11 @@ export function GeographicView({
               location && Number.isFinite(location.lat) && Number.isFinite(location.lng)
                 ? europePoint(location.lng, location.lat)
                 : null;
+            const index = intensity.get(id);
             return (
               <article
                 key={id}
-                data-city-selected={highlightedCity === id}
-                className="grid min-w-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-3 rounded-md border bg-card p-3 data-[city-selected=true]:border-accent-ink"
+                className="grid min-w-0 grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-3 rounded-md border bg-card p-3"
               >
                 <svg
                   viewBox={COUNTRY_VIEWS[code]}
@@ -380,7 +381,7 @@ export function GeographicView({
                       cx={coordinates[0]}
                       cy={coordinates[1]}
                       r={pitch * 1.05}
-                      fill="#f9da7d"
+                      fill="#fff"
                       stroke="var(--geo-background)"
                       strokeWidth={pitch * 0.45}
                     />
@@ -406,6 +407,40 @@ export function GeographicView({
                         </div>
                       </div>
                     ))}
+                    <div className="grid min-h-10 grid-cols-[0.8rem_minmax(0,1fr)] items-start gap-x-1.5 text-xs">
+                      <DetailDrawer
+                        title="Carbon intensity index"
+                        trigger={
+                          <button
+                            type="button"
+                            aria-label="Explain carbon intensity index"
+                            className="grid size-4 cursor-pointer place-items-center rounded text-muted-foreground hover:text-foreground"
+                          >
+                            <Info aria-hidden className="size-3" />
+                          </button>
+                        }
+                      >
+                        <p>
+                          The index divides the region’s share of location-based CO₂ emissions by
+                          its share of modeled energy across Zurich, Frankfurt, and Dublin in the
+                          current reporting period and filters. Mixed EU is excluded.
+                        </p>
+                        <p>
+                          Below 1.00× means below the mapped-region average. At 1.00× the region
+                          matches the average. Above 1.00× means above the average.
+                        </p>
+                        <p>
+                          The index is unavailable if the paired regional data are missing or the
+                          comparison has no positive denominator.
+                        </p>
+                      </DetailDrawer>
+                      <div>
+                        <dt className="text-muted-foreground">Carbon intensity index</dt>
+                        <dd className="num font-medium">
+                          {index == null ? "Unavailable" : `${index.toFixed(2)}×`}
+                        </dd>
+                      </div>
+                    </div>
                   </dl>
                 </div>
               </article>

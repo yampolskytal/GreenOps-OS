@@ -30,7 +30,9 @@ const groups = [
 
 export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   const { s, decideException } = useApp();
-  const decisions = api.isDemo ? s.demoExceptions : s.simulationDecisions;
+  // Protected decisions are review records only, including when a demo adapter is active.
+  const simulationOnly = (measure: Measure) =>
+    !api.isDemo || measure.decision?.status === "protected";
   const [filter, setFilter] = useState<ReviewFilter>("all");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,8 +47,8 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   const [error, setError] = useState("");
   const items = measures.map((measure) => {
     const original = decisionGroup(measure) ?? ("eligible" as const);
-    const actionable =
-      original !== "investigate" && (api.isDemo || measure.decision?.status !== "protected");
+    const actionable = original !== "investigate";
+    const decisions = simulationOnly(measure) ? s.simulationDecisions : s.demoExceptions;
     const decision = actionable ? decisions[measure.id] : undefined;
     const effective: DecisionStatus =
       decision?.approved === true
@@ -80,7 +82,7 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
   if (selected?.id !== selectedId) setSelectedId(selected?.id);
   const record = (m: Measure, approved: boolean | null) => {
     try {
-      decideException(m.id, m.risk.why, approved, !api.isDemo);
+      decideException(m.id, m.risk.why, approved, simulationOnly(m));
       setError("");
       setPending(null);
     } catch {
@@ -225,11 +227,6 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
               <Button size="sm" variant="outline" onClick={() => setEvidenceOpen(true)}>
                 More information
               </Button>
-              {s.role === "ceo" && selection.effective === "blocked" && !selection.actionable && (
-                <Button size="sm" disabled aria-describedby="protected-unblock-reason">
-                  Unblock for simulation
-                </Button>
-              )}
               {s.role === "ceo" && selection.actionable && (
                 <>
                   {selection.effective !== "blocked" &&
@@ -274,13 +271,12 @@ export function ApprovalWorkspace({ measures }: { measures: Measure[] }) {
                 </>
               )}
             </div>
-            {s.role === "ceo" &&
-              !selection.actionable &&
-              selected.decision?.status === "protected" && (
-                <p id="protected-unblock-reason" className="text-sm text-muted-foreground">
-                  Unblock is unavailable because this measure has a backend safety restriction.
-                </p>
-              )}
+            {selected.decision?.status === "protected" && (
+              <p className="text-sm text-muted-foreground">
+                Management unblocking is simulation only. The original safety restriction remains in
+                force for planning and implementation.
+              </p>
+            )}
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}

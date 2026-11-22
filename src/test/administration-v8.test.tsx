@@ -9,7 +9,8 @@ import { SelectedMonthSummary } from "@/components/greenops/historical-performan
 import { AppStateProvider } from "@/lib/store";
 import { categoryShares, gaugeGeometry } from "@/lib/administration";
 import { api, getPlanningApi } from "@/lib/api/client";
-import { approvedDemoIds } from "@/lib/proposals";
+import { validatePreview } from "@/lib/planning";
+import { approvedDemoIds, proposalMeasures } from "@/lib/proposals";
 import { demoMeasures, demoOverview, DEMO_BASELINE } from "@/lib/api/demo-data";
 import type { Measure, MonthlyObservation } from "@/lib/api/types";
 
@@ -196,28 +197,55 @@ describe("Administration scorecard, decisions and analysis", () => {
     expect(screen.getByRole("button", { name: "Block" })).toBeVisible();
   });
 
-  it("leaves backend-protected measures blocked despite a previously stored simulation decision", () => {
-    localStorage.setItem(
-      key,
-      JSON.stringify({ simulationDecisions: { [blocked.id]: { approved: true } } }),
-    );
-    approvals("ceo", [
-      {
-        ...blocked,
-        decision: {
-          status: "protected",
-          reason: "Hard operational restriction",
-          nextStep: null,
-          scopedAnnualCostChf: null,
-          benefits: [],
-          tradeoffs: [],
-        },
+  it("unblocks protected measures for simulation only, persists the decision, and reverses it", () => {
+    const protectedMeasure: Measure = {
+      ...blocked,
+      decision: {
+        status: "protected",
+        reason: "Hard operational restriction",
+        nextStep: null,
+        scopedAnnualCostChf: null,
+        benefits: [],
+        tradeoffs: [],
       },
-    ]);
-    expect(screen.getByRole("button", { name: "1 Blocked" })).toBeVisible();
+    };
+    const measures = [protectedMeasure];
+    const view = approvals("ceo", measures);
+    fireEvent.click(screen.getByRole("button", { name: "1 Blocked" }));
     const button = screen.getByRole("button", { name: "Unblock for simulation" });
-    expect(button).toBeDisabled();
-    expect(button).toHaveAccessibleDescription(/backend safety restriction/);
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: "Confirm simulation decision" }));
+    expect(screen.getByRole("button", { name: "0 Blocked" })).toBeVisible();
+    expect(screen.getByText(/No matching decisions/)).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "1 Unblocked" }));
+    expect(screen.getAllByText("Unblocked · simulation only")).toHaveLength(2);
+    expect(screen.getByText(/backend excludes this measure/)).toBeVisible();
+    const stored = () => JSON.parse(localStorage.getItem(key) ?? "{}");
+    expect(stored().simulationDecisions[protectedMeasure.id].approved).toBe(true);
+    expect(stored().demoExceptions[protectedMeasure.id]).toBeUndefined();
+    const result = evaluatePackage(measures, [], DEMO_BASELINE, 16500, 1100);
+    expect(
+      validatePreview(
+        [protectedMeasure.id],
+        proposalMeasures(measures, approvedDemoIds(stored().demoExceptions, false)),
+        16500,
+        result,
+      ),
+    ).toMatch(/blocked measures/);
+
+    view.unmount();
+    approvals("ceo", measures);
+    fireEvent.click(screen.getByRole("button", { name: "1 Unblocked" }));
+    expect(screen.getAllByText("Unblocked · simulation only")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Block" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm simulation decision" }));
+    expect(screen.getByRole("button", { name: "0 Unblocked" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "1 Blocked" }));
+    expect(screen.getAllByText("Blocked · local decision")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Revoke decision" }));
+    expect(stored().simulationDecisions).toEqual({});
+    expect(screen.getByRole("button", { name: "Unblock for simulation" })).toBeEnabled();
   });
 
   it("uses unrounded values for four target indicators and renders the projection before baseline", () => {
