@@ -24,7 +24,7 @@ def skeleton(root, filename, fields):
         return list(reader)
 
 
-def tables(a, plan, template_root=None):
+def tables(a, plan, template_root=None, *, growth_note=""):
     base = a.baseline
     market = MarketSummary(a.lines)
     market_cover = market.coverage()
@@ -59,7 +59,7 @@ def tables(a, plan, template_root=None):
     factor("energy_per_1000_tokens", a.factors["energy"]["token-large"], 1000,
            f" Reference large-model factor per 1,000 output-equivalent tokens. Input weight {a.factors['ai_input_weight']}; small models use their own factor.")
     factor("pue", a.factors["pue"])
-    factor("growth_per_year", a.factors["growth"], 100)
+    factor("growth_per_year", a.factors["growth"], 100, growth_note)
     root = template_root or a.path
     rows = skeleton(root, BASE_NAME, BASE_FIELDS)
     ids = [r["parameter"] for r in rows]
