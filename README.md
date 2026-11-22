@@ -1,10 +1,23 @@
 # GreenOps OS
 
+[![GreenOps checks](https://github.com/yampolskytal/greenops-os-v5/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/yampolskytal/greenops-os-v5/actions/workflows/checks.yml)
+
 **[Open the live dashboard →](https://greenops-os.lovable.app/)**
 
 GreenOps OS helps a CEO, CFO and IT manager decide which changes to cloud infrastructure, software subscriptions and AI usage are worth making. Built for the sprintd Basel Green AI challenge, it uses the same case data across all three dashboards so each role can trace a proposed saving back to its evidence.
 
+[![GreenOps dashboard comparing projected carbon and cost reductions against their targets alongside the implementation budget](docs/screenshots/dashboard.webp)](https://greenops-os.lovable.app/ceo)
+
+For the bundled case, the seven recommended measures are projected to cut annual spending by **25.1%** and location-based carbon emissions by **43.5%**, using the full CHF 16,500 budget and 15 person-days.
+
 ## Try a planning session
+
+<details>
+<summary>Preview the welcome page and its three role choices</summary>
+
+![GreenOps welcome page offering Executive Overview, Financial Intelligence and Technical Operations](docs/screenshots/welcome.webp)
+
+</details>
 
 1. **Start on the CEO dashboard.** Compare the cost and carbon targets with the recommended starting plan. Switch to CFO or IT Manager to inspect spending or resource usage behind the totals.
 2. **Open Studio.** Change the budget or selection of measures and compare alternatives. Save an alternative as a Path to revisit it later.
@@ -53,5 +66,7 @@ Open **[http://127.0.0.1:8080](http://127.0.0.1:8080)**, or the local URL printe
 | `npm test` | Frontend unit and component tests |
 | `npm run test:backend` | Python backend tests |
 | `npm run build` | Production dashboard build |
+
+Making a change? The [contributor guide](CONTRIBUTING.md) shows where to edit calculations, API mappings and views, and how to test a change before opening a pull request.
 
 **Dataset credit:** Sample data ALTYCA, sprintd Basel 2026. See the [organizer’s dataset and challenge brief](https://github.com/Fa-Bee/sprintd-basel-green-ai-data) for the data dictionary, example questions and submission requirements.

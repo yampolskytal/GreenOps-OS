@@ -20,7 +20,7 @@ The Python backend lives in `backend/`. The application uses the same-origin `/a
 | getBonus | GET bonus | carbon replay, CI diagnostics, workload clusters, AI usage, unused seats |
 | chat | POST chat | `assistant_router.route_question` (local rules, optional Apertus/OpenAI); follow-up context round-trips in `ChatMessage.context` |
 | exportBaseline / exportMeasures | GET exports/baseline, POST exports/measures | `templates.tables` with the organizer templates |
-| importFiles | POST imports | not supported over HTTP — restart backend with `--data` |
+| importFiles | POST imports | handled by the local Python service; blocked by the hosted dashboard proxy |
 
 ## Planning decisions
 
@@ -53,4 +53,4 @@ The Python backend lives in `backend/`. The application uses the same-origin `/a
 
 ## Planning persistence
 
-Per the existing frontend-only project architecture, the committed plan/settings persist on this device in the shared store. Live scenarios are temporary and never persisted as the Current Plan. Commit revalidates through `GreenOpsApi.simulate`, rejects stale contexts and blocked/unknown measures or exceeded limits, then writes storage before reporting success. Pending review is not approval or execution. Cross-device/backend plan persistence needs a future team contract; no endpoint has been invented.
+The shared frontend store saves the Current Plan and settings on this device. Trying a scenario does not replace that plan. An explicit commit revalidates the selection through `GreenOpsApi.simulate`; stale results, blocked or excluded measures, and unknown calculations prevent saving. A plan that misses a numerical target or exceeds an implementation limit can still be saved as a local proposal. Saving it neither records owner approval nor establishes submission readiness.
