@@ -12,6 +12,10 @@ Sprintd Basel 2026 · GreenTech Edition · Green AI & Data challenge
 
 <img width="1908" height="2436" alt="screencapture-127-0-0-1-8080-explore-2026-11-24-12_21_54" src="https://github.com/user-attachments/assets/494391f6-d83f-40e3-b0cf-8cb06752a29d" />
 
+<img width="1908" height="3136" alt="screencapture-127-0-0-1-8080-explore-2026-11-24-12_22_27" src="https://github.com/user-attachments/assets/b6079eae-8fb1-4858-8b68-f8289f816a59" />
+
+<img width="1908" height="2872" alt="screencapture-127-0-0-1-8080-studio-2026-11-24-12_25_10" src="https://github.com/user-attachments/assets/2141e378-17d9-4ab9-b438-da4a99394d99" />
+
 [Open the live dashboard](https://greenops-os.lovable.app/) · [Run locally](#run-locally) · [Reproduce the submission](#reproduce-the-submission)
 
 GreenOps brings cloud bills, server telemetry, AI usage and software contracts into one ledger. It shows where spend, electricity use and emissions come from, then proposes a package of changes under a cost and effort cap. A low-utilization server can be a savings opportunity or a protected disaster-recovery system. The decision depends on the bill, the workload and the applicable ticket.
